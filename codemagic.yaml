@@ -11,6 +11,8 @@ workflows:
         APPLE_TEAM_ID: "J5CYS3RDGH"
         APP_STORE_CONNECT_ISSUER_ID: "579d53d0-534c-40bd-80e7-b964c69447e5" # Developer ID
         BUNDLE_ID: "com.furkankaan.fingenda" # ⚠️ BURAYI KENDİ BUNDLE ID'niZLE DEĞİŞTİRİN
+    integrations:
+      app_store_connect: "Fıngenda" # Codemagic arayüzünde oluşturduğunuz API Key'in ismini buraya yazın
     scripts:
       - name: Initialize Keychain
         script: |
