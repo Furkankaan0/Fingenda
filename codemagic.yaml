@@ -1,0 +1,52 @@
+workflows:
+  ios-release:
+    name: iOS Release
+    instance_type: mac_mini_m1
+    environment:
+      groups:
+        - app_credential_group # Name of your environment variable group in Codemagic
+      vars:
+        XCODE_WORKSPACE: "ios/Runner.xcworkspace" # Path to your workspace
+        XCODE_SCHEME: "Runner" # Scheme name
+        APPLE_TEAM_ID: "J5CYS3RDGH"
+        APP_STORE_CONNECT_ISSUER_ID: "579d53d0-534c-40bd-80e7-b964c69447e5" # Developer ID
+        BUNDLE_ID: "com.furkankaan.fingenda" # ⚠️ BURAYI KENDİ BUNDLE ID'niZLE DEĞİŞTİRİN
+    scripts:
+      - name: Initialize Keychain
+        script: |
+          keychain initialize
+      - name: Fetch Signing Files
+        script: |
+          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create
+      - name: Set up code signing settings on Xcode project
+        script: |
+          xcode-project use-profiles
+      - name: Flutter Packages
+        script: |
+          # Ensure this is run in a Flutter project
+          flutter packages pub get
+      - name: Pod Install
+        script: |
+          # Install CocoaPods dependencies
+          find . -name "Podfile" -exec dir "{}" \;
+          cd ios && pod install
+      - name: Build IPA
+        script: |
+          # Build the iOS archive
+          flutter build ios --release --no-codesign
+          xcode-project build-ipa --workspace "$XCODE_WORKSPACE" --scheme "$XCODE_SCHEME"
+    publishing:
+      email:
+        recipients:
+          - furkankaan05@outlook.com # 
+        notify:
+          success: true
+          failure: true
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - *.dSYM.zip
+
