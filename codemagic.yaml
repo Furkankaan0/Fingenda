@@ -46,7 +46,5 @@ workflows:
         auth: integration
         submit_to_testflight: true
     artifacts:
-      - build/ios/ipa/*.ipa
-      - /tmp/xcodebuild_logs/*.log
-      - *.dSYM.zip
-
+      - 'build/ios/ipa/*.ipa'
+      - '/tmp/xcodebuild_logs/*.log'
