@@ -1,0 +1,573 @@
+#autopilot-tab-dna {
+    --dna-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(247, 249, 255, 0.9));
+    --dna-surface-strong: rgba(255, 255, 255, 0.94);
+    --dna-stroke: rgba(148, 163, 184, 0.18);
+    --dna-stroke-strong: rgba(99, 102, 241, 0.18);
+    --dna-shadow: 0 24px 44px rgba(15, 23, 42, 0.08);
+    --dna-text: #101828;
+    --dna-text-soft: #5b6477;
+    --dna-text-muted: #77829a;
+    --dna-accent: #4f46e5;
+    --dna-accent-soft: rgba(79, 70, 229, 0.12);
+    --dna-success: #10b981;
+    --dna-warning: #f59e0b;
+    --dna-danger: #ef4444;
+    --dna-track: rgba(15, 23, 42, 0.08);
+}
+
+html.dark #autopilot-tab-dna,
+html.dark #dna-detail-modal {
+    --dna-surface: linear-gradient(180deg, rgba(14, 23, 42, 0.94), rgba(15, 23, 42, 0.9));
+    --dna-surface-strong: rgba(15, 23, 42, 0.9);
+    --dna-stroke: rgba(148, 163, 184, 0.18);
+    --dna-stroke-strong: rgba(99, 102, 241, 0.28);
+    --dna-shadow: 0 28px 60px rgba(2, 6, 23, 0.46);
+    --dna-text: #eef2ff;
+    --dna-text-soft: rgba(226, 232, 240, 0.78);
+    --dna-text-muted: rgba(191, 219, 254, 0.66);
+    --dna-accent: #818cf8;
+    --dna-accent-soft: rgba(99, 102, 241, 0.18);
+    --dna-success: #34d399;
+    --dna-warning: #fbbf24;
+    --dna-danger: #fb7185;
+    --dna-track: rgba(148, 163, 184, 0.15);
+}
+
+#autopilot-tab-dna .dna-shell-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 28px;
+    padding: 20px;
+    background: var(--dna-surface);
+    border: 1px solid var(--dna-stroke);
+    box-shadow: var(--dna-shadow);
+    backdrop-filter: blur(22px);
+}
+
+#autopilot-tab-dna .dna-card-head,
+#autopilot-tab-dna .dna-card-head--summary,
+#dna-detail-modal .dna-detail-modal__header,
+#dna-detail-modal .dna-detail-modal__identity,
+#dna-detail-modal .dna-detail-modal__section-head,
+#dna-detail-modal .dna-detail-modal__story-copy,
+#autopilot-tab-dna .dna-category-row__top,
+#autopilot-tab-dna .dna-category-row__meta {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+#autopilot-tab-dna .dna-card-head,
+#autopilot-tab-dna .dna-card-head--summary {
+    margin-bottom: 18px;
+}
+
+#autopilot-tab-dna .dna-card-eyebrow,
+#dna-detail-modal .dna-detail-modal__eyebrow {
+    margin: 0 0 6px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dna-text-muted);
+}
+
+#autopilot-tab-dna .dna-card-title {
+    margin: 0;
+    color: var(--dna-text);
+    font-size: 1rem;
+    line-height: 1.15;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+#autopilot-tab-dna .dna-inline-meta,
+#dna-detail-modal .dna-inline-meta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 8px 12px;
+    background: rgba(148, 163, 184, 0.12);
+    color: var(--dna-text-soft);
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+#autopilot-tab-dna .dna-summary-card {
+    padding: 0;
+    border-color: var(--dna-stroke-strong);
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.12), rgba(6, 182, 212, 0.08)), var(--dna-surface);
+}
+
+#autopilot-tab-dna .dna-summary-card__aura {
+    position: absolute;
+    inset: -1px;
+    background:
+        radial-gradient(circle at top left, rgba(99, 102, 241, 0.32), transparent 42%),
+        radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.24), transparent 36%);
+    pointer-events: none;
+}
+
+#autopilot-tab-dna .dna-summary-card__content {
+    position: relative;
+    z-index: 1;
+    padding: 22px;
+    display: grid;
+    gap: 18px;
+}
+
+#autopilot-tab-dna .dna-summary-card__hero {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 14px;
+    align-items: center;
+}
+
+#autopilot-tab-dna .dna-summary-card__icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 20px;
+    display: grid;
+    place-items: center;
+    font-size: 28px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--dna-hero-start, #4f46e5), var(--dna-hero-end, #06b6d4));
+    box-shadow: 0 18px 34px rgba(79, 70, 229, 0.26);
+}
+
+#autopilot-tab-dna .dna-summary-card__title,
+#dna-detail-modal .dna-detail-modal__title {
+    margin: 0;
+    color: var(--dna-text);
+    letter-spacing: -0.04em;
+    font-weight: 900;
+}
+
+#autopilot-tab-dna .dna-summary-card__title {
+    font-size: clamp(1.35rem, 3.5vw, 1.9rem);
+    line-height: 1;
+}
+
+#dna-detail-modal .dna-detail-modal__title {
+    font-size: 1.55rem;
+    line-height: 1.05;
+}
+
+#autopilot-tab-dna .dna-summary-card__desc,
+#autopilot-tab-dna .dna-metric-card__note,
+#autopilot-tab-dna .dna-insight-card__note,
+#autopilot-tab-dna .dna-story-card,
+#autopilot-tab-dna .dna-action-card__desc,
+#autopilot-tab-dna .dna-category-row__note,
+#dna-detail-modal .dna-detail-modal__subtitle,
+#dna-detail-modal .dna-detail-modal__story-text,
+#dna-detail-modal .dna-detail-modal__story-meta,
+#dna-detail-modal .dna-detail-modal__section-head,
+#dna-detail-modal .dna-detail-modal__tx-meta {
+    color: var(--dna-text-soft);
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+#autopilot-tab-dna .dna-summary-card__chips,
+#autopilot-tab-dna .dna-summary-card__stats,
+#autopilot-tab-dna .dna-map-card__body,
+#autopilot-tab-dna .dna-driver-list,
+#autopilot-tab-dna .dna-action-list,
+#autopilot-tab-dna .dna-category-list,
+#dna-detail-modal .dna-detail-modal__list {
+    display: grid;
+    gap: 12px;
+}
+
+#autopilot-tab-dna .dna-summary-card__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+#autopilot-tab-dna .dna-summary-card__stat,
+#dna-detail-modal .dna-detail-modal__stat,
+#autopilot-tab-dna .dna-action-card,
+#autopilot-tab-dna .dna-category-row,
+#dna-detail-modal .dna-detail-modal__tx,
+#autopilot-tab-dna .dna-metric-card,
+#autopilot-tab-dna .dna-insight-card {
+    border-radius: 20px;
+    background: var(--dna-surface-strong);
+    border: 1px solid var(--dna-stroke);
+}
+
+#autopilot-tab-dna .dna-summary-card__stat,
+#dna-detail-modal .dna-detail-modal__stat {
+    padding: 14px 16px;
+}
+
+#autopilot-tab-dna .dna-action-card,
+#dna-detail-modal .dna-detail-modal__tx {
+    padding: 16px;
+}
+
+#autopilot-tab-dna .dna-category-row {
+    width: 100%;
+    display: grid;
+    gap: 14px;
+    padding: 16px;
+    text-align: left;
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+#autopilot-tab-dna .dna-category-row:hover {
+    transform: translateY(-1px);
+    border-color: var(--dna-stroke-strong);
+    box-shadow: 0 18px 30px rgba(15, 23, 42, 0.08);
+}
+
+#autopilot-tab-dna .dna-summary-card__label,
+#dna-detail-modal .dna-detail-modal__stat-label,
+#autopilot-tab-dna .dna-metric-card__label,
+#autopilot-tab-dna .dna-insight-card__eyebrow {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--dna-text-muted);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+}
+
+#autopilot-tab-dna .dna-summary-card__value,
+#dna-detail-modal .dna-detail-modal__stat-value,
+#autopilot-tab-dna .dna-metric-card__value,
+#autopilot-tab-dna .dna-insight-card__value,
+#autopilot-tab-dna .dna-category-row__amount,
+#dna-detail-modal .dna-detail-modal__tx-amount {
+    color: var(--dna-text);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+}
+
+#autopilot-tab-dna .dna-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    border: 1px solid transparent;
+}
+
+#autopilot-tab-dna .dna-chip--muted,
+#autopilot-tab-dna .dna-chip--ghost {
+    color: var(--dna-text-soft);
+    background: rgba(255, 255, 255, 0.5);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+html.dark #autopilot-tab-dna .dna-chip--muted,
+html.dark #autopilot-tab-dna .dna-chip--ghost {
+    background: rgba(15, 23, 42, 0.45);
+    border-color: rgba(148, 163, 184, 0.12);
+}
+
+#autopilot-tab-dna .dna-chip--positive { color: var(--dna-success); background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.18); }
+#autopilot-tab-dna .dna-chip--warning { color: var(--dna-warning); background: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.18); }
+#autopilot-tab-dna .dna-chip--danger { color: var(--dna-danger); background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.18); }
+#autopilot-tab-dna .dna-chip--neutral { color: var(--dna-accent); background: var(--dna-accent-soft); border-color: rgba(79, 70, 229, 0.14); }
+
+#autopilot-tab-dna .dna-map-card__chart {
+    position: relative;
+    min-height: 260px;
+    border-radius: 24px;
+    padding: 12px;
+    background: linear-gradient(180deg, rgba(79, 70, 229, 0.06), rgba(255, 255, 255, 0.02));
+    border: 1px solid var(--dna-stroke);
+}
+
+html.dark #autopilot-tab-dna .dna-map-card__chart {
+    background: linear-gradient(180deg, rgba(79, 70, 229, 0.12), rgba(15, 23, 42, 0.02));
+}
+
+#autopilot-tab-dna #radarChart {
+    width: 100%;
+    height: 236px !important;
+}
+
+#autopilot-tab-dna .dna-empty-state,
+#autopilot-tab-dna .dna-list-empty,
+#dna-detail-modal .dna-list-empty {
+    text-align: center;
+    border-radius: 22px;
+}
+
+#autopilot-tab-dna .dna-empty-state {
+    position: absolute;
+    inset: 14px;
+    display: grid;
+    place-items: center;
+    padding: 22px;
+    background: rgba(255, 255, 255, 0.64);
+    border: 1px dashed rgba(79, 70, 229, 0.24);
+}
+
+html.dark #autopilot-tab-dna .dna-empty-state {
+    background: rgba(15, 23, 42, 0.72);
+}
+
+#autopilot-tab-dna .dna-empty-state__icon {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 12px;
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+    color: var(--dna-accent);
+    background: rgba(79, 70, 229, 0.12);
+}
+
+#autopilot-tab-dna .dna-metric-grid,
+#autopilot-tab-dna .dna-insight-grid,
+#dna-detail-modal .dna-detail-modal__stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+#autopilot-tab-dna .dna-insight-card--accent {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(34, 211, 238, 0.08)), var(--dna-surface-strong);
+    border-color: var(--dna-stroke-strong);
+}
+
+#autopilot-tab-dna .dna-driver-row__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+#autopilot-tab-dna .dna-driver-row__label { color: var(--dna-text); font-size: 14px; font-weight: 800; }
+#autopilot-tab-dna .dna-driver-row__value { color: var(--dna-text-soft); font-size: 13px; font-weight: 800; }
+
+#autopilot-tab-dna .dna-driver-row__track,
+#dna-detail-modal .dna-detail-modal__bar,
+#autopilot-tab-dna .dna-category-row__track {
+    width: 100%;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--dna-track);
+}
+
+#autopilot-tab-dna .dna-driver-row__track,
+#dna-detail-modal .dna-detail-modal__bar {
+    height: 10px;
+}
+
+#autopilot-tab-dna .dna-category-row__track {
+    height: 8px;
+}
+
+#autopilot-tab-dna .dna-driver-row__fill,
+#dna-detail-modal .dna-detail-modal__bar-fill,
+#autopilot-tab-dna .dna-category-row__fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    transition: width 0.35s ease;
+}
+
+#autopilot-tab-dna .dna-driver-row__fill--needs { background: linear-gradient(90deg, #4f46e5, #60a5fa); }
+#autopilot-tab-dna .dna-driver-row__fill--wants { background: linear-gradient(90deg, #f97316, #fb7185); }
+#autopilot-tab-dna .dna-driver-row__fill--future { background: linear-gradient(90deg, #10b981, #22d3ee); }
+#autopilot-tab-dna .dna-story-card,
+#dna-detail-modal .dna-detail-modal__story {
+    padding: 16px 18px;
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(34, 211, 238, 0.06));
+    border: 1px solid var(--dna-stroke);
+}
+
+#autopilot-tab-dna .dna-action-card {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 14px;
+    align-items: start;
+}
+
+#autopilot-tab-dna .dna-action-card__icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    font-weight: 900;
+    background: rgba(79, 70, 229, 0.12);
+    color: var(--dna-accent);
+}
+
+#autopilot-tab-dna .dna-action-card__title,
+#dna-detail-modal .dna-detail-modal__tx-title {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--dna-text);
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+#autopilot-tab-dna .dna-action-card--positive .dna-action-card__icon { color: var(--dna-success); background: rgba(16, 185, 129, 0.12); }
+#autopilot-tab-dna .dna-action-card--warning .dna-action-card__icon { color: var(--dna-warning); background: rgba(245, 158, 11, 0.14); }
+#autopilot-tab-dna .dna-action-card--danger .dna-action-card__icon { color: var(--dna-danger); background: rgba(239, 68, 68, 0.12); }
+
+#autopilot-tab-dna .dna-category-row__left {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+}
+
+#autopilot-tab-dna .dna-category-row__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    color: var(--category-color, var(--dna-accent));
+    background: var(--category-soft, rgba(79, 70, 229, 0.12));
+    font-size: 20px;
+}
+
+#autopilot-tab-dna .dna-category-row__pills {
+    display: inline-flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+#autopilot-tab-dna .dna-mini-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 800;
+    background: rgba(148, 163, 184, 0.12);
+    color: var(--dna-text-soft);
+}
+
+#autopilot-tab-dna .dna-mini-pill--positive { color: var(--dna-success); background: rgba(16, 185, 129, 0.12); }
+#autopilot-tab-dna .dna-mini-pill--warning { color: var(--dna-warning); background: rgba(245, 158, 11, 0.14); }
+#autopilot-tab-dna .dna-mini-pill--danger { color: var(--dna-danger); background: rgba(239, 68, 68, 0.12); }
+
+#autopilot-tab-dna .dna-refresh-btn,
+#dna-detail-modal .dna-detail-modal__close {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    color: var(--dna-text-soft);
+    background: rgba(148, 163, 184, 0.12);
+    border: 1px solid var(--dna-stroke);
+    transition: color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+    flex-shrink: 0;
+}
+
+#autopilot-tab-dna .dna-refresh-btn:hover,
+#dna-detail-modal .dna-detail-modal__close:hover {
+    color: var(--dna-accent);
+    background: var(--dna-accent-soft);
+    transform: translateY(-1px);
+}
+
+#dna-detail-modal {
+    --dna-text: #101828;
+    --dna-text-soft: #5b6477;
+    --dna-text-muted: #77829a;
+    --dna-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(247, 249, 255, 0.92));
+    --dna-surface-strong: rgba(255, 255, 255, 0.95);
+    --dna-stroke: rgba(148, 163, 184, 0.18);
+    --dna-stroke-strong: rgba(99, 102, 241, 0.18);
+    --dna-accent: #4f46e5;
+    --dna-track: rgba(15, 23, 42, 0.08);
+    --dna-shadow: 0 28px 60px rgba(15, 23, 42, 0.24);
+}
+
+#dna-detail-modal .dna-detail-modal__scrim {
+    background: rgba(2, 6, 23, 0.56);
+    backdrop-filter: blur(14px);
+}
+
+#dna-detail-modal .dna-detail-modal__sheet {
+    width: min(420px, calc(100vw - 20px));
+    max-height: min(82vh, 760px);
+    display: grid;
+    gap: 16px;
+    padding: 18px 18px 20px;
+    overflow: hidden auto;
+    border-radius: 30px 30px 24px 24px;
+    background: var(--dna-surface);
+    border: 1px solid var(--dna-stroke);
+    box-shadow: var(--dna-shadow);
+}
+
+#dna-detail-modal .dna-detail-modal__handle {
+    width: 52px;
+    height: 5px;
+    margin: 0 auto;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.32);
+}
+
+#dna-detail-modal .dna-detail-modal__identity {
+    justify-content: flex-start;
+}
+
+#dna-detail-modal .dna-detail-modal__icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+    font-size: 24px;
+    color: var(--dna-accent);
+    background: rgba(79, 70, 229, 0.12);
+    flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+    #autopilot-tab-dna .dna-shell-card,
+    #dna-detail-modal .dna-detail-modal__sheet {
+        border-radius: 24px;
+        padding: 18px;
+    }
+
+    #autopilot-tab-dna .dna-metric-grid,
+    #autopilot-tab-dna .dna-insight-grid,
+    #dna-detail-modal .dna-detail-modal__stats,
+    #autopilot-tab-dna .dna-summary-card__stats {
+        grid-template-columns: 1fr;
+    }
+
+    #autopilot-tab-dna .dna-category-row__top,
+    #autopilot-tab-dna .dna-category-row__meta {
+        flex-direction: column;
+    }
+
+    #autopilot-tab-dna .dna-category-row__pills {
+        justify-content: flex-start;
+    }
+
+    #dna-detail-modal .dna-detail-modal__sheet {
+        width: 100%;
+        max-height: 86vh;
+        margin: 0 8px 8px;
+        border-radius: 28px 28px 22px 22px;
+    }
+}

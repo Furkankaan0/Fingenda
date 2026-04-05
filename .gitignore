@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build output
+www/
+
+# Capacitor native projects (generated)
+ios/
+android/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+*.log
+
+# Codemagic
+build/
+
+# Misc
+.codex-taxhacker/
+FINGENDA_ANALIZ_RAPORU.md

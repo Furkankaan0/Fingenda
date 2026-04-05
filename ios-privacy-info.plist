@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Fingenda - Privacy Info
+
+  Bu dosyadaki key'leri ios/App/App/Info.plist icine kopyalayin.
+  Capacitor "npx cap add ios" komutu calistirildiktan sonra
+  Info.plist dosyasi olusacaktir.
+
+  iOS 17+ icin PrivacyInfo.xcprivacy de gereklidir.
+-->
+<plist version="1.0">
+<dict>
+    <!-- Uygulama adi -->
+    <key>CFBundleDisplayName</key>
+    <string>Fingenda</string>
+
+    <!-- Minimum iOS surumu -->
+    <key>MinimumOSVersion</key>
+    <string>17.0</string>
+
+    <!-- Kamera izni (OCR / fis tarama icin) -->
+    <key>NSCameraUsageDescription</key>
+    <string>Fingenda, fis ve fatura taramak icin kameraniza erisim istiyor.</string>
+
+    <!-- Fotograf kutuphanesi izni -->
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Fingenda, fis gorsellerini kaydetmek icin fotograf kutuphanenize erisim istiyor.</string>
+
+    <!-- Face ID / Touch ID izni -->
+    <key>NSFaceIDUsageDescription</key>
+    <string>Fingenda, finansal verilerinizi korumak icin biyometrik kimlik dogrulama kullaniyor.</string>
+
+    <!-- Bildirim izni (zaten Capacitor plugin ile handle ediliyor) -->
+    <!-- Push Notifications icin Capability eklemeyi unutmayin -->
+
+    <!-- App Transport Security -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <false/>
+    </dict>
+
+    <!-- Desteklenen yonelimler (sadece portrait) -->
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+    </array>
+
+    <!-- Status bar -->
+    <key>UIViewControllerBasedStatusBarAppearance</key>
+    <true/>
+
+    <!-- Launch storyboard kullan -->
+    <key>UILaunchStoryboardName</key>
+    <string>LaunchScreen</string>
+</dict>
+</plist>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Fingenda - Privacy Manifest (iOS 17+)
+
+  Bu dosyayi ios/App/App/ klasorune kopyalayin ve
+  Xcode'da projeye ekleyin.
+
+  Apple, Spring 2024'ten itibaren Privacy Manifest zorunlu kildi.
+  https://developer.apple.com/documentation/bundleresources/privacy_manifest_files
+-->
+<plist version="1.0">
+<dict>
+    <!-- Erisilebilir API turleri -->
+    <key>NSPrivacyAccessedAPITypes</key>
+    <array>
+        <!-- UserDefaults / Preferences API (Capacitor Preferences plugin) -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>CA92.1</string>
+            </array>
+        </dict>
+    </array>
+
+    <!-- Izleme domainleri (tracking yok) -->
+    <key>NSPrivacyTrackingDomains</key>
+    <array/>
+
+    <!-- Izleme kullanimi (hayir) -->
+    <key>NSPrivacyTracking</key>
+    <false/>
+
+    <!-- Toplanan veri turleri -->
+    <key>NSPrivacyCollectedDataTypes</key>
+    <array/>
+</dict>
+</plist>

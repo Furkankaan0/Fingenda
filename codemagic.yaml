@@ -1,0 +1,221 @@
+workflows:
+
+  # ════════════════════════════════════════════════════════════════
+  # FINGENDA iOS - App Store Build
+  # ════════════════════════════════════════════════════════════════
+  ios-release:
+    name: Fingenda iOS Release
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      # This must match the Apple Developer Portal key name in Codemagic.
+      app_store_connect: Fingenda
+
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.fingenda.app
+      node: 20
+      xcode: latest
+      cocoapods: default
+      vars:
+        APP_DISPLAY_NAME: "Fingenda"
+        XCODE_WORKSPACE: "ios/App/App.xcworkspace"
+        XCODE_SCHEME: "App"
+
+    cache:
+      cache_paths:
+        - $HOME/.npm
+        - $CM_BUILD_DIR/node_modules
+        - $HOME/Library/Caches/CocoaPods
+        - $CM_BUILD_DIR/ios/App/Pods
+
+    scripts:
+      - name: Install Node dependencies
+        script: |
+          npm ci || npm install
+
+      - name: Build web assets
+        script: |
+          node scripts/build.js
+
+      - name: Create iOS platform if missing
+        script: |
+          if [ ! -d "$CM_BUILD_DIR/ios/App" ]; then
+            npx cap add ios
+          fi
+
+      - name: Sync Capacitor iOS project
+        script: |
+          npx cap sync ios
+
+      - name: Apply iOS plist settings
+        script: |
+          APP_PLIST="$CM_BUILD_DIR/ios/App/App/Info.plist"
+
+          add_or_set_plist_value() {
+            local key="$1"
+            local type="$2"
+            local value="$3"
+
+            /usr/libexec/PlistBuddy -c "Set :$key $value" "$APP_PLIST" \
+              || /usr/libexec/PlistBuddy -c "Add :$key $type $value" "$APP_PLIST"
+          }
+
+          add_or_set_plist_value CFBundleDisplayName string "$APP_DISPLAY_NAME"
+          add_or_set_plist_value MinimumOSVersion string "17.0"
+          add_or_set_plist_value NSCameraUsageDescription string "Fingenda, fis ve fatura taramak icin kameraniza erisim istiyor."
+          add_or_set_plist_value NSPhotoLibraryUsageDescription string "Fingenda, fis gorsellerini kaydetmek icin fotograf kutuphanenize erisim istiyor."
+          add_or_set_plist_value NSFaceIDUsageDescription string "Fingenda, finansal verilerinizi korumak icin biyometrik kimlik dogrulama kullaniyor."
+          add_or_set_plist_value UIViewControllerBasedStatusBarAppearance bool true
+          add_or_set_plist_value UILaunchStoryboardName string "LaunchScreen"
+
+          /usr/libexec/PlistBuddy -c "Delete :NSAppTransportSecurity" "$APP_PLIST" || true
+          /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity dict" "$APP_PLIST"
+          /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity:NSAllowsArbitraryLoads bool false" "$APP_PLIST"
+
+          /usr/libexec/PlistBuddy -c "Delete :UISupportedInterfaceOrientations" "$APP_PLIST" || true
+          /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations array" "$APP_PLIST"
+          /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations:0 string UIInterfaceOrientationPortrait" "$APP_PLIST"
+
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios/App
+          pod install
+
+      - name: Set up code signing
+        script: |
+          xcode-project use-profiles
+
+      - name: Build signed IPA
+        script: |
+          xcode-project build-ipa \
+            --workspace "$CM_BUILD_DIR/$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        expire_build_submitted_for_review: true
+        submit_to_app_store: false
+
+  # ════════════════════════════════════════════════════════════════
+  # FINGENDA iOS - TestFlight (Development Build)
+  # ════════════════════════════════════════════════════════════════
+  ios-testflight:
+    name: Fingenda TestFlight
+    max_build_duration: 45
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: Fingenda
+
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.fingenda.app
+      node: 20
+      xcode: latest
+      cocoapods: default
+      vars:
+        APP_DISPLAY_NAME: "Fingenda"
+        XCODE_WORKSPACE: "ios/App/App.xcworkspace"
+        XCODE_SCHEME: "App"
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: "main"
+          include: true
+        - pattern: "release/*"
+          include: true
+
+    cache:
+      cache_paths:
+        - $HOME/.npm
+        - $CM_BUILD_DIR/node_modules
+        - $HOME/Library/Caches/CocoaPods
+        - $CM_BUILD_DIR/ios/App/Pods
+
+    scripts:
+      - name: Install Node dependencies
+        script: |
+          npm ci || npm install
+
+      - name: Build web assets
+        script: |
+          node scripts/build.js
+
+      - name: Create iOS platform if missing
+        script: |
+          if [ ! -d "$CM_BUILD_DIR/ios/App" ]; then
+            npx cap add ios
+          fi
+
+      - name: Sync Capacitor iOS project
+        script: |
+          npx cap sync ios
+
+      - name: Apply iOS plist settings
+        script: |
+          APP_PLIST="$CM_BUILD_DIR/ios/App/App/Info.plist"
+
+          add_or_set_plist_value() {
+            local key="$1"
+            local type="$2"
+            local value="$3"
+
+            /usr/libexec/PlistBuddy -c "Set :$key $value" "$APP_PLIST" \
+              || /usr/libexec/PlistBuddy -c "Add :$key $type $value" "$APP_PLIST"
+          }
+
+          add_or_set_plist_value CFBundleDisplayName string "$APP_DISPLAY_NAME"
+          add_or_set_plist_value MinimumOSVersion string "17.0"
+          add_or_set_plist_value NSCameraUsageDescription string "Fingenda, fis ve fatura taramak icin kameraniza erisim istiyor."
+          add_or_set_plist_value NSPhotoLibraryUsageDescription string "Fingenda, fis gorsellerini kaydetmek icin fotograf kutuphanenize erisim istiyor."
+          add_or_set_plist_value NSFaceIDUsageDescription string "Fingenda, finansal verilerinizi korumak icin biyometrik kimlik dogrulama kullaniyor."
+          add_or_set_plist_value UIViewControllerBasedStatusBarAppearance bool true
+          add_or_set_plist_value UILaunchStoryboardName string "LaunchScreen"
+
+          /usr/libexec/PlistBuddy -c "Delete :NSAppTransportSecurity" "$APP_PLIST" || true
+          /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity dict" "$APP_PLIST"
+          /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity:NSAllowsArbitraryLoads bool false" "$APP_PLIST"
+
+          /usr/libexec/PlistBuddy -c "Delete :UISupportedInterfaceOrientations" "$APP_PLIST" || true
+          /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations array" "$APP_PLIST"
+          /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations:0 string UIInterfaceOrientationPortrait" "$APP_PLIST"
+
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios/App
+          pod install
+
+      - name: Set up code signing for internal TestFlight
+        script: |
+          xcode-project use-profiles \
+            --custom-export-options='{"testFlightInternalTestingOnly": true}'
+
+      - name: Build signed IPA
+        script: |
+          xcode-project build-ipa \
+            --workspace "$CM_BUILD_DIR/$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: false
+        submit_to_app_store: false

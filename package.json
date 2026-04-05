@@ -1,0 +1,35 @@
+{
+  "name": "fingenda",
+  "version": "1.0.0",
+  "description": "Fingenda - Premium Finans Yonetim Uygulamasi",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve www",
+    "build": "node scripts/build.js",
+    "cap:init": "npx cap init Fingenda com.fingenda.app --web-dir www",
+    "cap:add:ios": "npx cap add ios",
+    "cap:sync": "npx cap sync",
+    "cap:open:ios": "npx cap open ios",
+    "cap:build": "npm run build && npx cap sync"
+  },
+  "keywords": ["finance", "budget", "expense-tracker", "ios"],
+  "author": "Fingenda",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/ios": "^6.2.0",
+    "@capacitor/app": "^6.0.0",
+    "@capacitor/haptics": "^6.0.0",
+    "@capacitor/keyboard": "^6.0.0",
+    "@capacitor/status-bar": "^6.0.0",
+    "@capacitor/preferences": "^6.0.0",
+    "@capacitor/splash-screen": "^6.0.0",
+    "@capacitor/push-notifications": "^6.0.0",
+    "@capacitor/local-notifications": "^6.0.0",
+    "@capacitor/share": "^6.0.0",
+    "@capacitor/camera": "^6.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.0"
+  }
+}
