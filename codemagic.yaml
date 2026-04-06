@@ -62,6 +62,7 @@ workflows:
           }
 
           add_or_set_plist_value CFBundleDisplayName string "$APP_DISPLAY_NAME"
+          add_or_set_plist_value CFBundleVersion string "$PROJECT_BUILD_NUMBER"
           add_or_set_plist_value MinimumOSVersion string "17.0"
           add_or_set_plist_value NSCameraUsageDescription string "Fingenda, fis ve fatura taramak icin kameraniza erisim istiyor."
           add_or_set_plist_value NSPhotoLibraryUsageDescription string "Fingenda, fis gorsellerini kaydetmek icin fotograf kutuphanenize erisim istiyor."
@@ -178,6 +179,7 @@ workflows:
           }
 
           add_or_set_plist_value CFBundleDisplayName string "$APP_DISPLAY_NAME"
+          add_or_set_plist_value CFBundleVersion string "$PROJECT_BUILD_NUMBER"
           add_or_set_plist_value MinimumOSVersion string "17.0"
           add_or_set_plist_value NSCameraUsageDescription string "Fingenda, fis ve fatura taramak icin kameraniza erisim istiyor."
           add_or_set_plist_value NSPhotoLibraryUsageDescription string "Fingenda, fis gorsellerini kaydetmek icin fotograf kutuphanenize erisim istiyor."
