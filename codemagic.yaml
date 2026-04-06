@@ -13,10 +13,8 @@ workflows:
 
     environment:
       ios_signing:
-        provisioning_profiles:
-          - Furkan Pekeriçli
-        certificates:
-          - Furkan
+        distribution_type: app_store
+        bundle_identifier: com.fingenda.app
       node: 20
       xcode: latest
       cocoapods: default
@@ -120,10 +118,8 @@ workflows:
 
     environment:
       ios_signing:
-        provisioning_profiles:
-          - Furkan Pekeriçli
-        certificates:
-          - Furkan
+        distribution_type: app_store
+        bundle_identifier: com.fingenda.app
       node: 20
       xcode: latest
       cocoapods: default
