@@ -198,10 +198,9 @@ workflows:
           cd ios/App
           pod install
 
-      - name: Set up code signing for internal TestFlight
+      - name: Set up code signing for TestFlight
         script: |
-          xcode-project use-profiles \
-            --custom-export-options='{"testFlightInternalTestingOnly": true}'
+          xcode-project use-profiles
 
       - name: Build signed IPA
         script: |
