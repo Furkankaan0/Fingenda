@@ -27,7 +27,6 @@ workflows:
         - $HOME/.npm
         - $CM_BUILD_DIR/node_modules
         - $HOME/Library/Caches/CocoaPods
-        - $CM_BUILD_DIR/ios/App/Pods
 
     scripts:
       - name: Install Node dependencies
@@ -40,7 +39,8 @@ workflows:
 
       - name: Create iOS platform if missing
         script: |
-          if [ ! -d "$CM_BUILD_DIR/ios/App" ]; then
+          if [ ! -f "$CM_BUILD_DIR/ios/App/Podfile" ]; then
+            rm -rf "$CM_BUILD_DIR/ios"
             npx cap add ios
           fi
 
@@ -143,7 +143,6 @@ workflows:
         - $HOME/.npm
         - $CM_BUILD_DIR/node_modules
         - $HOME/Library/Caches/CocoaPods
-        - $CM_BUILD_DIR/ios/App/Pods
 
     scripts:
       - name: Install Node dependencies
@@ -156,7 +155,8 @@ workflows:
 
       - name: Create iOS platform if missing
         script: |
-          if [ ! -d "$CM_BUILD_DIR/ios/App" ]; then
+          if [ ! -f "$CM_BUILD_DIR/ios/App/Podfile" ]; then
+            rm -rf "$CM_BUILD_DIR/ios"
             npx cap add ios
           fi
 
