@@ -14,7 +14,7 @@ workflows:
     environment:
       ios_signing:
         provisioning_profiles:
-          - Furkan Pekericli
+          - Furkan Pekeriçli
         certificates:
           - Furkan
       node: 20
@@ -121,7 +121,7 @@ workflows:
     environment:
       ios_signing:
         provisioning_profiles:
-          - Furkan Pekericli
+          - Furkan Pekeriçli
         certificates:
           - Furkan
       node: 20
