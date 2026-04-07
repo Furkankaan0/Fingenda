@@ -48,6 +48,10 @@ workflows:
         script: |
           npx cap sync ios
 
+      - name: Generate iOS app icons
+        script: |
+          node scripts/generate-ios-appicon.js
+
       - name: Apply iOS plist settings
         script: |
           APP_PLIST="$CM_BUILD_DIR/ios/App/App/Info.plist"
@@ -164,6 +168,10 @@ workflows:
       - name: Sync Capacitor iOS project
         script: |
           npx cap sync ios
+
+      - name: Generate iOS app icons
+        script: |
+          node scripts/generate-ios-appicon.js
 
       - name: Apply iOS plist settings
         script: |
