@@ -81002,15 +81002,30 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
     #advanced-filter-modal {
         align-items: center !important;
         justify-content: center !important;
+        overflow-x: hidden !important;
+        overscroll-behavior-x: none !important;
+        touch-action: pan-y pinch-zoom !important;
         padding:
             max(18px, calc(env(safe-area-inset-top, 0px) + 10px)) 14px max(22px, calc(env(safe-area-inset-bottom, 0px) + 8px)) !important;
     }
 
+    #advanced-filter-modal,
+    #advanced-filter-modal *,
+    #advanced-filter-modal *::before,
+    #advanced-filter-modal *::after {
+        box-sizing: border-box !important;
+    }
+
     #advanced-filter-modal .history-filter-sheet {
-        width: min(420px, calc(100vw - 32px)) !important;
+        width: min(100%, 420px) !important;
+        max-width: 420px !important;
         max-height: min(760px, calc(var(--viewport-height, 100vh) - 56px)) !important;
         margin: 0 auto !important;
+        min-width: 0 !important;
         border-radius: 28px !important;
+        overflow: hidden !important;
+        isolation: isolate !important;
+        transform: translateZ(0) !important;
     }
 
     #advanced-filter-modal .history-filter-sheet__handle {
@@ -81039,12 +81054,52 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
 
     #advanced-filter-modal .history-filter-sheet__scroll {
         padding: 12px 16px 4px !important;
+        overflow-x: hidden !important;
+        overscroll-behavior-x: none !important;
+        overscroll-behavior-y: contain !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-gutter: stable both-edges;
     }
 
     #advanced-filter-modal .history-filter-sheet__glance {
         margin-bottom: 12px !important;
         padding: 10px !important;
         border-radius: 20px !important;
+    }
+
+    #advanced-filter-modal .history-filter-sheet__copy,
+    #advanced-filter-modal .history-filter-sheet__header,
+    #advanced-filter-modal .history-filter-sheet__scroll,
+    #advanced-filter-modal .history-filter-sheet__footer,
+    #advanced-filter-modal .history-filter-sheet__glance,
+    #advanced-filter-modal .history-filter-sheet__glance-card,
+    #advanced-filter-modal .history-filter-sheet__section,
+    #advanced-filter-modal .history-filter-sheet__section-head,
+    #advanced-filter-modal .history-filter-sheet__choice-grid,
+    #advanced-filter-modal .history-filter-sheet__category-grid,
+    #advanced-filter-modal .history-filter-sheet__field-grid,
+    #advanced-filter-modal .history-filter-sheet__field,
+    #advanced-filter-modal .history-filter-sheet__choice,
+    #advanced-filter-modal .history-filter-sheet__category,
+    #advanced-filter-modal .history-filter-sheet__category-text,
+    #advanced-filter-modal .history-filter-sheet__input,
+    #advanced-filter-modal .history-filter-sheet__action {
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    #advanced-filter-modal .history-filter-sheet__glance,
+    #advanced-filter-modal .history-filter-sheet__choice-grid,
+    #advanced-filter-modal .history-filter-sheet__category-grid,
+    #advanced-filter-modal .history-filter-sheet__field-grid {
+        width: 100% !important;
+        overflow-x: hidden !important;
+    }
+
+    #advanced-filter-modal .history-filter-sheet__choice,
+    #advanced-filter-modal .history-filter-sheet__category {
+        overflow: hidden !important;
+        overflow-wrap: anywhere !important;
     }
 
     #advanced-filter-modal .history-filter-sheet__glance-card {
@@ -81109,7 +81164,8 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         }
 
         #advanced-filter-modal .history-filter-sheet {
-            width: min(408px, calc(100vw - 24px)) !important;
+            width: min(100%, 408px) !important;
+            max-width: 408px !important;
             max-height: min(88vh, calc(var(--viewport-height, 100vh) - 40px)) !important;
             border-radius: 26px !important;
         }
@@ -81117,7 +81173,8 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
 
     @media (max-width: 420px) {
         #advanced-filter-modal .history-filter-sheet {
-            width: calc(100vw - 24px) !important;
+            width: 100% !important;
+            max-width: none !important;
             max-height: calc(var(--viewport-height, 100vh) - 32px) !important;
             border-radius: 24px !important;
         }
