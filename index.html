@@ -82322,5 +82322,105 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
 
     })();
 </script>
+<script>
+    (function applyNativeIOSFullscreenClass() {
+        try {
+            const isNativeIOS = !!(window.Capacitor?.isNativePlatform?.() && window.Capacitor?.getPlatform?.() === 'ios');
+            if (!isNativeIOS) return;
+
+            document.documentElement.classList.add('native-ios-shell');
+            if (document.body) {
+                document.body.classList.add('native-ios-shell');
+            }
+        } catch (err) {
+            console.warn('native-ios-shell class could not be applied', err);
+        }
+    })();
+</script>
+<style id="native-ios-fullscreen-fix">
+    html.native-ios-shell,
+    html.native-ios-shell body {
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 100% !important;
+        overflow: hidden !important;
+        overscroll-behavior: none !important;
+        background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 52%, #e8edf5 100%) !important;
+        background-color: #eef2f7 !important;
+    }
+
+    html.dark.native-ios-shell,
+    html.dark.native-ios-shell body {
+        background: linear-gradient(180deg, #08101d 0%, #0f172a 48%, #131c31 100%) !important;
+        background-color: #0f172a !important;
+    }
+
+    html.native-ios-shell body {
+        position: fixed !important;
+        inset: 0 !important;
+    }
+
+    html.native-ios-shell #app-container {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        isolation: isolate !important;
+        background: transparent !important;
+    }
+
+    @supports not (height: 100dvh) {
+        html.native-ios-shell #app-container {
+            height: var(--viewport-height, calc(var(--app-vh, 1vh) * 100)) !important;
+            max-height: var(--viewport-height, calc(var(--app-vh, 1vh) * 100)) !important;
+        }
+    }
+
+    html.native-ios-shell #app-container::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        pointer-events: none;
+        background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 52%, #e8edf5 100%);
+    }
+
+    html.dark.native-ios-shell #app-container::after {
+        background: linear-gradient(180deg, #08101d 0%, #0f172a 48%, #131c31 100%);
+    }
+
+    html.native-ios-shell #app-container>main {
+        min-height: 0 !important;
+        height: 100% !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        overscroll-behavior: none !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding-bottom: calc(104px + env(safe-area-inset-bottom, 0px)) !important;
+        background: transparent !important;
+    }
+
+    html.native-ios-shell #screen-dashboard,
+    html.native-ios-shell #screen-notes,
+    html.native-ios-shell #screen-history,
+    html.native-ios-shell #screen-goals,
+    html.native-ios-shell #screen-doviz,
+    html.native-ios-shell #screen-wallet,
+    html.native-ios-shell #screen-add,
+    html.native-ios-shell #screen-transactions {
+        min-height: auto !important;
+        padding-bottom: 0 !important;
+        margin-bottom: 0 !important;
+        background: transparent !important;
+    }
+
+    html.native-ios-shell #nav-wrapper {
+        bottom: max(12px, env(safe-area-inset-bottom, 0px)) !important;
+    }
+</style>
 </body>
 </html>
