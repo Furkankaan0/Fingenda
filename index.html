@@ -42954,10 +42954,88 @@
             // --- SESLİ KOMUT İLE İŞLEM EKLEME ---
             window.currentRecognition = null;
 
+            window.applyTransactionVoiceTranscript = function (transcript) {
+                if (!transcript || !transcript.trim()) {
+                    window.alertMessage(
+                        window.FINGENDA_LANG === 'en' ? 'No input' : 'Girdi bulunamadi',
+                        window.FINGENDA_LANG === 'en'
+                            ? 'Please say or enter a transaction sentence.'
+                            : 'Lutfen bir islem cumlesi soyleyin veya yazin.',
+                        "red"
+                    );
+                    return false;
+                }
+
+                const normalizedTranscript = transcript.trim();
+                const amountMatch = normalizedTranscript.match(/(\d+([\.,]\d+)?)\s*(tl|lira|try)?/i);
+                let category = "";
+                const lowerText = normalizedTranscript.toLowerCase();
+                const keywords = {
+                    'Market': ['market', 'bakkal', 'supermarket', 'süpermarket', 'gida', 'gıda', 'bim', 'a101', 'sok', 'şok', 'migros'],
+                    'Ulaşım': ['benzin', 'mazot', 'otobus', 'otobüs', 'taksi', 'dolmus', 'dolmuş', 'bilet'],
+                    'Yemek': ['yemek', 'restoran', 'kafe', 'kahve', 'simit', 'doner', 'döner', 'burger'],
+                    'Fatura': ['fatura', 'elektrik', 'su', 'dogalgaz', 'doğalgaz', 'internet', 'telefon'],
+                    'Giyim': ['kiyafet', 'kıyafet', 'tisort', 'tişört', 'pantolon', 'ayakkabi', 'ayakkabı', 'mont'],
+                    'Eğlence': ['sinema', 'oyun', 'netflix', 'spotify', 'konser'],
+                    'Sağlık': ['eczane', 'ilac', 'ilaç', 'doktor', 'hastane'],
+                    'Eğitim': ['kitap', 'defter', 'okul', 'kurs']
+                };
+
+                for (const [cat, keys] of Object.entries(keywords)) {
+                    if (keys.some(k => lowerText.includes(k))) {
+                        category = cat;
+                        break;
+                    }
+                }
+
+                if (amountMatch) {
+                    const amountEl = document.getElementById('input-amount');
+                    if (amountEl) {
+                        amountEl.value = amountMatch[1].replace('.', ',');
+                        if (window.formatAmount) window.formatAmount(amountEl);
+                        if (window.updateCurrencyPreview) window.updateCurrencyPreview();
+                    }
+                }
+
+                if (category) {
+                    const catSelect = document.getElementById('input-category');
+                    if (catSelect) {
+                        for (let i = 0; i < catSelect.options.length; i++) {
+                            if (catSelect.options[i].value.includes(category)) {
+                                catSelect.selectedIndex = i;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                const desc = normalizedTranscript.charAt(0).toUpperCase() + normalizedTranscript.slice(1);
+                const descEl = document.getElementById('input-desc');
+                if (descEl) descEl.value = desc;
+
+                window.alertMessage("Anlasildi", `"${desc}"`, "purple");
+                if (navigator.vibrate) navigator.vibrate(50);
+                return true;
+            };
+
+            window.openTransactionVoiceFallbackPrompt = function () {
+                const isEnglish = window.FINGENDA_LANG === 'en';
+                const manualInput = window.prompt(
+                    isEnglish
+                        ? 'Voice recognition is not available in this iPhone app build yet. Enter a short command like: 425 lira market'
+                        : 'Bu iPhone uygulama surumunde ses tanima su an desteklenmiyor. "425 lira market" gibi kisa bir komut yazin.',
+                    '425 lira market'
+                );
+
+                if (manualInput === null) return false;
+                return window.applyTransactionVoiceTranscript(manualInput);
+            };
+
             window.startTransactionVoiceInput = function () {
                 const btn = document.getElementById('btn-voice-input');
                 const btnText = document.getElementById('btn-voice-text');
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const isNativeIOS = !!(window.Capacitor?.isNativePlatform?.() && window.Capacitor?.getPlatform?.() === 'ios');
 
                 const resetVoiceButton = function () {
                     window.currentRecognition = null;
@@ -42975,8 +43053,8 @@
                     return;
                 }
 
-                if (!SpeechRecognition) {
-                    window.alertMessage(window.t('msg.error'), window.t('msg.voiceNotSupported'), "red");
+                if (!SpeechRecognition || isNativeIOS) {
+                    window.openTransactionVoiceFallbackPrompt();
                     return;
                 }
 
@@ -43000,6 +43078,8 @@
 
                 recognition.onresult = function (event) {
                     const transcript = event.results[0][0].transcript;
+                    window.applyTransactionVoiceTranscript(transcript);
+                    return;
                     console.log("Algılanan:", transcript);
 
                     // 1. Tutar Bulma
@@ -43076,7 +43156,13 @@
                     window.alertMessage(window.t('msg.error'), message, "red");
                 };
 
-                recognition.start();
+                try {
+                    recognition.start();
+                } catch (err) {
+                    console.error('Transaction speech recognition start error:', err);
+                    resetVoiceButton();
+                    window.openTransactionVoiceFallbackPrompt();
+                }
             };
 
             // --- GÜVENLİ & TASARIM PIN YÖNETİCİSİ ---
@@ -61335,31 +61421,60 @@ html.perf: blur(8px) fallback
     (function disablePullToRefresh() {
         'use strict';
 
-        // 1. Prevent iOS/Chrome overscroll reload logic
-        // Only prevent if we are at the top of the page AND pulling down
         let startY = 0;
+        let activeScroller = null;
+
+        function findScrollableParent(node) {
+            let current = node instanceof Element ? node : null;
+
+            while (current && current !== document.body) {
+                const style = window.getComputedStyle(current);
+                const canScrollY = /(auto|scroll)/.test(style.overflowY || '') || /(auto|scroll)/.test(style.overflow || '');
+
+                if (canScrollY && current.scrollHeight > current.clientHeight + 1) {
+                    return current;
+                }
+
+                current = current.parentElement;
+            }
+
+            return document.querySelector('#app-container > main, main.custom-scroll');
+        }
 
         document.addEventListener('touchstart', (e) => {
+            if (!e.touches || !e.touches.length) return;
             startY = e.touches[0].clientY;
+            activeScroller = findScrollableParent(e.target);
         }, { passive: true });
 
         document.addEventListener('touchmove', (e) => {
-            const y = e.touches[0].clientY;
-            // Handle cases where scrollTop might be on body or html
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+            if (!e.touches || !e.touches.length) return;
 
-            // If at top and pulling down
-            if (scrollTop <= 0 && y > startY) {
-                // Ensure this isn't a scrollable inner container
-                const target = e.target;
-                const scrollableParent = target.closest && target.closest('.overflow-y-auto, .overflow-auto, .scrollable');
+            const currentY = e.touches[0].clientY;
+            const deltaY = currentY - startY;
+            const scroller = activeScroller || findScrollableParent(e.target);
 
-                if (!scrollableParent || scrollableParent.scrollTop === 0) {
-                    if (e.cancelable) e.preventDefault();
-                }
+            if (!scroller) {
+                if (e.cancelable) e.preventDefault();
+                return;
             }
-        }, { passive: false }); // passive: false is critical for preventDefault
-        console.log('[System] Pull-to-refresh disabled.');
+
+            const maxScrollTop = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+            const atTop = scroller.scrollTop <= 0;
+            const atBottom = scroller.scrollTop >= (maxScrollTop - 1);
+            const isPullingDownAtTop = deltaY > 0 && atTop;
+            const isPullingUpAtBottom = deltaY < 0 && atBottom;
+
+            if (isPullingDownAtTop || isPullingUpAtBottom) {
+                if (e.cancelable) e.preventDefault();
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchend', () => {
+            activeScroller = null;
+        }, { passive: true });
+
+        console.log('[System] Viewport bounce disabled.');
     })();
 </script>
 
@@ -67091,8 +67206,19 @@ html.perf: blur(8px) fallback
 
     /* Body does NOT need min-height: 100vh when position: fixed */
     /* This was causing the ghost layer conflict */
+    html,
+    body {
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 100% !important;
+        overflow: hidden !important;
+        overscroll-behavior: none !important;
+    }
+
     body {
         /* Already has position: fixed from earlier styles */
+        position: fixed !important;
+        inset: 0 !important;
         min-height: unset !important;
         height: 100% !important;
         background: linear-gradient(135deg, var(--bg-gradient-start, #fafbfc) 0%, var(--bg-gradient-end, #eef2f7) 100%) !important;
@@ -67106,18 +67232,25 @@ html.perf: blur(8px) fallback
 
     /* App container should fill body and allow scroll */
     #app-container {
-        height: 100% !important;
+        width: 100% !important;
+        height: var(--viewport-height, calc(var(--app-vh, 1vh) * 100)) !important;
         min-height: unset !important;
+        max-height: var(--viewport-height, calc(var(--app-vh, 1vh) * 100)) !important;
         display: flex !important;
         flex-direction: column !important;
+        overflow: hidden !important;
         background: inherit !important;
+        isolation: isolate !important;
     }
 
     /* Main content area - single padding-bottom for nav clearance */
     #app-container>main {
         flex: 1 !important;
+        min-height: 0 !important;
+        height: 100% !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
+        overscroll-behavior-y: none !important;
         -webkit-overflow-scrolling: touch !important;
         background: inherit !important;
 
