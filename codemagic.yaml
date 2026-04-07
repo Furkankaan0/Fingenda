@@ -52,10 +52,6 @@ workflows:
         script: |
           node scripts/generate-ios-appicon.js
 
-      - name: Generate iOS launch screen assets
-        script: |
-          node scripts/generate-ios-launchscreen.js
-
       - name: Apply iOS plist settings
         script: |
           APP_PLIST="$CM_BUILD_DIR/ios/App/App/Info.plist"
@@ -176,10 +172,6 @@ workflows:
       - name: Generate iOS app icons
         script: |
           node scripts/generate-ios-appicon.js
-
-      - name: Generate iOS launch screen assets
-        script: |
-          node scripts/generate-ios-launchscreen.js
 
       - name: Apply iOS plist settings
         script: |
