@@ -31483,6 +31483,13 @@
                 box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.22) !important;
                 backdrop-filter: none !important;
                 -webkit-backdrop-filter: none !important;
+                border-radius: 40px !important;
+                overflow: hidden !important;
+                isolation: isolate;
+                clip-path: inset(0 round 40px);
+                -webkit-mask-image: -webkit-radial-gradient(white, black);
+                transform: translateZ(0);
+                backface-visibility: hidden;
             }
 
             html.dark .modal-surface-opaque,
@@ -31490,6 +31497,27 @@
                 background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%) !important;
                 border: 1px solid rgba(255, 255, 255, 0.08) !important;
                 box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
+            }
+
+            .modal-surface-opaque::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                border-radius: inherit;
+                pointer-events: none;
+                box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+                z-index: 1;
+            }
+
+            html.dark .modal-surface-opaque::before,
+            .dark .modal-surface-opaque::before {
+                box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+            }
+
+            #detailed-stats-modal>.modal-surface-opaque,
+            #savings-detail-modal>.modal-surface-opaque {
+                border-radius: 40px !important;
+                clip-path: inset(0 round 40px);
             }
 
             /* Modal içi kartlar için opak yüzey */
