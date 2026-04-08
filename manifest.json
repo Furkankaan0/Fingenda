@@ -11,32 +11,6 @@
   "lang": "tr",
   "dir": "ltr",
   "categories": ["finance", "productivity"],
-  "shortcuts": [
-    {
-      "name": "Yeni Gider",
-      "short_name": "Gider",
-      "description": "Hızlı gider kaydı başlat",
-      "url": "./index.html?action=add-expense&source=homescreen"
-    },
-    {
-      "name": "Yeni Gelir",
-      "short_name": "Gelir",
-      "description": "Hızlı gelir kaydı başlat",
-      "url": "./index.html?action=add-income&source=homescreen"
-    },
-    {
-      "name": "Hızlı Not",
-      "short_name": "Not",
-      "description": "Yeni bir not oluştur",
-      "url": "./index.html?action=quick-note&source=homescreen"
-    },
-    {
-      "name": "Bugün Özeti",
-      "short_name": "Özet",
-      "description": "Bugünkü finans özetini aç",
-      "url": "./index.html?action=today-summary&source=homescreen"
-    }
-  ],
   "icons": [
     {
       "src": "icons/icon-72x72.png",

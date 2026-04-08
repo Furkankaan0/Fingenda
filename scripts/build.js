@@ -16,10 +16,6 @@ const WWW = path.join(ROOT, 'www');
 // Kopyalanacak dosya ve klasorler
 const COPY_LIST = [
     'index.html',
-    'fingenda-p0-submission.css',
-    'fingenda-p0-submission.js',
-    'fingenda-p2-ecosystem.css',
-    'fingenda-p2-ecosystem.js',
     'dna-performance-runtime.js',
     'dna-refresh-core.js',
     'dna-refresh-ui.js',

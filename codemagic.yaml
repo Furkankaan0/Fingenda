@@ -48,10 +48,6 @@ workflows:
         script: |
           npx cap sync ios
 
-      - name: Configure iOS system actions
-        script: |
-          node scripts/generate-ios-system-actions-v2.js
-
       - name: Generate iOS app icons
         script: |
           node scripts/generate-ios-appicon.js
@@ -85,28 +81,6 @@ workflows:
           /usr/libexec/PlistBuddy -c "Delete :UISupportedInterfaceOrientations" "$APP_PLIST" || true
           /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations array" "$APP_PLIST"
           /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations:0 string UIInterfaceOrientationPortrait" "$APP_PLIST"
-
-          /usr/libexec/PlistBuddy -c "Delete :CFBundleURLTypes" "$APP_PLIST" || true
-          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes array" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0 dict" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleTypeRole string Editor" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLName string com.fingenda.app.actions" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes array" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string fingenda" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes:1 string Fingenda" "$APP_PLIST"
-
-          /usr/libexec/PlistBuddy -c "Delete :NSUserActivityTypes" "$APP_PLIST" || true
-          /usr/libexec/PlistBuddy -c "Add :NSUserActivityTypes array" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSUserActivityTypes:0 string com.fingenda.app.action.add-expense" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSUserActivityTypes:1 string com.fingenda.app.action.add-income" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSUserActivityTypes:2 string com.fingenda.app.action.quick-note" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSUserActivityTypes:3 string com.fingenda.app.action.goal-contribution" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSUserActivityTypes:4 string com.fingenda.app.action.today-summary" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSUserActivityTypes:5 string com.fingenda.app.action.recent-expenses" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSUserActivityTypes:6 string com.fingenda.app.action.fingo-brain" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSUserActivityTypes:7 string com.fingenda.app.action.market" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSUserActivityTypes:8 string com.fingenda.app.action.voice-add" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSUserActivityTypes:9 string com.fingenda.app.action.receipt-scan" "$APP_PLIST"
 
       - name: Install CocoaPods dependencies
         script: |
@@ -195,10 +169,6 @@ workflows:
         script: |
           npx cap sync ios
 
-      - name: Configure iOS system actions
-        script: |
-          node scripts/generate-ios-system-actions-v2.js
-
       - name: Generate iOS app icons
         script: |
           node scripts/generate-ios-appicon.js
@@ -232,28 +202,6 @@ workflows:
           /usr/libexec/PlistBuddy -c "Delete :UISupportedInterfaceOrientations" "$APP_PLIST" || true
           /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations array" "$APP_PLIST"
           /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations:0 string UIInterfaceOrientationPortrait" "$APP_PLIST"
-
-          /usr/libexec/PlistBuddy -c "Delete :CFBundleURLTypes" "$APP_PLIST" || true
-          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes array" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0 dict" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleTypeRole string Editor" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLName string com.fingenda.app.actions" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes array" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string fingenda" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes:1 string Fingenda" "$APP_PLIST"
-
-          /usr/libexec/PlistBuddy -c "Delete :NSUserActivityTypes" "$APP_PLIST" || true
-          /usr/libexec/PlistBuddy -c "Add :NSUserActivityTypes array" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSUserActivityTypes:0 string com.fingenda.app.action.add-expense" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSUserActivityTypes:1 string com.fingenda.app.action.add-income" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSUserActivityTypes:2 string com.fingenda.app.action.quick-note" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSUserActivityTypes:3 string com.fingenda.app.action.goal-contribution" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSUserActivityTypes:4 string com.fingenda.app.action.today-summary" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSUserActivityTypes:5 string com.fingenda.app.action.recent-expenses" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSUserActivityTypes:6 string com.fingenda.app.action.fingo-brain" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSUserActivityTypes:7 string com.fingenda.app.action.market" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSUserActivityTypes:8 string com.fingenda.app.action.voice-add" "$APP_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :NSUserActivityTypes:9 string com.fingenda.app.action.receipt-scan" "$APP_PLIST"
 
       - name: Install CocoaPods dependencies
         script: |
