@@ -40039,7 +40039,7 @@
             // (Eski badgesDef bu alandan kaldırıldı ve script sonuna taşındı)
 
             // --- 3D KART DETAYINI AÇMA FONKSİYONU ---
-            window.openBadgeDetail = function (badgeId) {
+            window.openBadgeDetail = async function (badgeId) {
                 const badge = badgesDef.find(b => b.id === badgeId);
                 if (!badge) return;
 
@@ -40112,7 +40112,7 @@
 
             // --- GÜNCELLENMİŞ 3D ROZET İNCELEME (PREMIUM EFFECT) ---
             // PATCH: HEDEF-3 - Badge date fix with meta storage
-            window.openBadgeDetail = function (badgeId) {
+            window.openBadgeDetail = async function (badgeId) {
                 const badge = badgesDef.find(b => b.id === badgeId);
                 if (!badge) return;
 
@@ -44465,7 +44465,7 @@ KULLANICI NOTU
             }
 
             // --- YENİ NESİL 3D ROZET İNCELEME (LAG-FREE) ---
-            window.openBadgeDetail = function (badgeId) {
+            window.openBadgeDetail = async function (badgeId) {
                 const badge = badgesDef.find(b => b.id === badgeId);
                 if (!badge) return;
 
@@ -45709,6 +45709,22 @@ KULLANICI NOTU
                 const badgeImg = card.querySelector('.badge-3d-img');
 
                 // Durum Değişkenleri
+                const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+                const supportsOrientation = typeof window.DeviceOrientationEvent !== 'undefined';
+                const requiresMotionPermission = supportsOrientation && typeof window.DeviceOrientationEvent.requestPermission === 'function';
+                const hintRow = modal.querySelector('.mt-8 span');
+                let motionListenerActive = false;
+                let orientationBaseline = null;
+
+                function updateTiltHint(text) {
+                    if (hintRow) hintRow.textContent = text;
+                }
+
+                updateTiltHint(supportsOrientation && hasTouch && !prefersReducedMotion
+                    ? 'Telefonu Eğ veya Sürükle'
+                    : 'Rozeti İncelemek İçin Sürükle');
+
                 let state = {
                     mouseX: 0, mouseY: 0,      // Hedef (Mouse/Gyro)
                     currentX: 0, currentY: 0,  // Mevcut (Animasyon için)
@@ -45753,6 +45769,7 @@ KULLANICI NOTU
                 }
 
                 // Döngüyü başlat
+                state.limits = prefersReducedMotion ? 10 : 18;
                 requestAnimationFrame(animate);
 
                 // 2. Olay Dinleyicileri (Sadece hedef değerleri günceller)
@@ -45771,12 +45788,33 @@ KULLANICI NOTU
                     state.mouseY = 0;
                 }
 
+                function handleTouchMove(e) {
+                    if (!card || !e.touches || !e.touches[0]) return;
+                    const rect = card.getBoundingClientRect();
+                    const x = (e.touches[0].clientX - rect.left - rect.width / 2) / (rect.width / 2);
+                    const y = (e.touches[0].clientY - rect.top - rect.height / 2) / (rect.height / 2);
+                    state.mouseX = Math.max(-1, Math.min(1, x));
+                    state.mouseY = Math.max(-1, Math.min(1, y));
+                }
+
                 // Mobil Jiroskop
                 function handleOrientation(e) {
+                    if (prefersReducedMotion) return;
+                    if (typeof e.gamma !== 'number' || typeof e.beta !== 'number') return;
+
+                    if (!orientationBaseline) {
+                        orientationBaseline = {
+                            gamma: e.gamma,
+                            beta: e.beta
+                        };
+                    }
+
                     // Değerleri normalize et ve sınırla (-1 ile 1 arası)
                     let x = e.gamma / 45; // Sağa sola
                     let y = e.beta / 45;  // Öne arkaya
 
+                    x = (e.gamma - orientationBaseline.gamma) / 30;
+                    y = (e.beta - orientationBaseline.beta) / 38;
                     if (x > 1) x = 1; if (x < -1) x = -1;
                     if (y > 1) y = 1; if (y < -1) y = -1;
 
@@ -45784,29 +45822,66 @@ KULLANICI NOTU
                     state.mouseY = y;
                 }
 
+                async function enableMotionTilt() {
+                    if (!supportsOrientation || !hasTouch || prefersReducedMotion) {
+                        updateTiltHint('Rozeti İncelemek İçin Sürükle');
+                        return false;
+                    }
+
+                    try {
+                        if (requiresMotionPermission) {
+                            const permissionState = await window.DeviceOrientationEvent.requestPermission();
+                            if (permissionState !== 'granted') {
+                                updateTiltHint('Rozeti İncelemek İçin Sürükle');
+                                return false;
+                            }
+                        }
+
+                        orientationBaseline = null;
+                        window.addEventListener('deviceorientation', handleOrientation, { passive: true });
+                        motionListenerActive = true;
+                        updateTiltHint('Telefonu Hafifçe Eğerek İncele');
+                        return true;
+                    } catch (error) {
+                        console.log('[BADGE MOTION] Gyroscope unavailable:', error);
+                        updateTiltHint('Rozeti İncelemek İçin Sürükle');
+                        return false;
+                    }
+                }
+
                 // Eventleri Ekle
                 card.addEventListener('mousemove', handleMouseMove);
                 card.addEventListener('mouseleave', handleMouseLeave);
+                card.addEventListener('touchstart', handleTouchMove, { passive: true });
+                card.addEventListener('touchmove', handleTouchMove, { passive: true });
+                card.addEventListener('touchend', handleMouseLeave, { passive: true });
+                card.addEventListener('touchcancel', handleMouseLeave, { passive: true });
 
                 // Mobil destek kontrolü
-                if (window.DeviceOrientationEvent && 'ontouchstart' in window) {
-                    window.addEventListener('deviceorientation', handleOrientation);
-                }
+                enableMotionTilt();
 
                 // 3. Temizlik Fonksiyonu (Modal kapandığında çalışır)
                 window.cleanupBadgeDetail = function () {
                     state.isRunning = false; // Döngüyü durdur
                     card.removeEventListener('mousemove', handleMouseMove);
                     card.removeEventListener('mouseleave', handleMouseLeave);
-                    window.removeEventListener('deviceorientation', handleOrientation);
+                    card.removeEventListener('touchstart', handleTouchMove);
+                    card.removeEventListener('touchmove', handleTouchMove);
+                    card.removeEventListener('touchend', handleMouseLeave);
+                    card.removeEventListener('touchcancel', handleMouseLeave);
+                    if (motionListenerActive) {
+                        window.removeEventListener('deviceorientation', handleOrientation);
+                    }
+                    orientationBaseline = null;
                     modal.classList.add('hidden');
                 };
 
                 // Kapatma butonunu güncelle
-                const closeBtn = modal.querySelector('button');
-                if (closeBtn) {
-                    closeBtn.onclick = window.cleanupBadgeDetail;
-                }
+                modal.querySelectorAll('button').forEach((button, index) => {
+                    if (index < 2) {
+                        button.onclick = window.cleanupBadgeDetail;
+                    }
+                });
             };
 
             /* --- GELİŞMİŞ WALLET SİSTEMİ (PRO) --- */
