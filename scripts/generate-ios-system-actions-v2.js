@@ -176,6 +176,7 @@ private enum FingendaSystemAction: String, CaseIterable {
     }
 }
 
+/*
 @available(iOS 17.0, *)
 private protocol FingendaShortcutIntent: AppIntent {
     var action: FingendaSystemAction { get }
@@ -398,7 +399,7 @@ struct FingendaShortcutsProvider: AppShortcutsProvider {
         ]
     }
 }
-
+*/
 extension AppDelegate {
     fileprivate func fingendaConfigureSystemActions(application: UIApplication, launchOptions: [UIApplication.LaunchOptionsKey: Any]?) {
         application.shortcutItems = FingendaSystemAction.quickActionItems
@@ -423,7 +424,6 @@ extension AppDelegate {
         FingendaSystemAction.allCases.forEach { action in
             let activity = NSUserActivity(activityType: action.activityType)
             activity.title = action.shortcutTitle
-            activity.suggestedInvocationPhrase = action.invocationPhrase
             activity.isEligibleForSearch = true
             activity.isEligibleForPrediction = true
             activity.userInfo = ["fingendaURL": action.deepLink]
@@ -487,21 +487,6 @@ function upsertMarkedBlock(source, startMarker, endMarker, block) {
     return `${source.trimEnd()}\n\n${block.trim()}\n`;
 }
 
-function ensureImport(source, moduleName) {
-    if (source.includes(`import ${moduleName}`)) {
-        return source;
-    }
-
-    const importMatches = [...source.matchAll(/^import\s+[A-Za-z0-9_]+\s*$/gm)];
-    if (!importMatches.length) {
-        return `import ${moduleName}\n${source}`;
-    }
-
-    const lastImport = importMatches[importMatches.length - 1];
-    const insertIndex = lastImport.index + lastImport[0].length;
-    return `${source.slice(0, insertIndex)}\nimport ${moduleName}${source.slice(insertIndex)}`;
-}
-
 function patchDidFinishLaunching(source) {
     const pattern = /func application\(\s*_ application: UIApplication,\s*didFinishLaunchingWithOptions launchOptions: \[UIApplication\.LaunchOptionsKey: Any\]\?\)\s*-> Bool \{([\s\S]*?)return true(\s*\n\s*\})/m;
 
@@ -543,7 +528,6 @@ if (!fs.existsSync(APP_DELEGATE)) {
 }
 
 let source = fs.readFileSync(APP_DELEGATE, 'utf8');
-source = ensureImport(source, 'AppIntents');
 source = patchDidFinishLaunching(source);
 source = patchContinueUserActivity(source);
 source = upsertMarkedBlock(source, START_MARKER, END_MARKER, extensionBlock);
