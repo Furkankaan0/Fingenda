@@ -82479,5 +82479,186 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         bottom: max(12px, env(safe-area-inset-bottom, 0px)) !important;
     }
 </style>
+<script>
+    (function () {
+        const isNativeRuntime = () => !!window.Capacitor?.isNativePlatform?.();
+        const parseJSON = (raw) => {
+            if (!raw) return null;
+            try { return JSON.parse(raw); } catch (e) { return null; }
+        };
+
+        const hasVerifiedPremiumEvidence = () => {
+            const cacheData = parseJSON(localStorage.getItem('premium_cache'));
+            if (cacheData?.isPremium === true) return true;
+
+            const entitlement = parseJSON(localStorage.getItem('premium_entitlement'));
+            if (!entitlement) return false;
+
+            return !entitlement.expiresAt || new Date(entitlement.expiresAt) > new Date();
+        };
+
+        const writeUserStatusValue = (value) => {
+            try { userStatus = value; } catch (e) { }
+            window.userStatus = value;
+        };
+
+        const syncFreePremiumState = async () => {
+            writeUserStatusValue('free');
+
+            try {
+                await Promise.all([
+                    AppStorage.set('user_status', 'free'),
+                    AppStorage.set('user_membership_status', 'free'),
+                    AppStorage.set('premium', 'false')
+                ]);
+            } catch (e) { }
+
+            localStorage.setItem('user_status', 'free');
+            localStorage.setItem('user_membership_status', 'free');
+            localStorage.setItem('premium', 'false');
+            window.__premiumReady = Promise.resolve(false);
+
+            if (window.PremiumManager) {
+                window.PremiumManager.isPremium = false;
+            }
+
+            try { window.updateUserPlanBadge?.(); } catch (e) { }
+            try { window.refreshPremiumLocks?.(); } catch (e) { }
+            try { window.updateProfileUI?.(window.currentUserName, window.currentUserTitle, window.currentUserAvatar); } catch (e) { }
+        };
+
+        window.hydratePremiumState = async function hydratePremiumStateSafe() {
+            const [asUserStatus, asMembership, asPremiumFlag, asPremiumCache] = await Promise.all([
+                AppStorage.get('user_status'),
+                AppStorage.get('user_membership_status'),
+                AppStorage.get('premium'),
+                AppStorage.get('premium_cache')
+            ]);
+
+            const cacheData = parseJSON(asPremiumCache || localStorage.getItem('premium_cache'));
+            const entitlement = parseJSON(localStorage.getItem('premium_entitlement'));
+            let isPremium = !!cacheData?.isPremium;
+
+            if (!isPremium && entitlement) {
+                isPremium = !entitlement.expiresAt || new Date(entitlement.expiresAt) > new Date();
+            }
+
+            if (!isPremium && !isNativeRuntime()) {
+                const legacyCandidates = [
+                    asMembership,
+                    asUserStatus,
+                    localStorage.getItem('user_membership_status'),
+                    localStorage.getItem('user_status')
+                ].filter(Boolean);
+
+                isPremium = legacyCandidates.some((value) => value === 'pro' || value === 'premium');
+
+                if (!isPremium) {
+                    const premiumFlag = asPremiumFlag || localStorage.getItem('premium');
+                    isPremium = premiumFlag === 'true';
+                }
+            }
+
+            if (isPremium) {
+                writeUserStatusValue('pro');
+                if (window.PremiumManager) window.PremiumManager.isPremium = true;
+                window.__premiumReady = Promise.resolve(true);
+            } else {
+                await syncFreePremiumState();
+            }
+
+            return isPremium;
+        };
+
+        window.buyPremium = function openPremiumPaywallSafe() {
+            const legacyModal = document.getElementById('premium-modal');
+            if (legacyModal) legacyModal.classList.add('hidden');
+
+            if (window.PremiumManager?.isPremium) return;
+
+            if (window.PremiumManager?.showPaywall) {
+                window.PremiumManager.showPaywall('premium_upgrade');
+                return;
+            }
+
+            window.alertMessage?.('Premium', 'Premium planlari acilirken kisa bir sorun olustu. Lutfen tekrar deneyin.', 'blue');
+        };
+
+        window.upgradeToPro = async function upgradeToProSafe() {
+            window.buyPremium();
+        };
+
+        const patchPremiumManager = () => {
+            if (!window.PremiumManager || window.PremiumManager.__freeFlowPatched) return;
+
+            const premiumManager = window.PremiumManager;
+            premiumManager.__freeFlowPatched = true;
+
+            const originalLoadCachedEntitlement = typeof premiumManager._loadCachedEntitlement === 'function'
+                ? premiumManager._loadCachedEntitlement.bind(premiumManager)
+                : null;
+            premiumManager._loadCachedEntitlement = function loadCachedEntitlementSafe() {
+                const cacheData = parseJSON(localStorage.getItem('premium_cache'));
+                if (cacheData?.isPremium === true) {
+                    this._entitlementCache = cacheData;
+                    this.isPremium = true;
+                    return;
+                }
+
+                const entitlement = parseJSON(localStorage.getItem('premium_entitlement'));
+                if (entitlement && (!entitlement.expiresAt || new Date(entitlement.expiresAt) > new Date())) {
+                    this.isPremium = true;
+                    return;
+                }
+
+                if (!isNativeRuntime() && originalLoadCachedEntitlement) {
+                    originalLoadCachedEntitlement();
+                    return;
+                }
+
+                this.isPremium = false;
+            };
+
+            const originalCloseModal = typeof premiumManager.closeModal === 'function'
+                ? premiumManager.closeModal.bind(premiumManager)
+                : null;
+            premiumManager.closeModal = function closeModalSafe() {
+                if (originalCloseModal) originalCloseModal();
+
+                if (!this.isPremium && isNativeRuntime() && !hasVerifiedPremiumEvidence()) {
+                    syncFreePremiumState();
+                }
+            };
+
+            const originalRefreshEntitlement = typeof premiumManager.refreshEntitlement === 'function'
+                ? premiumManager.refreshEntitlement.bind(premiumManager)
+                : null;
+            premiumManager.refreshEntitlement = async function refreshEntitlementSafe() {
+                if (originalRefreshEntitlement) {
+                    await originalRefreshEntitlement();
+                }
+
+                if (!this.isPremium && isNativeRuntime() && !hasVerifiedPremiumEvidence()) {
+                    await syncFreePremiumState();
+                }
+
+                return this.isPremium;
+            };
+        };
+
+        const applyPremiumFlowFixes = () => {
+            patchPremiumManager();
+            window.hydratePremiumState?.();
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', applyPremiumFlowFixes);
+        } else {
+            applyPremiumFlowFixes();
+        }
+
+        setTimeout(applyPremiumFlowFixes, 0);
+    })();
+</script>
 </body>
 </html>
