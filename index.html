@@ -16,6 +16,8 @@
     <link rel="apple-touch-icon" sizes="180x180" href="logo-180.png">
     <link rel="apple-touch-icon" sizes="152x152" href="logo-152.png">
     <link rel="apple-touch-icon" sizes="120x120" href="logo-120.png">
+    <link rel="stylesheet" href="fingenda-p2-ecosystem.css">
+    <link rel="stylesheet" href="fingenda-p0-submission.css">
     <style>
         /* ═══════════════════════════════════════════════════════════════
        iOS OPTIMIZATIONS
@@ -31236,16 +31238,29 @@
                                         class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 ml-2"
                                         data-i18n="transaction.category">Kategori</label>
                                     <div class="relative">
+                                        <button type="button" id="transaction-category-trigger"
+                                            onclick="window.openTransactionCategorySheet()"
+                                            class="w-full text-left transition-all duration-200">
+                                            <span class="transaction-category-trigger__copy">
+                                                <span id="transaction-category-trigger-icon"
+                                                    class="transaction-category-trigger__icon" aria-hidden="true">↘</span>
+                                                <span class="transaction-category-trigger__text">
+                                                    <span id="transaction-category-trigger-label"
+                                                        class="transaction-category-trigger__label">Kategori seç</span>
+                                                    <span id="transaction-category-trigger-meta"
+                                                        class="transaction-category-trigger__meta">Gider kategorileri</span>
+                                                </span>
+                                            </span>
+                                            <span class="transaction-category-trigger__chevron" aria-hidden="true">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 9l-7 7-7-7"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
                                         <select id="input-category" onchange="window.checkInvestmentInput()"
-                                            class="w-full pl-4 pr-10 py-4 h-[52px] rounded-2xl text-sm font-bold bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 focus:ring-2 focus:ring-indigo-500/20 outline-none appearance-none transition-all text-gray-800 dark:text-white cursor-pointer truncate">
+                                            class="hidden" tabindex="-1" aria-hidden="true">
                                         </select>
-                                        <div
-                                            class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M19 9l-7 7-7-7"></path>
-                                            </svg>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -82379,6 +82394,1245 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
 
     })();
 </script>
+<div id="transaction-category-sheet" class="fixed inset-0 z-[140] hidden" aria-hidden="true">
+    <button type="button" class="transaction-category-sheet__backdrop" data-close-category-sheet="true"
+        aria-label="Kategori seçimini kapat"></button>
+    <div class="transaction-category-sheet__panel" role="dialog" aria-modal="true"
+        aria-labelledby="transaction-category-sheet-title">
+        <div class="transaction-category-sheet__grabber" aria-hidden="true"></div>
+        <div class="transaction-category-sheet__header">
+            <div class="transaction-category-sheet__headline">
+                <p id="transaction-category-sheet-kicker" class="transaction-category-sheet__kicker">Kategori</p>
+                <h3 id="transaction-category-sheet-title" class="transaction-category-sheet__title">Kategori seç</h3>
+                <p id="transaction-category-sheet-subtitle" class="transaction-category-sheet__subtitle">İşlemine en
+                    uygun kategoriyi seç.</p>
+            </div>
+            <button type="button" id="transaction-category-sheet-close" class="transaction-category-sheet__close"
+                data-close-category-sheet="true" aria-label="Kapat">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+        </div>
+        <div class="transaction-category-sheet__search-wrap">
+            <svg class="transaction-category-sheet__search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <input type="text" id="transaction-category-search" class="transaction-category-sheet__search"
+                placeholder="Kategori ara">
+        </div>
+        <div id="transaction-category-recent-block" class="transaction-category-sheet__recent-block hidden">
+            <div class="transaction-category-sheet__section-header">
+                <span id="transaction-category-recent-title">Son kullanılanlar</span>
+            </div>
+            <div id="transaction-category-recent" class="transaction-category-sheet__recent"></div>
+        </div>
+        <div class="transaction-category-sheet__section-header">
+            <span id="transaction-category-all-title">Tüm kategoriler</span>
+        </div>
+        <div id="transaction-category-list" class="transaction-category-sheet__list"></div>
+        <button type="button" id="transaction-category-manage" class="transaction-category-sheet__manage-link">
+            Kategorileri düzenle
+        </button>
+    </div>
+</div>
+<style id="p1-apple-polish-sprint">
+    html:not(.dark) {
+        --p1-text-secondary: #5f6c7e;
+        --p1-text-muted: #738198;
+        --p1-chip-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+        --p1-sheet-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.98) 100%);
+        --p1-sheet-border: rgba(148, 163, 184, 0.18);
+    }
+
+    html.dark {
+        --p1-text-secondary: #bcc8dc;
+        --p1-text-muted: #96a4ba;
+        --p1-chip-shadow: 0 12px 26px rgba(2, 6, 23, 0.38);
+        --p1-sheet-surface: linear-gradient(180deg, rgba(15, 23, 42, 0.96) 0%, rgba(10, 16, 30, 0.98) 100%);
+        --p1-sheet-border: rgba(148, 163, 184, 0.16);
+    }
+
+    #screen-notes,
+    #screen-history,
+    #screen-goals,
+    #screen-doviz,
+    #screen-wallet,
+    #screen-add {
+        padding-top: 0.3rem;
+    }
+
+    #screen-notes>div:first-child,
+    #screen-add>div:first-child {
+        padding: 1rem 1.05rem !important;
+        margin-bottom: 0.95rem !important;
+        border-radius: 26px !important;
+    }
+
+    #screen-notes>div:first-child .flex.items-center.justify-between,
+    #screen-history>div:first-child,
+    #screen-doviz>div:first-child,
+    #screen-wallet>.px-5.pt-4.pb-2>.flex.items-center.justify-between.mb-5 {
+        gap: 0.75rem;
+    }
+
+    #screen-notes>div:first-child h3,
+    #screen-add>div:first-child h3,
+    #screen-history>div:first-child h3,
+    #screen-doviz>div:first-child h3,
+    #screen-goals .goal-hero__title,
+    #screen-wallet>.px-5.pt-4.pb-2 h2 {
+        letter-spacing: -0.035em;
+    }
+
+    #screen-notes>div:first-child h3 {
+        font-size: 1.45rem !important;
+    }
+
+    #screen-notes>div:first-child p,
+    #screen-add>div:first-child p,
+    #screen-goals .goal-hero__subtitle,
+    #screen-goals .goal-hero__eyebrow,
+    #screen-goals .goal-focus__track,
+    #screen-goals .goal-focus__eyebrow,
+    #screen-wallet>.px-5.pt-4.pb-2 p,
+    #screen-add label,
+    #screen-add #currency-hint,
+    #screen-add #savings-options span,
+    #screen-add #transaction-feedback p,
+    #screen-add #ocr-progress,
+    #screen-history .text-gray-400,
+    #screen-history .text-gray-500,
+    #screen-doviz .text-gray-400,
+    #screen-doviz .text-gray-500,
+    .insight-desc {
+        color: var(--p1-text-secondary) !important;
+    }
+
+    #screen-notes>div:first-child .w-12.h-12 {
+        width: 2.625rem !important;
+        height: 2.625rem !important;
+        border-radius: 1rem !important;
+    }
+
+    #screen-notes>div:first-child .mt-4.pt-4 {
+        margin-top: 0.8rem !important;
+        padding-top: 0.8rem !important;
+        gap: 0.625rem !important;
+    }
+
+    #screen-notes>div:first-child .flex-1.text-center {
+        padding: 0.65rem 0.45rem !important;
+        border-radius: 1rem !important;
+    }
+
+    #screen-notes>div:first-child .text-lg.font-black {
+        font-size: 1rem !important;
+    }
+
+    #screen-notes>div:first-child p[class*='text-[10px]'] {
+        font-size: 0.68rem !important;
+        letter-spacing: 0.12em !important;
+        color: var(--p1-text-muted) !important;
+    }
+
+    #screen-notes .notes-filter-btn {
+        min-height: 2.35rem;
+        border-radius: 999px !important;
+        padding: 0.55rem 0.95rem !important;
+        font-size: 0.76rem !important;
+        letter-spacing: -0.01em;
+    }
+
+    #screen-history>div:first-child,
+    #screen-doviz>div:first-child {
+        padding: 0.15rem 0.15rem 0.25rem !important;
+        align-items: center !important;
+    }
+
+    #screen-history>div:first-child h3,
+    #screen-doviz>div:first-child h3 {
+        font-size: 1.55rem !important;
+        font-weight: 800 !important;
+    }
+
+    #screen-history>div:first-child button {
+        min-height: 2.45rem;
+        border-radius: 1rem !important;
+        padding: 0.55rem 0.82rem !important;
+        font-size: 0.74rem !important;
+        letter-spacing: -0.01em;
+    }
+
+    #screen-history #history-search {
+        min-height: 3.15rem;
+        padding-left: 2.9rem !important;
+        font-weight: 600 !important;
+    }
+
+    #screen-history #history-search::placeholder {
+        color: var(--p1-text-muted) !important;
+    }
+
+    #screen-goals .goal-hero {
+        padding: 1.1rem !important;
+        border-radius: 30px !important;
+    }
+
+    #screen-goals .goal-hero__top {
+        gap: 0.85rem !important;
+        align-items: flex-start !important;
+    }
+
+    #screen-goals .goal-hero__title {
+        font-size: 1.7rem !important;
+        line-height: 1.02 !important;
+    }
+
+    #screen-goals .goal-hero__subtitle {
+        font-size: 0.88rem !important;
+    }
+
+    #screen-goals .goal-hero__panels {
+        margin-top: 0.9rem !important;
+        gap: 0.8rem !important;
+    }
+
+    #screen-goals .goal-hero__cta {
+        min-height: auto !important;
+        padding: 0.72rem 0.96rem !important;
+        border-radius: 18px !important;
+    }
+
+    #screen-goals .goal-focus__percent,
+    #screen-goals .goal-card-v2__chip,
+    #screen-goals .goal-card-v2__percent {
+        min-height: 1.75rem !important;
+        padding: 0.32rem 0.72rem !important;
+        border-radius: 999px !important;
+        font-size: 0.76rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.02em;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.28rem !important;
+    }
+
+    #screen-doviz .glass-card {
+        padding: 1rem 1rem 0.95rem !important;
+        border-color: var(--p1-sheet-border) !important;
+    }
+
+    #screen-doviz [id^="rate-"] {
+        min-width: 4.8rem;
+        min-height: 1.82rem;
+        padding: 0.34rem 0.72rem !important;
+        border-radius: 999px !important;
+        font-size: 0.78rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.02em;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.28rem !important;
+        white-space: nowrap;
+        box-shadow: var(--p1-chip-shadow);
+    }
+
+    #screen-doviz [id^="val-"] {
+        letter-spacing: -0.025em;
+    }
+
+    #screen-doviz p[class*='text-[9px]'],
+    #screen-doviz p[class*='text-[10px]'],
+    #screen-doviz span[class*='text-[9px]'],
+    #screen-doviz span[class*='text-[10px]'],
+    #screen-doviz p.text-xs {
+        color: var(--p1-text-secondary) !important;
+    }
+
+    #screen-doviz .space-y-4>div:first-child span[class*='text-[10px]'] {
+        min-height: 1.6rem;
+        padding: 0.28rem 0.58rem !important;
+        border-radius: 999px !important;
+        font-size: 0.72rem !important;
+        font-weight: 800 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.26rem;
+    }
+
+    #screen-wallet>.px-5.pt-4.pb-2 {
+        padding-top: 1rem !important;
+        padding-bottom: 0.45rem !important;
+    }
+
+    #screen-wallet>.px-5.pt-4.pb-2>.flex.items-center.justify-between.mb-5 {
+        margin-bottom: 0.9rem !important;
+    }
+
+    #screen-wallet>.px-5.pt-4.pb-2 h2 {
+        font-size: 1.8rem !important;
+        line-height: 1.02 !important;
+    }
+
+    #screen-wallet>.px-5.pt-4.pb-2 .w-12.h-12 {
+        width: 2.75rem !important;
+        height: 2.75rem !important;
+    }
+
+    #screen-wallet>.px-4.space-y-5 {
+        padding-top: 0.25rem !important;
+    }
+
+    #screen-wallet .fb-chip-v2 {
+        min-height: 1.74rem;
+        padding: 0.28rem 0.68rem !important;
+        font-size: 0.74rem !important;
+        font-weight: 800 !important;
+        border-radius: 999px !important;
+        box-shadow: var(--p1-chip-shadow);
+    }
+
+    #screen-add>div:first-child h3 {
+        font-size: 1.85rem !important;
+        line-height: 1.04 !important;
+    }
+
+    #screen-add>div:first-child p {
+        font-size: 0.8rem !important;
+    }
+
+    #screen-add .mb-6.animate-fade-in {
+        margin-bottom: 1rem !important;
+        padding-inline: 0 !important;
+    }
+
+    #screen-add .grid.grid-cols-2.gap-4 {
+        gap: 0.75rem !important;
+    }
+
+    #screen-add .animate-fade-in button {
+        min-height: 6.5rem !important;
+        padding: 0.95rem 0.8rem !important;
+        border-radius: 22px !important;
+    }
+
+    #screen-add .animate-fade-in button span.text-3xl {
+        font-size: 2rem !important;
+    }
+
+    #screen-add .px-6.pb-8.space-y-6 {
+        padding: 1.25rem 1.1rem 1.65rem !important;
+        gap: 1.15rem !important;
+    }
+
+    #screen-add #transaction-feedback h4 {
+        letter-spacing: -0.01em;
+    }
+
+    #screen-add #input-category {
+        display: none !important;
+    }
+
+    #transaction-category-trigger {
+        min-height: 54px;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.9rem;
+        padding: 0.72rem 0.9rem;
+        border-radius: 1.15rem;
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        background: rgba(248, 250, 252, 0.82);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+    }
+
+    html.dark #transaction-category-trigger {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(148, 163, 184, 0.14);
+        box-shadow: 0 14px 32px rgba(2, 6, 23, 0.26);
+    }
+
+    #transaction-category-trigger[data-selected="true"] {
+        border-color: rgba(99, 102, 241, 0.24);
+        background: rgba(255, 255, 255, 0.94);
+    }
+
+    html.dark #transaction-category-trigger[data-selected="true"] {
+        background: rgba(15, 23, 42, 0.86);
+        border-color: rgba(129, 140, 248, 0.28);
+    }
+
+    #transaction-category-trigger:active {
+        transform: scale(0.992);
+    }
+
+    #transaction-category-trigger:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.16);
+    }
+
+    .transaction-category-trigger__copy {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.78rem;
+    }
+
+    .transaction-category-trigger__icon {
+        flex: 0 0 2.25rem;
+        width: 2.25rem;
+        height: 2.25rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.14), rgba(168, 85, 247, 0.08));
+        color: #4f46e5;
+        font-size: 1rem;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    }
+
+    html.dark .transaction-category-trigger__icon {
+        background: linear-gradient(135deg, rgba(129, 140, 248, 0.22), rgba(168, 85, 247, 0.12));
+        color: #c7d2fe;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .transaction-category-trigger__text {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.14rem;
+    }
+
+    .transaction-category-trigger__label {
+        font-size: 0.95rem;
+        font-weight: 800;
+        line-height: 1.15;
+        color: #0f172a;
+        letter-spacing: -0.015em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    html.dark .transaction-category-trigger__label {
+        color: #f8fafc;
+    }
+
+    .transaction-category-trigger__meta {
+        font-size: 0.74rem;
+        font-weight: 700;
+        color: var(--p1-text-secondary);
+        letter-spacing: -0.01em;
+    }
+
+    .transaction-category-trigger__chevron {
+        flex: 0 0 auto;
+        color: var(--p1-text-muted);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    body.category-sheet-open,
+    html.category-sheet-open {
+        overflow: hidden !important;
+    }
+
+    #transaction-category-sheet {
+        display: flex;
+        align-items: flex-end;
+        justify-content: stretch;
+    }
+
+    .transaction-category-sheet__backdrop {
+        position: absolute;
+        inset: 0;
+        border: 0;
+        padding: 0;
+        background: rgba(15, 23, 42, 0.42);
+        opacity: 0;
+        transition: opacity 0.24s ease;
+    }
+
+    .transaction-category-sheet__panel {
+        position: relative;
+        width: 100%;
+        max-height: min(78vh, 700px);
+        padding: 0.75rem 1rem calc(1.15rem + env(safe-area-inset-bottom, 0px));
+        border-radius: 30px 30px 0 0;
+        border: 1px solid var(--p1-sheet-border);
+        border-bottom: none;
+        background: var(--p1-sheet-surface);
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+        box-shadow: 0 -24px 64px rgba(15, 23, 42, 0.18);
+        transform: translateY(108%);
+        transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+        overflow: hidden;
+    }
+
+    html.dark .transaction-category-sheet__panel {
+        box-shadow: 0 -30px 74px rgba(2, 6, 23, 0.55);
+    }
+
+    #transaction-category-sheet.is-open .transaction-category-sheet__backdrop {
+        opacity: 1;
+    }
+
+    #transaction-category-sheet.is-open .transaction-category-sheet__panel {
+        transform: translateY(0);
+    }
+
+    .transaction-category-sheet__grabber {
+        width: 2.8rem;
+        height: 0.32rem;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.4);
+        margin: 0 auto 0.15rem;
+    }
+
+    .transaction-category-sheet__header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.85rem;
+    }
+
+    .transaction-category-sheet__headline {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+
+    .transaction-category-sheet__kicker {
+        margin: 0;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--p1-text-muted);
+    }
+
+    .transaction-category-sheet__title {
+        margin: 0;
+        font-size: 1.45rem;
+        font-weight: 800;
+        letter-spacing: -0.035em;
+        color: #0f172a;
+    }
+
+    html.dark .transaction-category-sheet__title {
+        color: #f8fafc;
+    }
+
+    .transaction-category-sheet__subtitle {
+        margin: 0;
+        font-size: 0.84rem;
+        line-height: 1.45;
+        color: var(--p1-text-secondary);
+    }
+
+    .transaction-category-sheet__close {
+        flex: 0 0 auto;
+        width: 2.35rem;
+        height: 2.35rem;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        background: rgba(255, 255, 255, 0.8);
+        color: #475569;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+    }
+
+    html.dark .transaction-category-sheet__close {
+        background: rgba(255, 255, 255, 0.06);
+        color: #cbd5e1;
+        border-color: rgba(148, 163, 184, 0.14);
+        box-shadow: none;
+    }
+
+    .transaction-category-sheet__search-wrap {
+        position: relative;
+    }
+
+    .transaction-category-sheet__search-icon {
+        position: absolute;
+        left: 0.95rem;
+        top: 50%;
+        width: 1rem;
+        height: 1rem;
+        color: var(--p1-text-muted);
+        transform: translateY(-50%);
+        pointer-events: none;
+    }
+
+    .transaction-category-sheet__search {
+        width: 100%;
+        min-height: 2.95rem;
+        border-radius: 1rem;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        background: rgba(248, 250, 252, 0.9);
+        color: #0f172a;
+        padding: 0.8rem 0.95rem 0.8rem 2.85rem;
+        font-size: 0.94rem;
+        font-weight: 600;
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    }
+
+    html.dark .transaction-category-sheet__search {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(148, 163, 184, 0.16);
+        color: #f8fafc;
+    }
+
+    .transaction-category-sheet__search::placeholder {
+        color: var(--p1-text-muted);
+    }
+
+    .transaction-category-sheet__search:focus {
+        border-color: rgba(99, 102, 241, 0.28);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+    }
+
+    .transaction-category-sheet__section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-top: 0.15rem;
+    }
+
+    .transaction-category-sheet__section-header span {
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+        color: var(--p1-text-muted);
+    }
+
+    .transaction-category-sheet__recent {
+        display: flex;
+        gap: 0.55rem;
+        overflow-x: auto;
+        padding-bottom: 0.15rem;
+        scrollbar-width: none;
+    }
+
+    .transaction-category-sheet__recent::-webkit-scrollbar {
+        display: none;
+    }
+
+    .transaction-category-sheet__recent-pill {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        min-height: 2.1rem;
+        padding: 0.46rem 0.72rem;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.16);
+        background: rgba(255, 255, 255, 0.88);
+        color: #0f172a;
+        font-size: 0.8rem;
+        font-weight: 700;
+        box-shadow: var(--p1-chip-shadow);
+        white-space: nowrap;
+    }
+
+    html.dark .transaction-category-sheet__recent-pill {
+        background: rgba(255, 255, 255, 0.05);
+        color: #f8fafc;
+        box-shadow: none;
+    }
+
+    .transaction-category-sheet__recent-pill.is-selected {
+        border-color: rgba(99, 102, 241, 0.24);
+        color: #4338ca;
+        background: rgba(238, 242, 255, 0.96);
+    }
+
+    html.dark .transaction-category-sheet__recent-pill.is-selected {
+        background: rgba(79, 70, 229, 0.18);
+        color: #e0e7ff;
+    }
+
+    .transaction-category-sheet__list {
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding-right: 0.1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .transaction-category-sheet__option {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.8rem;
+        padding: 0.84rem 0.9rem;
+        border-radius: 1.15rem;
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        background: rgba(255, 255, 255, 0.86);
+        color: inherit;
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.04);
+        transition: transform 0.18s ease, border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    html.dark .transaction-category-sheet__option {
+        background: rgba(255, 255, 255, 0.045);
+        border-color: rgba(148, 163, 184, 0.12);
+        box-shadow: none;
+    }
+
+    .transaction-category-sheet__option:active {
+        transform: scale(0.992);
+    }
+
+    .transaction-category-sheet__option.is-selected {
+        border-color: rgba(99, 102, 241, 0.26);
+        background: rgba(238, 242, 255, 0.96);
+        box-shadow: 0 14px 28px rgba(99, 102, 241, 0.1);
+    }
+
+    html.dark .transaction-category-sheet__option.is-selected {
+        background: rgba(79, 70, 229, 0.16);
+        border-color: rgba(129, 140, 248, 0.26);
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.28);
+    }
+
+    .transaction-category-sheet__option-main {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.78rem;
+    }
+
+    .transaction-category-sheet__option-icon {
+        flex: 0 0 2.45rem;
+        width: 2.45rem;
+        height: 2.45rem;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.16), rgba(168, 85, 247, 0.08));
+        color: #4338ca;
+        font-size: 1.05rem;
+    }
+
+    html.dark .transaction-category-sheet__option-icon {
+        background: linear-gradient(135deg, rgba(129, 140, 248, 0.22), rgba(168, 85, 247, 0.12));
+        color: #e0e7ff;
+    }
+
+    .transaction-category-sheet__option-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.14rem;
+    }
+
+    .transaction-category-sheet__option-label {
+        font-size: 0.95rem;
+        font-weight: 800;
+        line-height: 1.18;
+        letter-spacing: -0.015em;
+        color: #0f172a;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    html.dark .transaction-category-sheet__option-label {
+        color: #f8fafc;
+    }
+
+    .transaction-category-sheet__option-meta {
+        font-size: 0.76rem;
+        font-weight: 700;
+        color: var(--p1-text-secondary);
+    }
+
+    .transaction-category-sheet__option-check {
+        flex: 0 0 auto;
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        color: transparent;
+        background: rgba(255, 255, 255, 0.8);
+        transition: all 0.18s ease;
+    }
+
+    html.dark .transaction-category-sheet__option-check {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(148, 163, 184, 0.14);
+    }
+
+    .transaction-category-sheet__option.is-selected .transaction-category-sheet__option-check {
+        border-color: rgba(79, 70, 229, 0.22);
+        color: #4338ca;
+        background: rgba(255, 255, 255, 0.98);
+    }
+
+    html.dark .transaction-category-sheet__option.is-selected .transaction-category-sheet__option-check {
+        color: #e0e7ff;
+        background: rgba(15, 23, 42, 0.92);
+        border-color: rgba(129, 140, 248, 0.22);
+    }
+
+    .transaction-category-sheet__empty {
+        padding: 1.2rem 1rem;
+        border-radius: 1.15rem;
+        border: 1px dashed rgba(148, 163, 184, 0.24);
+        text-align: center;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--p1-text-secondary);
+        background: rgba(255, 255, 255, 0.56);
+    }
+
+    html.dark .transaction-category-sheet__empty {
+        background: rgba(255, 255, 255, 0.04);
+    }
+
+    .transaction-category-sheet__manage-link {
+        margin-top: 0.2rem;
+        min-height: 2.8rem;
+        border: 1px solid rgba(148, 163, 184, 0.16);
+        border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.78);
+        color: #4f46e5;
+        font-size: 0.84rem;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        box-shadow: var(--p1-chip-shadow);
+    }
+
+    html.dark .transaction-category-sheet__manage-link {
+        background: rgba(255, 255, 255, 0.05);
+        color: #c7d2fe;
+        box-shadow: none;
+    }
+</style>
+<script id="p1-apple-polish-script">
+    (function enhanceApplePolishP1() {
+        const CATEGORY_PICKER_COPY = {
+            tr: {
+                kicker: 'Kategori',
+                title: 'Kategori seç',
+                subtitleExpense: 'İşlemini hızlıca tamamlamak için gider kategorini seç.',
+                subtitleIncome: 'Gelir girişini hızlandırmak için uygun kategoriyi seç.',
+                placeholder: 'Kategori seç',
+                searchPlaceholder: 'Kategori ara',
+                recent: 'Son kullanılanlar',
+                all: 'Tüm kategoriler',
+                expenseMeta: 'Gider kategorileri',
+                incomeMeta: 'Gelir kategorileri',
+                selectedMeta: 'Dokun ve değiştir',
+                optionMeta: 'Tek dokunuşla seç',
+                empty: 'Aramana uygun kategori bulunamadı.',
+                manage: 'Kategorileri düzenle'
+            },
+            en: {
+                kicker: 'Category',
+                title: 'Choose category',
+                subtitleExpense: 'Pick the expense category to complete the entry faster.',
+                subtitleIncome: 'Pick the income category for a quicker, clearer flow.',
+                placeholder: 'Choose category',
+                searchPlaceholder: 'Search category',
+                recent: 'Recent',
+                all: 'All categories',
+                expenseMeta: 'Expense categories',
+                incomeMeta: 'Income categories',
+                selectedMeta: 'Tap to change',
+                optionMeta: 'Select with one tap',
+                empty: 'No categories match your search.',
+                manage: 'Edit categories'
+            }
+        };
+
+        function getPickerCopy() {
+            const lang = String(window.FINGENDA_LANG || 'tr').toLowerCase();
+            return CATEGORY_PICKER_COPY[lang.startsWith('en') ? 'en' : 'tr'];
+        }
+
+        function getActiveTransactionType() {
+            return typeof currentType !== 'undefined' ? currentType : 'expense';
+        }
+
+        function getAvailableCategories() {
+            try {
+                const type = getActiveTransactionType();
+                return typeof categories !== 'undefined' && Array.isArray(categories[type]) ? categories[type].slice() : [];
+            } catch (err) {
+                return [];
+            }
+        }
+
+        function normalizeCategoryText(text) {
+            return String(text || '')
+                .toLocaleLowerCase('tr-TR')
+                .replace(/[^A-Za-zÇĞİÖŞÜçğıöşü0-9\s]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function getCategoryPresentation(category) {
+            const raw = String(category || '').trim();
+            const type = getActiveTransactionType();
+
+            if (!raw) {
+                return { icon: type === 'income' ? '↗' : '↘', label: '', raw: '' };
+            }
+
+            const firstToken = raw.split(/\s+/)[0];
+            const hasPlainTextPrefix = /^[A-Za-zÇĞİÖŞÜçğıöşü0-9]+$/.test(firstToken);
+            let icon = '';
+            let label = raw;
+
+            if (!hasPlainTextPrefix && raw.includes(' ')) {
+                icon = firstToken;
+                label = raw.slice(firstToken.length).trim();
+            }
+
+            if (!icon && typeof window.getSmartIcon === 'function') {
+                try {
+                    const smartIcon = window.getSmartIcon(label, '');
+                    if (smartIcon && smartIcon !== label) icon = smartIcon;
+                } catch (err) {
+                    // no-op
+                }
+            }
+
+            if (!icon) icon = type === 'income' ? '↗' : '↘';
+            return { icon, label, raw };
+        }
+
+        function getRecentCategories() {
+            const availableSet = new Set(getAvailableCategories());
+            if (typeof transactions === 'undefined' || !Array.isArray(transactions)) return [];
+
+            const recent = [];
+            const type = getActiveTransactionType();
+
+            for (let i = transactions.length - 1; i >= 0 && recent.length < 4; i -= 1) {
+                const item = transactions[i];
+                if (!item || item.type !== type || !item.category || !availableSet.has(item.category)) continue;
+                if (!recent.includes(item.category)) recent.push(item.category);
+            }
+
+            return recent;
+        }
+
+        function setCategorySheetCopy() {
+            const copy = getPickerCopy();
+            const type = getActiveTransactionType();
+            const kicker = document.getElementById('transaction-category-sheet-kicker');
+            const title = document.getElementById('transaction-category-sheet-title');
+            const subtitle = document.getElementById('transaction-category-sheet-subtitle');
+            const search = document.getElementById('transaction-category-search');
+            const recentTitle = document.getElementById('transaction-category-recent-title');
+            const allTitle = document.getElementById('transaction-category-all-title');
+            const manage = document.getElementById('transaction-category-manage');
+
+            if (kicker) kicker.textContent = copy.kicker;
+            if (title) title.textContent = copy.title;
+            if (subtitle) subtitle.textContent = type === 'income' ? copy.subtitleIncome : copy.subtitleExpense;
+            if (search) search.placeholder = copy.searchPlaceholder;
+            if (recentTitle) recentTitle.textContent = copy.recent;
+            if (allTitle) allTitle.textContent = copy.all;
+            if (manage) manage.textContent = copy.manage;
+        }
+
+        function createCategoryOptionButton(category) {
+            const copy = getPickerCopy();
+            const select = document.getElementById('input-category');
+            const isSelected = !!select && select.value === category;
+            const presentation = getCategoryPresentation(category);
+            const button = document.createElement('button');
+
+            button.type = 'button';
+            button.className = `transaction-category-sheet__option${isSelected ? ' is-selected' : ''}`;
+            button.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+            button.innerHTML = `
+                <span class="transaction-category-sheet__option-main">
+                    <span class="transaction-category-sheet__option-icon" aria-hidden="true">${presentation.icon}</span>
+                    <span class="transaction-category-sheet__option-copy">
+                        <span class="transaction-category-sheet__option-label">${presentation.label}</span>
+                        <span class="transaction-category-sheet__option-meta">${copy.optionMeta}</span>
+                    </span>
+                </span>
+                <span class="transaction-category-sheet__option-check" aria-hidden="true">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </span>
+            `;
+            button.addEventListener('click', function () {
+                window.selectTransactionCategory(category);
+            });
+            return button;
+        }
+
+        function createRecentCategoryButton(category) {
+            const select = document.getElementById('input-category');
+            const isSelected = !!select && select.value === category;
+            const presentation = getCategoryPresentation(category);
+            const button = document.createElement('button');
+
+            button.type = 'button';
+            button.className = `transaction-category-sheet__recent-pill${isSelected ? ' is-selected' : ''}`;
+            button.innerHTML = `<span aria-hidden="true">${presentation.icon}</span><span>${presentation.label}</span>`;
+            button.addEventListener('click', function () {
+                window.selectTransactionCategory(category);
+            });
+            return button;
+        }
+
+        window.renderTransactionCategorySheet = function () {
+            const list = document.getElementById('transaction-category-list');
+            const recentBlock = document.getElementById('transaction-category-recent-block');
+            const recentContainer = document.getElementById('transaction-category-recent');
+            const search = document.getElementById('transaction-category-search');
+            const copy = getPickerCopy();
+
+            if (!list || !recentBlock || !recentContainer) return;
+
+            setCategorySheetCopy();
+
+            const query = normalizeCategoryText(search ? search.value : '');
+            const categoriesList = getAvailableCategories().filter(function (category) {
+                if (!query) return true;
+                const presentation = getCategoryPresentation(category);
+                return normalizeCategoryText(`${category} ${presentation.label}`).includes(query);
+            });
+
+            const recent = getRecentCategories().filter(function (category) {
+                if (!query) return true;
+                const presentation = getCategoryPresentation(category);
+                return normalizeCategoryText(`${category} ${presentation.label}`).includes(query);
+            });
+
+            recentContainer.innerHTML = '';
+            if (recent.length > 0) {
+                recent.forEach(function (category) {
+                    recentContainer.appendChild(createRecentCategoryButton(category));
+                });
+                recentBlock.classList.remove('hidden');
+            } else {
+                recentBlock.classList.add('hidden');
+            }
+
+            list.innerHTML = '';
+            if (categoriesList.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'transaction-category-sheet__empty';
+                empty.textContent = copy.empty;
+                list.appendChild(empty);
+                return;
+            }
+
+            categoriesList.forEach(function (category) {
+                list.appendChild(createCategoryOptionButton(category));
+            });
+        };
+
+        window.syncTransactionCategoryField = function () {
+            const select = document.getElementById('input-category');
+            const trigger = document.getElementById('transaction-category-trigger');
+            const icon = document.getElementById('transaction-category-trigger-icon');
+            const label = document.getElementById('transaction-category-trigger-label');
+            const meta = document.getElementById('transaction-category-trigger-meta');
+            const copy = getPickerCopy();
+            const type = getActiveTransactionType();
+
+            if (!select || !trigger || !icon || !label || !meta) return;
+
+            if (!select.value && select.options.length > 0) {
+                select.value = select.options[0].value;
+            }
+
+            const hasValue = !!select.value;
+            const presentation = getCategoryPresentation(select.value);
+
+            icon.textContent = presentation.icon || (type === 'income' ? '↗' : '↘');
+            label.textContent = hasValue ? presentation.label : copy.placeholder;
+            meta.textContent = hasValue
+                ? `${type === 'income' ? copy.incomeMeta : copy.expenseMeta} · ${copy.selectedMeta}`
+                : (type === 'income' ? copy.incomeMeta : copy.expenseMeta);
+            trigger.dataset.selected = hasValue ? 'true' : 'false';
+            trigger.setAttribute('aria-label', `${copy.title}: ${hasValue ? presentation.label : copy.placeholder}`);
+        };
+
+        window.openTransactionCategorySheet = function () {
+            const sheet = document.getElementById('transaction-category-sheet');
+            const search = document.getElementById('transaction-category-search');
+            if (!sheet) return;
+
+            if (search) {
+                search.value = '';
+                search.blur();
+            }
+
+            setCategorySheetCopy();
+            window.renderTransactionCategorySheet();
+
+            sheet.classList.remove('hidden');
+            sheet.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('category-sheet-open');
+            document.documentElement.classList.add('category-sheet-open');
+            requestAnimationFrame(function () {
+                sheet.classList.add('is-open');
+            });
+        };
+
+        window.closeTransactionCategorySheet = function () {
+            const sheet = document.getElementById('transaction-category-sheet');
+            const search = document.getElementById('transaction-category-search');
+            if (!sheet) return;
+
+            sheet.classList.remove('is-open');
+            sheet.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('category-sheet-open');
+            document.documentElement.classList.remove('category-sheet-open');
+            window.setTimeout(function () {
+                sheet.classList.add('hidden');
+                if (search) search.value = '';
+            }, 240);
+        };
+
+        window.selectTransactionCategory = function (category) {
+            const select = document.getElementById('input-category');
+            if (!select) return;
+
+            const exists = Array.from(select.options).some(function (option) {
+                return option.value === category;
+            });
+            if (!exists) return;
+
+            select.value = category;
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+            window.syncTransactionCategoryField();
+            window.closeTransactionCategorySheet();
+        };
+
+        function bindTransactionCategorySheet() {
+            const sheet = document.getElementById('transaction-category-sheet');
+            const search = document.getElementById('transaction-category-search');
+            const manage = document.getElementById('transaction-category-manage');
+
+            if (sheet && sheet.dataset.bound !== 'true') {
+                sheet.addEventListener('click', function (event) {
+                    if (event.target === sheet || event.target.closest('[data-close-category-sheet="true"]')) {
+                        window.closeTransactionCategorySheet();
+                    }
+                });
+                sheet.dataset.bound = 'true';
+            }
+
+            if (search && search.dataset.bound !== 'true') {
+                search.addEventListener('input', function () {
+                    window.renderTransactionCategorySheet();
+                });
+                search.dataset.bound = 'true';
+            }
+
+            if (manage && manage.dataset.bound !== 'true') {
+                manage.addEventListener('click', function () {
+                    window.closeTransactionCategorySheet();
+                    if (typeof window.openCategoryModal === 'function') {
+                        window.openCategoryModal();
+                    }
+                });
+                manage.dataset.bound = 'true';
+            }
+        }
+
+        const originalUpdateCategoryOptions = window.updateCategoryOptions;
+        window.updateCategoryOptions = function () {
+            const select = document.getElementById('input-category');
+            const previousValue = select ? select.value : '';
+            const activeType = getActiveTransactionType();
+
+            if (select && typeof categories !== 'undefined' && Array.isArray(categories[activeType])) {
+                select.innerHTML = '';
+                categories[activeType].forEach(function (category) {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    select.appendChild(option);
+                });
+
+                if (previousValue && categories[activeType].includes(previousValue)) {
+                    select.value = previousValue;
+                } else if (select.options.length > 0) {
+                    select.value = select.options[0].value;
+                }
+            } else if (typeof originalUpdateCategoryOptions === 'function') {
+                originalUpdateCategoryOptions.apply(this, arguments);
+            }
+
+            window.syncTransactionCategoryField();
+            if (document.getElementById('transaction-category-sheet')?.classList.contains('is-open')) {
+                window.renderTransactionCategorySheet();
+            }
+        };
+
+        const originalCheckInvestmentInput = window.checkInvestmentInput;
+        window.checkInvestmentInput = function () {
+            const result = typeof originalCheckInvestmentInput === 'function'
+                ? originalCheckInvestmentInput.apply(this, arguments)
+                : undefined;
+            window.syncTransactionCategoryField();
+            return result;
+        };
+
+        function initApplePolishP1() {
+            bindTransactionCategorySheet();
+            window.syncTransactionCategoryField();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApplePolishP1, { once: true });
+        } else {
+            initApplePolishP1();
+        }
+
+        document.addEventListener('FingendaLangChanged', function () {
+            window.syncTransactionCategoryField();
+            if (document.getElementById('transaction-category-sheet')?.classList.contains('is-open')) {
+                window.renderTransactionCategorySheet();
+            }
+        });
+    })();
+</script>
+<script src="fingenda-p2-ecosystem.js"></script>
+<script src="fingenda-p0-submission.js"></script>
 <script>
     (function applyNativeIOSFullscreenClass() {
         try {

@@ -37,6 +37,10 @@ echo "🔄 Capacitor sync yapiliyor..."
 npx cap sync ios
 echo ""
 
+echo "âš¡ iOS sistem aksiyonlari yapilandiriliyor..."
+node scripts/generate-ios-system-actions-v2.js
+echo ""
+
 # 5. iOS ikonlarini olustur
 echo "🎨 iOS ikonlari olusturuluyor..."
 if command -v python3 &>/dev/null; then
