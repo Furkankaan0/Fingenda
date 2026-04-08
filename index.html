@@ -16548,6 +16548,7 @@
                 height: 480px;
                 position: relative;
                 transform-style: preserve-3d;
+                transform-origin: center center;
                 border-radius: 28px;
                 background: linear-gradient(165deg, #1a1a2e 0%, #0d0d15 50%, #0a0a12 100%);
                 box-shadow:
@@ -16555,6 +16556,17 @@
                     0 15px 40px rgba(0, 0, 0, 0.4),
                     inset 0 1px 0 rgba(255, 255, 255, 0.1);
                 transition: transform 0.1s ease-out, box-shadow 0.3s ease;
+                will-change: transform;
+                contain: layout paint style;
+                isolation: isolate;
+                -webkit-font-smoothing: antialiased;
+                text-rendering: geometricPrecision;
+            }
+
+            .premium-3d-card * {
+                backface-visibility: hidden;
+                -webkit-backface-visibility: hidden;
+                transform-style: preserve-3d;
             }
 
             .premium-3d-card:hover {
@@ -16660,6 +16672,28 @@
             .layer-floating {
                 transform: translateZ(100px);
                 filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+                will-change: transform, filter;
+                transition: transform 0.18s ease-out, filter 0.22s ease-out;
+            }
+
+            .badge-tilt-shadow {
+                position: absolute;
+                left: 50%;
+                bottom: 14px;
+                width: 78%;
+                height: 34px;
+                border-radius: 999px;
+                background: radial-gradient(circle, rgba(15, 23, 42, 0.24) 0%, rgba(15, 23, 42, 0.08) 48%, transparent 78%);
+                filter: blur(18px);
+                transform: translateX(-50%);
+                pointer-events: none;
+                opacity: 0.72;
+                transition: transform 0.18s ease-out, opacity 0.18s ease-out, filter 0.22s ease-out;
+            }
+
+            html.dark .badge-tilt-shadow,
+            .dark .badge-tilt-shadow {
+                background: radial-gradient(circle, rgba(15, 23, 42, 0.52) 0%, rgba(15, 23, 42, 0.18) 48%, transparent 80%);
             }
 
             /* Badge Icon Glow Effect */
@@ -20623,6 +20657,8 @@
                 transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                 max-width: 140px;
                 pointer-events: none;
+                will-change: transform, filter;
+                image-rendering: -webkit-optimize-contrast;
             }
 
             /* --- ULTRA-REALISTIC HOLOGRAPHIC SHADERS --- */
@@ -45639,8 +45675,7 @@ KULLANICI NOTU
 
                 container.innerHTML = `
                 <div class="nft-modal-perspective flex flex-col items-center justify-center h-full w-full py-8">
-                    
-
+                    <div id="tilt-shadow" class="badge-tilt-shadow"></div>
 
                     <div id="tilt-card" class="premium-3d-card ${borderClass} ${cardShadow} gpu-accelerated flex flex-col items-center p-8 select-none cursor-grab active:cursor-grabbing relative overflow-hidden group transition-all duration-300" style="${cardBgStyle}; min-height: 520px; width: 100%; max-width: 340px; border-radius: 28px;">
                         
@@ -45668,7 +45703,7 @@ KULLANICI NOTU
 
                         <!-- Floating 3D Icon Container -->
                         <div class="layer-floating my-auto relative z-20 filter ${dropShadow} transition-transform duration-500 group-hover:scale-105 group-hover:-translate-y-2">
-                            <img src="${badge.icon}" alt="Icon" class="badge-3d-img w-52 h-52 object-contain filter contrast-110 saturate-110">
+                            <img src="${badge.icon}" alt="Icon" class="badge-3d-img w-52 h-52 object-contain opacity-[0.98]">
                         </div>
 
                         <!-- Content Section -->
@@ -45704,9 +45739,13 @@ KULLANICI NOTU
 
                 // --- OPTİMİZE EDİLMİŞ ANİMASYON MOTORU (rAF Loop) ---
                 const card = document.getElementById('tilt-card');
+                const shadow = document.getElementById('tilt-shadow');
                 const glare = document.getElementById('holo-glare');
                 const foil = document.getElementById('holo-foil');
                 const badgeImg = card.querySelector('.badge-3d-img');
+                const floatingLayer = card.querySelector('.layer-floating');
+                const topLayer = card.querySelector('.layer-top');
+                const midLayer = card.querySelector('.layer-mid');
 
                 // Durum Değişkenleri
                 const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -45725,6 +45764,13 @@ KULLANICI NOTU
                     ? 'Telefonu Eğ veya Sürükle'
                     : 'Rozeti İncelemek İçin Sürükle');
 
+                const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+                const normalizeTiltAxis = (value, range, deadZone) => {
+                    if (Math.abs(value) <= deadZone) return 0;
+                    const adjusted = value > 0 ? value - deadZone : value + deadZone;
+                    return clamp(adjusted / range, -1, 1);
+                };
+
                 let state = {
                     mouseX: 0, mouseY: 0,      // Hedef (Mouse/Gyro)
                     currentX: 0, currentY: 0,  // Mevcut (Animasyon için)
@@ -45738,38 +45784,57 @@ KULLANICI NOTU
 
                     // Lineer İnterpolasyon (Yumuşatma) - Değeri 0.1 (Yavaş) ile 1 (Anlık) arası değiştirilebilir
                     // 0.1 değeri hareketin "ağırlıklı" ve "akıcı" olmasını sağlar.
-                    state.currentX += (state.mouseX - state.currentX) * 0.1;
-                    state.currentY += (state.mouseY - state.currentY) * 0.1;
+                    state.currentX += (state.mouseX - state.currentX) * 0.085;
+                    state.currentY += (state.mouseY - state.currentY) * 0.085;
 
                     // Hesaplamaları yap (Virgülden sonra 2 basamak yeterli)
                     const rotateX = (state.currentY * -state.limits).toFixed(2);
                     const rotateY = (state.currentX * state.limits).toFixed(2);
                     const glareX = (50 + (state.currentX * 50)).toFixed(2);
                     const glareY = (50 + (state.currentY * 50)).toFixed(2);
+                    const shadowX = (state.currentX * 18).toFixed(2);
+                    const shadowY = (Math.abs(state.currentY) * 9).toFixed(2);
+                    const shadowScale = (1 - (Math.abs(state.currentX) + Math.abs(state.currentY)) * 0.05).toFixed(3);
 
                     // DOM Güncellemesi (Tek seferde)
-                    card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                    card.style.transform = `perspective(1400px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translate3d(0,0,0)`;
+
+                    if (shadow) {
+                        shadow.style.transform = `translateX(calc(-50% + ${shadowX}px)) translateY(${shadowY}px) scale(${shadowScale})`;
+                        shadow.style.opacity = `${0.58 + Math.min(0.18, Math.abs(state.currentX) * 0.12 + Math.abs(state.currentY) * 0.08)}`;
+                    }
 
                     if (glare) {
-                        glare.style.background = `radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255,255,255,0.3) 0%, transparent 60%)`;
-                        glare.style.opacity = Math.min(1, Math.abs(state.currentX) + Math.abs(state.currentY) + 0.2);
+                        glare.style.background = `radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255,255,255,0.26) 0%, rgba(255,255,255,0.09) 22%, transparent 62%)`;
+                        glare.style.opacity = Math.min(0.9, Math.abs(state.currentX) * 0.5 + Math.abs(state.currentY) * 0.45 + 0.16);
                     }
 
                     if (foil) {
                         foil.style.backgroundPosition = `${glareX}% ${glareY}%`;
-                        foil.style.opacity = Math.min(1, Math.abs(state.currentX) + Math.abs(state.currentY));
+                        foil.style.opacity = Math.min(0.58, Math.abs(state.currentX) * 0.34 + Math.abs(state.currentY) * 0.28 + 0.08);
                     }
 
-                    if (badgeImg) {
-                        // Paralaks efekti
-                        badgeImg.style.transform = `translateX(${state.currentX * 15}px) translateY(${state.currentY * 15}px) scale(1.1)`;
+                    if (midLayer) {
+                        midLayer.style.transform = `translate3d(${(state.currentX * 4).toFixed(2)}px, ${(state.currentY * 4).toFixed(2)}px, 35px)`;
+                    }
+
+                    if (topLayer) {
+                        topLayer.style.transform = `translate3d(${(state.currentX * 5).toFixed(2)}px, ${(state.currentY * 5).toFixed(2)}px, 75px)`;
+                    }
+
+                    if (floatingLayer) {
+                        floatingLayer.style.transform = `translate3d(${(state.currentX * 8).toFixed(2)}px, ${(state.currentY * 8).toFixed(2)}px, 100px)`;
+                    }
+
+                    if (badgeImg && floatingLayer) {
+                        badgeImg.style.transform = `translate3d(${(state.currentX * 7).toFixed(2)}px, ${(state.currentY * 7).toFixed(2)}px, 0) scale(1.045) rotateZ(${(state.currentX * 1.6).toFixed(2)}deg)`;
                     }
 
                     requestAnimationFrame(animate);
                 }
 
                 // Döngüyü başlat
-                state.limits = prefersReducedMotion ? 10 : 18;
+                state.limits = prefersReducedMotion ? 6 : 10;
                 requestAnimationFrame(animate);
 
                 // 2. Olay Dinleyicileri (Sadece hedef değerleri günceller)
@@ -45779,8 +45844,9 @@ KULLANICI NOTU
                     const rect = card.getBoundingClientRect();
                     const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
                     const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
-                    state.mouseX = x;
-                    state.mouseY = y;
+                    state.mouseX = clamp(x, -1, 1);
+                    state.mouseY = clamp(y, -1, 1);
+                    state.limits = prefersReducedMotion ? 6 : 11;
                 }
 
                 function handleMouseLeave() {
@@ -45795,6 +45861,7 @@ KULLANICI NOTU
                     const y = (e.touches[0].clientY - rect.top - rect.height / 2) / (rect.height / 2);
                     state.mouseX = Math.max(-1, Math.min(1, x));
                     state.mouseY = Math.max(-1, Math.min(1, y));
+                    state.limits = prefersReducedMotion ? 6 : 11;
                 }
 
                 // Mobil Jiroskop
@@ -45820,6 +45887,9 @@ KULLANICI NOTU
 
                     state.mouseX = x;
                     state.mouseY = y;
+                    state.mouseX = normalizeTiltAxis(e.gamma - orientationBaseline.gamma, 14, 1.4);
+                    state.mouseY = normalizeTiltAxis(e.beta - orientationBaseline.beta, 18, 1.8);
+                    state.limits = prefersReducedMotion ? 6 : 8;
                 }
 
                 async function enableMotionTilt() {
