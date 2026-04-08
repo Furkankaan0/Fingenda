@@ -82756,6 +82756,18 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
             window.userStatus = value;
         };
 
+        const hideLegacyPremiumModal = () => {
+            const legacyModal = document.getElementById('premium-modal');
+            if (legacyModal) legacyModal.classList.add('hidden');
+        };
+
+        const hideOnboardingOverlay = () => {
+            const onboardingOverlay = document.getElementById('fingo-onboarding');
+            if (!onboardingOverlay) return;
+            onboardingOverlay.classList.remove('fo-fadeout');
+            onboardingOverlay.classList.add('fo-hidden');
+        };
+
         const syncFreePremiumState = async () => {
             writeUserStatusValue('free');
 
@@ -82824,22 +82836,31 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
             return isPremium;
         };
 
-        window.buyPremium = function openPremiumPaywallSafe() {
-            const legacyModal = document.getElementById('premium-modal');
-            if (legacyModal) legacyModal.classList.add('hidden');
-
+        window.openPremiumPaywall = function openPremiumPaywallSafe(sourceKey = 'premium_upgrade') {
+            hideLegacyPremiumModal();
+            hideOnboardingOverlay();
             if (window.PremiumManager?.isPremium) return;
 
             if (window.PremiumManager?.showPaywall) {
-                window.PremiumManager.showPaywall('premium_upgrade');
+                window.PremiumManager.showPaywall(sourceKey);
+                return;
+            }
+
+            const legacyModal = document.getElementById('premium-modal');
+            if (legacyModal) {
+                legacyModal.classList.remove('hidden');
                 return;
             }
 
             window.alertMessage?.('Premium', 'Premium planlari acilirken kisa bir sorun olustu. Lutfen tekrar deneyin.', 'blue');
         };
 
+        window.buyPremium = function buyPremiumSafe() {
+            window.openPremiumPaywall('premium_upgrade');
+        };
+
         window.upgradeToPro = async function upgradeToProSafe() {
-            window.buyPremium();
+            window.openPremiumPaywall('upgrade_cta');
         };
 
         const patchPremiumManager = () => {
@@ -82873,11 +82894,54 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
                 this.isPremium = false;
             };
 
+            premiumManager.showPaywall = function showPaywallSafe(featureKey) {
+                if (this.isPremium || window.userStatus === 'pro') {
+                    hideLegacyPremiumModal();
+                    return;
+                }
+
+                hideLegacyPremiumModal();
+                hideOnboardingOverlay();
+
+                const modal = document.getElementById('premium-paywall-modal') || document.getElementById('premium-modal');
+                const card = document.getElementById('premium-modal-card');
+                if (!modal) return;
+
+                modal.classList.remove('hidden');
+                modal.setAttribute('aria-hidden', 'false');
+
+                if (card) {
+                    card.classList.remove('scale-95', 'opacity-0');
+                    requestAnimationFrame(() => {
+                        card.classList.add('scale-100', 'opacity-100');
+                    });
+                }
+
+                if (featureKey) {
+                    window.ErrorLogger?.log('info', `Paywall shown for: ${featureKey}`);
+                }
+            };
+
             const originalCloseModal = typeof premiumManager.closeModal === 'function'
                 ? premiumManager.closeModal.bind(premiumManager)
                 : null;
             premiumManager.closeModal = function closeModalSafe() {
-                if (originalCloseModal) originalCloseModal();
+                const modal = document.getElementById('premium-paywall-modal');
+                const card = document.getElementById('premium-modal-card');
+
+                if (card) {
+                    card.classList.remove('scale-100', 'opacity-100');
+                    card.classList.add('scale-95', 'opacity-0');
+                }
+
+                if (modal) {
+                    modal.setAttribute('aria-hidden', 'true');
+                    setTimeout(() => modal.classList.add('hidden'), 300);
+                } else if (originalCloseModal) {
+                    originalCloseModal();
+                }
+
+                hideLegacyPremiumModal();
 
                 if (!this.isPremium && isNativeRuntime() && !hasVerifiedPremiumEvidence()) {
                     syncFreePremiumState();
@@ -82900,8 +82964,22 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
             };
         };
 
+        const patchOnboardingPremiumCTA = () => {
+            if (!window.fingoOnboarding || window.fingoOnboarding.__premiumFlowPatched) return;
+
+            const onboarding = window.fingoOnboarding;
+            onboarding.__premiumFlowPatched = true;
+
+            onboarding.buyPremium = function buyPremiumFromOnboardingSafe() {
+                localStorage.setItem('fingo_onboarding_completed', 'true');
+                hideOnboardingOverlay();
+                window.openPremiumPaywall?.('onboarding_cta');
+            };
+        };
+
         const applyPremiumFlowFixes = () => {
             patchPremiumManager();
+            patchOnboardingPremiumCTA();
             window.hydratePremiumState?.();
         };
 
