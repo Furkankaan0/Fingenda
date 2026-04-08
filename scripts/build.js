@@ -20,6 +20,7 @@ const COPY_LIST = [
     'dna-refresh-core.js',
     'dna-refresh-ui.js',
     'dna-refresh.css',
+    'fingenda-native-voice.js',
     'sw.js',
     'manifest.json',
     'logo.jpg',

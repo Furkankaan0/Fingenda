@@ -48,6 +48,10 @@ workflows:
         script: |
           npx cap sync ios
 
+      - name: Install native iOS speech plugin
+        script: |
+          node scripts/install-ios-speech-plugin.js
+
       - name: Generate iOS app icons
         script: |
           node scripts/generate-ios-appicon.js
@@ -70,6 +74,8 @@ workflows:
           add_or_set_plist_value MinimumOSVersion string "17.0"
           add_or_set_plist_value NSCameraUsageDescription string "Fingenda, fis ve fatura taramak icin kameraniza erisim istiyor."
           add_or_set_plist_value NSPhotoLibraryUsageDescription string "Fingenda, fis gorsellerini kaydetmek icin fotograf kutuphanenize erisim istiyor."
+          add_or_set_plist_value NSMicrophoneUsageDescription string "Fingenda, sesle islem ekleme ozelligi icin mikrofonunuza erisim istiyor."
+          add_or_set_plist_value NSSpeechRecognitionUsageDescription string "Fingenda, sesinizi yaziya cevirerek hizli islem girisi yapabilmek icin ses tanima izni istiyor."
           add_or_set_plist_value NSFaceIDUsageDescription string "Fingenda, finansal verilerinizi korumak icin biyometrik kimlik dogrulama kullaniyor."
           add_or_set_plist_value UIViewControllerBasedStatusBarAppearance bool true
           add_or_set_plist_value UILaunchStoryboardName string "LaunchScreen"
@@ -169,6 +175,10 @@ workflows:
         script: |
           npx cap sync ios
 
+      - name: Install native iOS speech plugin
+        script: |
+          node scripts/install-ios-speech-plugin.js
+
       - name: Generate iOS app icons
         script: |
           node scripts/generate-ios-appicon.js
@@ -191,6 +201,8 @@ workflows:
           add_or_set_plist_value MinimumOSVersion string "17.0"
           add_or_set_plist_value NSCameraUsageDescription string "Fingenda, fis ve fatura taramak icin kameraniza erisim istiyor."
           add_or_set_plist_value NSPhotoLibraryUsageDescription string "Fingenda, fis gorsellerini kaydetmek icin fotograf kutuphanenize erisim istiyor."
+          add_or_set_plist_value NSMicrophoneUsageDescription string "Fingenda, sesle islem ekleme ozelligi icin mikrofonunuza erisim istiyor."
+          add_or_set_plist_value NSSpeechRecognitionUsageDescription string "Fingenda, sesinizi yaziya cevirerek hizli islem girisi yapabilmek icin ses tanima izni istiyor."
           add_or_set_plist_value NSFaceIDUsageDescription string "Fingenda, finansal verilerinizi korumak icin biyometrik kimlik dogrulama kullaniyor."
           add_or_set_plist_value UIViewControllerBasedStatusBarAppearance bool true
           add_or_set_plist_value UILaunchStoryboardName string "LaunchScreen"

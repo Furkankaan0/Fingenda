@@ -37,6 +37,11 @@ echo "🔄 Capacitor sync yapiliyor..."
 npx cap sync ios
 echo ""
 
+# 4.1 Native iOS speech plugin kur
+echo "ğŸŽ¤ Native iOS speech plugin uygulanıyor..."
+node scripts/install-ios-speech-plugin.js
+echo ""
+
 # 5. iOS ikonlarini olustur
 echo "🎨 iOS ikonlari olusturuluyor..."
 if command -v python3 &>/dev/null; then
@@ -56,6 +61,12 @@ if [ -f "$PLIST_PATH" ]; then
     fi
     if ! grep -q "NSPhotoLibraryUsageDescription" "$PLIST_PATH"; then
         echo "  ⚠️  NSPhotoLibraryUsageDescription eksik - manuel olarak ekleyin"
+    fi
+    if ! grep -q "NSMicrophoneUsageDescription" "$PLIST_PATH"; then
+        echo "  âš ï¸  NSMicrophoneUsageDescription eksik - manuel olarak ekleyin"
+    fi
+    if ! grep -q "NSSpeechRecognitionUsageDescription" "$PLIST_PATH"; then
+        echo "  âš ï¸  NSSpeechRecognitionUsageDescription eksik - manuel olarak ekleyin"
     fi
 fi
 echo ""

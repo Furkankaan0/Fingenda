@@ -1,0 +1,362 @@
+const fs = require('fs');
+const path = require('path');
+
+const ROOT = path.resolve(__dirname, '..');
+const IOS_APP_DIR = path.join(ROOT, 'ios', 'App', 'App');
+const APP_DELEGATE_PATH = path.join(IOS_APP_DIR, 'AppDelegate.swift');
+const STORYBOARD_PATH = path.join(IOS_APP_DIR, 'Base.lproj', 'Main.storyboard');
+
+const SPEECH_BLOCK = `
+// FINGENDA_NATIVE_SPEECH_PLUGIN_BEGIN
+import Speech
+import AVFoundation
+
+@objc(FingendaSpeechRecognitionPlugin)
+public class FingendaSpeechRecognitionPlugin: CAPPlugin, CAPBridgedPlugin, SFSpeechRecognizerDelegate {
+    public let identifier = "FingendaSpeechRecognitionPlugin"
+    public let jsName = "FingendaSpeechRecognition"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "getAvailability", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "startListening", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "stopListening", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "cancelListening", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "addListener", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "removeAllListeners", returnType: CAPPluginReturnPromise)
+    ]
+
+    private let audioEngine = AVAudioEngine()
+    private var speechRecognizer: SFSpeechRecognizer?
+    private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
+    private var recognitionTask: SFSpeechRecognitionTask?
+    private var currentTranscript = ""
+    private var isStopping = false
+
+    @objc func getAvailability(_ call: CAPPluginCall) {
+        let locale = call.getString("locale") ?? Locale.current.identifier
+        let recognizer = makeRecognizer(locale: locale)
+        let speechStatus = SFSpeechRecognizer.authorizationStatus()
+        let microphoneStatus = AVAudioSession.sharedInstance().recordPermission
+        let available = recognizer?.isAvailable == true
+
+        call.resolve([
+            "available": available,
+            "speechPermission": speechPermissionText(from: speechStatus),
+            "microphonePermission": microphonePermissionText(from: microphoneStatus),
+            "locale": recognizer?.locale.identifier ?? locale,
+            "reason": availabilityReason(available: available, speechStatus: speechStatus, microphoneStatus: microphoneStatus)
+        ])
+    }
+
+    @objc func startListening(_ call: CAPPluginCall) {
+        let locale = call.getString("locale") ?? Locale.current.identifier
+
+        requestPermissions { [weak self] granted, errorMessage in
+            guard let self else { return }
+
+            guard granted else {
+                self.notifyListeners("speechState", data: [
+                    "state": "permissionDenied",
+                    "message": errorMessage ?? "Speech recognition permission was denied."
+                ])
+                call.reject(errorMessage ?? "Speech recognition permission was denied.")
+                return
+            }
+
+            DispatchQueue.main.async {
+                self.beginRecognition(locale: locale, call: call)
+            }
+        }
+    }
+
+    @objc func stopListening(_ call: CAPPluginCall) {
+        isStopping = true
+
+        if audioEngine.isRunning {
+            audioEngine.stop()
+            audioEngine.inputNode.removeTap(onBus: 0)
+        }
+
+        recognitionRequest?.endAudio()
+
+        notifyListeners("speechState", data: [
+            "state": "stopped",
+            "transcript": currentTranscript
+        ])
+
+        call.resolve([
+            "stopped": true,
+            "transcript": currentTranscript
+        ])
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+            self?.cleanupRecognition(deactivateAudio: true)
+            self?.isStopping = false
+        }
+    }
+
+    @objc func cancelListening(_ call: CAPPluginCall) {
+        isStopping = true
+        cleanupRecognition(deactivateAudio: true)
+        notifyListeners("speechState", data: ["state": "cancelled"])
+        call.resolve(["cancelled": true])
+        isStopping = false
+    }
+
+    private func beginRecognition(locale: String, call: CAPPluginCall) {
+        cleanupRecognition(deactivateAudio: false)
+
+        guard let recognizer = makeRecognizer(locale: locale) else {
+            let message = "Speech recognition is not available for the selected language."
+            notifyListeners("speechState", data: ["state": "unavailable", "message": message])
+            call.reject(message)
+            return
+        }
+
+        guard recognizer.isAvailable else {
+            let message = "Speech recognition is currently unavailable."
+            notifyListeners("speechState", data: ["state": "unavailable", "message": message])
+            call.reject(message)
+            return
+        }
+
+        speechRecognizer = recognizer
+        speechRecognizer?.delegate = self
+
+        let session = AVAudioSession.sharedInstance()
+
+        do {
+            try session.setCategory(.record, mode: .measurement, options: [.duckOthers])
+            try session.setActive(true, options: .notifyOthersOnDeactivation)
+
+            let request = SFSpeechAudioBufferRecognitionRequest()
+            request.shouldReportPartialResults = true
+            recognitionRequest = request
+
+            let inputNode = audioEngine.inputNode
+            let recordingFormat = inputNode.outputFormat(forBus: 0)
+            inputNode.removeTap(onBus: 0)
+            inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
+                self?.recognitionRequest?.append(buffer)
+            }
+
+            audioEngine.prepare()
+            try audioEngine.start()
+            currentTranscript = ""
+            isStopping = false
+
+            recognitionTask = recognizer.recognitionTask(with: request) { [weak self] result, error in
+                guard let self else { return }
+
+                if let result = result {
+                    let transcript = result.bestTranscription.formattedString.trimmingCharacters(in: .whitespacesAndNewlines)
+                    self.currentTranscript = transcript
+                    self.notifyListeners("speechResult", data: [
+                        "transcript": transcript,
+                        "isFinal": result.isFinal
+                    ])
+
+                    if result.isFinal {
+                        self.notifyListeners("speechState", data: ["state": "completed"])
+                        self.cleanupRecognition(deactivateAudio: true)
+                    }
+                }
+
+                if let error = error {
+                    if !self.isStopping {
+                        self.notifyListeners("speechState", data: [
+                            "state": "error",
+                            "message": error.localizedDescription
+                        ])
+                    }
+
+                    self.cleanupRecognition(deactivateAudio: true)
+                }
+            }
+
+            notifyListeners("speechState", data: [
+                "state": "listening",
+                "locale": recognizer.locale.identifier
+            ])
+
+            call.resolve([
+                "started": true,
+                "locale": recognizer.locale.identifier
+            ])
+        } catch {
+            cleanupRecognition(deactivateAudio: true)
+            notifyListeners("speechState", data: [
+                "state": "error",
+                "message": error.localizedDescription
+            ])
+            call.reject("Speech recognition could not start.", nil, error)
+        }
+    }
+
+    private func cleanupRecognition(deactivateAudio: Bool) {
+        recognitionTask?.cancel()
+        recognitionTask = nil
+
+        recognitionRequest?.endAudio()
+        recognitionRequest = nil
+
+        if audioEngine.isRunning {
+            audioEngine.stop()
+        }
+        audioEngine.inputNode.removeTap(onBus: 0)
+
+        if deactivateAudio {
+            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        }
+    }
+
+    private func requestPermissions(completion: @escaping (Bool, String?) -> Void) {
+        SFSpeechRecognizer.requestAuthorization { [weak self] status in
+            DispatchQueue.main.async {
+                guard let self else { return }
+
+                guard status == .authorized else {
+                    completion(false, self.authorizationMessage(for: status))
+                    return
+                }
+
+                AVAudioSession.sharedInstance().requestRecordPermission { granted in
+                    DispatchQueue.main.async {
+                        completion(granted, granted ? nil : "Microphone permission was denied.")
+                    }
+                }
+            }
+        }
+    }
+
+    private func makeRecognizer(locale: String) -> SFSpeechRecognizer? {
+        let preferred = Locale(identifier: locale)
+        if let recognizer = SFSpeechRecognizer(locale: preferred) {
+            return recognizer
+        }
+
+        return SFSpeechRecognizer(locale: Locale(identifier: "tr-TR")) ?? SFSpeechRecognizer()
+    }
+
+    private func authorizationMessage(for status: SFSpeechRecognizerAuthorizationStatus) -> String {
+        switch status {
+        case .denied:
+            return "Speech recognition permission was denied."
+        case .restricted:
+            return "Speech recognition is restricted on this device."
+        case .notDetermined:
+            return "Speech recognition permission has not been determined yet."
+        default:
+            return "Speech recognition is unavailable right now."
+        }
+    }
+
+    private func availabilityReason(available: Bool, speechStatus: SFSpeechRecognizerAuthorizationStatus, microphoneStatus: AVAudioSession.RecordPermission) -> String {
+        if !available {
+            return "Speech recognition is currently unavailable."
+        }
+
+        if speechStatus != .authorized {
+            return authorizationMessage(for: speechStatus)
+        }
+
+        if microphoneStatus == .denied {
+            return "Microphone permission was denied."
+        }
+
+        return ""
+    }
+
+    private func speechPermissionText(from status: SFSpeechRecognizerAuthorizationStatus) -> String {
+        switch status {
+        case .authorized:
+            return "granted"
+        case .denied:
+            return "denied"
+        case .restricted:
+            return "restricted"
+        case .notDetermined:
+            return "prompt"
+        @unknown default:
+            return "unknown"
+        }
+    }
+
+    private func microphonePermissionText(from status: AVAudioSession.RecordPermission) -> String {
+        switch status {
+        case .granted:
+            return "granted"
+        case .denied:
+            return "denied"
+        case .undetermined:
+            return "prompt"
+        @unknown default:
+            return "unknown"
+        }
+    }
+
+    public func speechRecognizer(_ speechRecognizer: SFSpeechRecognizer, availabilityDidChange available: Bool) {
+        notifyListeners("speechState", data: [
+            "state": available ? "available" : "unavailable",
+            "locale": speechRecognizer.locale.identifier
+        ])
+    }
+}
+
+class FingendaBridgeViewController: CAPBridgeViewController {
+    override open func capacitorDidLoad() {
+        bridge?.registerPluginInstance(FingendaSpeechRecognitionPlugin())
+    }
+}
+// FINGENDA_NATIVE_SPEECH_PLUGIN_END
+`;
+
+function patchAppDelegate() {
+    if (!fs.existsSync(APP_DELEGATE_PATH)) {
+        console.log('[iOS Speech] AppDelegate.swift bulunamadi, patch atlandi.');
+        return;
+    }
+
+    let content = fs.readFileSync(APP_DELEGATE_PATH, 'utf8');
+
+    if (!content.includes('import Capacitor')) {
+        throw new Error('AppDelegate.swift beklenen Capacitor importunu icermiyor.');
+    }
+
+    const importLines = ['import Speech', 'import AVFoundation'];
+    let nextContent = content;
+    for (const importLine of importLines) {
+        if (!nextContent.includes(importLine)) {
+            nextContent = nextContent.replace('import Capacitor', `import Capacitor\n${importLine}`);
+        }
+    }
+
+    const blockPattern = /\/\/ FINGENDA_NATIVE_SPEECH_PLUGIN_BEGIN[\s\S]*?\/\/ FINGENDA_NATIVE_SPEECH_PLUGIN_END/;
+    if (blockPattern.test(nextContent)) {
+        nextContent = nextContent.replace(blockPattern, SPEECH_BLOCK.trim());
+    } else {
+        nextContent = `${nextContent.trim()}\n\n${SPEECH_BLOCK.trim()}\n`;
+    }
+
+    fs.writeFileSync(APP_DELEGATE_PATH, nextContent, 'utf8');
+    console.log('[iOS Speech] AppDelegate.swift guncellendi.');
+}
+
+function patchStoryboard() {
+    if (!fs.existsSync(STORYBOARD_PATH)) {
+        console.log('[iOS Speech] Main.storyboard bulunamadi, patch atlandi.');
+        return;
+    }
+
+    let content = fs.readFileSync(STORYBOARD_PATH, 'utf8');
+
+    content = content.replace(
+        /customClass="CAPBridgeViewController"(?:\s+customModule="[^"]+")?(?:\s+customModuleProvider="[^"]+")?/g,
+        'customClass="FingendaBridgeViewController" customModuleProvider="target"'
+    );
+
+    fs.writeFileSync(STORYBOARD_PATH, content, 'utf8');
+    console.log('[iOS Speech] Main.storyboard guncellendi.');
+}
+
+patchAppDelegate();
+patchStoryboard();

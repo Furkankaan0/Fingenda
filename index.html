@@ -43022,8 +43022,8 @@
                 const isEnglish = window.FINGENDA_LANG === 'en';
                 const manualInput = window.prompt(
                     isEnglish
-                        ? 'Voice recognition is not available in this iPhone app build yet. Enter a short command like: 425 lira market'
-                        : 'Bu iPhone uygulama surumunde ses tanima su an desteklenmiyor. "425 lira market" gibi kisa bir komut yazin.',
+                        ? 'Voice input is not available right now. Enter a short command like: 425 lira market'
+                        : 'Sesli giris su an kullanilamiyor. "425 lira market" gibi kisa bir komut yazin.',
                     '425 lira market'
                 );
 
@@ -69722,6 +69722,7 @@ html.perf: blur(8px) fallback
     })();
 </script>
 <script defer src="./dna-performance-runtime.js"></script>
+<script defer src="./fingenda-native-voice.js"></script>
 <script id="tool-modal-refresh-final">
     window.openCurrencyModal = function () {
         if (window.FingoHaptics?.light) window.FingoHaptics.light();
