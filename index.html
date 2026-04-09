@@ -82997,9 +82997,17 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
             if (!raw) return null;
             try { return JSON.parse(raw); } catch (e) { return null; }
         };
+        const getPremiumCacheData = () => parseJSON(localStorage.getItem('premium_cache'));
+        const hasTestPremiumBypass = () => {
+            const cacheData = getPremiumCacheData();
+            if (cacheData?.isPremium === true && cacheData?.source === 'test-bypass') return true;
+            return localStorage.getItem('premium_test_bypass') === 'true';
+        };
 
         const hasVerifiedPremiumEvidence = () => {
-            const cacheData = parseJSON(localStorage.getItem('premium_cache'));
+            if (hasTestPremiumBypass()) return true;
+
+            const cacheData = getPremiumCacheData();
             if (cacheData?.isPremium === true) return true;
 
             const entitlement = parseJSON(localStorage.getItem('premium_entitlement'));
@@ -83118,7 +83126,8 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
                     AppStorage.set('user_status', 'pro'),
                     AppStorage.set('user_membership_status', 'pro'),
                     AppStorage.set('premium', 'true'),
-                    AppStorage.set('premium_cache', JSON.stringify(premiumCache))
+                    AppStorage.set('premium_cache', JSON.stringify(premiumCache)),
+                    AppStorage.set('premium_test_bypass', 'true')
                 ]);
             } catch (e) { }
 
@@ -83126,18 +83135,17 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
             localStorage.setItem('user_membership_status', 'pro');
             localStorage.setItem('premium', 'true');
             localStorage.setItem('premium_cache', JSON.stringify(premiumCache));
+            localStorage.setItem('premium_test_bypass', 'true');
 
             const premiumManager = window.PremiumManager;
-            if (TEST_PREMIUM_BYPASS) {
-                return window.activatePremiumForTesting?.(sourceKey);
-            }
             if (premiumManager) {
                 if (typeof premiumManager._updateEntitlement === 'function') {
                     premiumManager._updateEntitlement(true, 'test-bypass');
                 } else {
                     premiumManager.isPremium = true;
-                    premiumManager.unlockAllFeatures?.();
                 }
+                premiumManager.isPremium = true;
+                premiumManager.unlockAllFeatures?.();
             }
 
             hideLegacyPremiumModal();
@@ -83163,7 +83171,7 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
 
             const cacheData = parseJSON(asPremiumCache || localStorage.getItem('premium_cache'));
             const entitlement = parseJSON(localStorage.getItem('premium_entitlement'));
-            let isPremium = !!cacheData?.isPremium;
+            let isPremium = !!cacheData?.isPremium || hasTestPremiumBypass();
 
             if (!isPremium && entitlement) {
                 isPremium = !entitlement.expiresAt || new Date(entitlement.expiresAt) > new Date();
@@ -83214,6 +83222,10 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         };
 
         window.startPremiumCheckout = async function startPremiumCheckoutSafe(sourceKey = 'premium_checkout') {
+            if (TEST_PREMIUM_BYPASS) {
+                return window.activatePremiumForTesting?.(sourceKey);
+            }
+
             const premiumManager = window.PremiumManager;
             if (!premiumManager || typeof window.IAPManager?.purchase !== 'function') {
                 window.alertMessage?.('Premium', 'Satın alma şu anda kullanılamıyor. Lütfen kısa süre sonra tekrar deneyin.', 'blue');
@@ -83330,8 +83342,30 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
                 this.isPremium = false;
             };
 
+            const originalRequirePremium = typeof premiumManager.requirePremium === 'function'
+                ? premiumManager.requirePremium.bind(premiumManager)
+                : null;
+            premiumManager.requirePremium = function requirePremiumSafe(featureKey) {
+                if (this.isPremium || window.userStatus === 'pro' || hasVerifiedPremiumEvidence()) {
+                    this.isPremium = true;
+                    writeUserStatusValue('pro');
+                    this.unlockAllFeatures?.();
+                    return true;
+                }
+
+                if (originalRequirePremium) {
+                    return originalRequirePremium(featureKey);
+                }
+
+                this.showPaywall(featureKey);
+                return false;
+            };
+
             premiumManager.showPaywall = function showPaywallSafe(featureKey) {
-                if (this.isPremium || window.userStatus === 'pro') {
+                if (this.isPremium || window.userStatus === 'pro' || hasVerifiedPremiumEvidence()) {
+                    this.isPremium = true;
+                    writeUserStatusValue('pro');
+                    this.unlockAllFeatures?.();
                     hideLegacyPremiumModal();
                     hideModernPremiumModal();
                     return;
@@ -83433,8 +83467,28 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
             };
         };
 
+        const patchLegacyPremiumFeatureCheck = () => {
+            if (window.__legacyPremiumFeatureCheckPatched || typeof window.checkPremiumFeature !== 'function') return;
+            const originalCheckPremiumFeature = window.checkPremiumFeature.bind(window);
+            window.__legacyPremiumFeatureCheckPatched = true;
+
+            window.checkPremiumFeature = function checkPremiumFeatureSafe(featureName) {
+                if (window.PremiumManager?.isPremium || window.userStatus === 'pro' || hasVerifiedPremiumEvidence()) {
+                    writeUserStatusValue('pro');
+                    if (window.PremiumManager) {
+                        window.PremiumManager.isPremium = true;
+                        window.PremiumManager.unlockAllFeatures?.();
+                    }
+                    return true;
+                }
+
+                return originalCheckPremiumFeature(featureName);
+            };
+        };
+
         const applyPremiumFlowFixes = () => {
             patchLegacyPricingPlan();
+            patchLegacyPremiumFeatureCheck();
             patchPremiumManager();
             patchOnboardingPremiumCTA();
             window.hydratePremiumState?.();
