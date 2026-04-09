@@ -82831,11 +82831,61 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
             if (legacyModal) legacyModal.classList.add('hidden');
         };
 
+        const hideModernPremiumModal = () => {
+            const modernModal = document.getElementById('premium-paywall-modal');
+            const modernCard = document.getElementById('premium-modal-card');
+            if (modernCard) {
+                modernCard.classList.remove('scale-100', 'opacity-100');
+                modernCard.classList.add('scale-95', 'opacity-0');
+            }
+            if (modernModal) {
+                modernModal.setAttribute('aria-hidden', 'true');
+                modernModal.classList.add('hidden');
+            }
+        };
+
         const hideOnboardingOverlay = () => {
             const onboardingOverlay = document.getElementById('fingo-onboarding');
             if (!onboardingOverlay) return;
             onboardingOverlay.classList.remove('fo-fadeout');
             onboardingOverlay.classList.add('fo-hidden');
+        };
+
+        const getLegacyPremiumPlan = () => {
+            const rememberedPlan = window.__legacyPremiumPlan;
+            if (rememberedPlan === 'monthly' || rememberedPlan === 'yearly') {
+                return rememberedPlan;
+            }
+
+            const activeOption = document.querySelector('#premium-modal .pricing-option.active');
+            const activeText = activeOption?.textContent?.toLowerCase?.() || '';
+            if (activeText.includes('yıll') || activeText.includes('year')) return 'yearly';
+            if (activeText.includes('aylık') || activeText.includes('month')) return 'monthly';
+
+            const yearlyHint = document.querySelector('#premium-price-display .save-badge');
+            return yearlyHint ? 'yearly' : (window.PremiumManager?.selectedPlan || 'monthly');
+        };
+
+        const showPrimaryPremiumPaywall = (sourceKey = 'premium_upgrade') => {
+            if (window.PremiumManager?.isPremium || window.userStatus === 'pro') {
+                hideLegacyPremiumModal();
+                hideModernPremiumModal();
+                return true;
+            }
+
+            hideOnboardingOverlay();
+            hideModernPremiumModal();
+
+            const legacyModal = document.getElementById('premium-modal');
+            if (legacyModal) {
+                legacyModal.classList.remove('hidden');
+                if (sourceKey) {
+                    window.ErrorLogger?.log('info', `Primary paywall shown for: ${sourceKey}`);
+                }
+                return true;
+            }
+
+            return false;
         };
 
         const syncFreePremiumState = async () => {
@@ -82907,18 +82957,12 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         };
 
         window.openPremiumPaywall = function openPremiumPaywallSafe(sourceKey = 'premium_upgrade') {
-            hideLegacyPremiumModal();
-            hideOnboardingOverlay();
-            if (window.PremiumManager?.isPremium) return;
-
-            if (window.PremiumManager?.showPaywall) {
-                window.PremiumManager.showPaywall(sourceKey);
+            if (showPrimaryPremiumPaywall(sourceKey)) {
                 return;
             }
 
-            const legacyModal = document.getElementById('premium-modal');
-            if (legacyModal) {
-                legacyModal.classList.remove('hidden');
+            if (window.PremiumManager?.showPaywall) {
+                window.PremiumManager.showPaywall(sourceKey);
                 return;
             }
 
@@ -82929,8 +82973,90 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
             window.openPremiumPaywall('premium_upgrade');
         };
 
+        window.startPremiumCheckout = async function startPremiumCheckoutSafe(sourceKey = 'premium_checkout') {
+            const premiumManager = window.PremiumManager;
+            if (!premiumManager || typeof window.IAPManager?.purchase !== 'function') {
+                window.alertMessage?.('Premium', 'Satın alma şu anda kullanılamıyor. Lütfen kısa süre sonra tekrar deneyin.', 'blue');
+                return false;
+            }
+
+            if (premiumManager.isPremium || window.userStatus === 'pro') {
+                hideLegacyPremiumModal();
+                hideModernPremiumModal();
+                return true;
+            }
+
+            const selectedPlan = getLegacyPremiumPlan();
+            window.__legacyPremiumPlan = selectedPlan;
+            premiumManager.selectedPlan = selectedPlan;
+            premiumManager.setPlan?.(selectedPlan);
+
+            const legacyButton = document.querySelector('#premium-modal button[onclick*="upgradeToPro"]');
+            const modernButton = document.getElementById('btn-purchase-premium');
+            const button = legacyButton && !document.getElementById('premium-modal')?.classList?.contains('hidden')
+                ? legacyButton
+                : modernButton;
+            const originalMarkup = button?.innerHTML || '';
+
+            if (button) {
+                button.disabled = true;
+                button.innerHTML = '<span class="inline-flex items-center gap-2 justify-center"><svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Yükleniyor...</span></span>';
+            }
+
+            try {
+                hideModernPremiumModal();
+
+                const productId = selectedPlan === 'monthly'
+                    ? window.IAPManager?.PRODUCT_IDS?.MONTHLY
+                    : window.IAPManager?.PRODUCT_IDS?.YEARLY;
+
+                if (!productId) {
+                    window.alertMessage?.('Premium', 'Satın alma planı hazırlanamadı. Lütfen tekrar deneyin.', 'red');
+                    return false;
+                }
+
+                if (sourceKey) {
+                    window.ErrorLogger?.log('info', `Premium checkout started: ${sourceKey}:${selectedPlan}`);
+                }
+
+                const success = await window.IAPManager.purchase(productId);
+                if (!success) {
+                    window.showMicroFeedback?.({ message: 'Satın alma iptal edildi', type: 'warning' });
+                    return false;
+                }
+
+                localStorage.setItem('user_membership_status', 'pro');
+                localStorage.setItem('user_status', 'pro');
+                await premiumManager.refreshEntitlement?.();
+                premiumManager.isPremium = true;
+                writeUserStatusValue('pro');
+                window.__premiumReady = Promise.resolve(true);
+
+                hideLegacyPremiumModal();
+                hideModernPremiumModal();
+
+                try { window.updateUserPlanBadge?.(); } catch (e) { }
+                try { window.refreshPremiumLocks?.(); } catch (e) { }
+                try { window.applyPremiumUI?.(); } catch (e) { }
+                try { window.updateProfileUI?.(window.currentUserName, window.currentUserTitle, window.currentUserAvatar); } catch (e) { }
+
+                window.showMicroFeedback?.({ message: 'Premium aktif edildi!', type: 'success' });
+                return true;
+            } catch (error) {
+                console.error('[PremiumFlow] Checkout error:', error);
+                window.ErrorLogger?.log('error', 'Premium checkout failed', { sourceKey, error: error?.message || String(error) });
+                window.alertMessage?.('Premium', 'Apple ödeme ekranı açılamadı. Lütfen tekrar deneyin.', 'red');
+                return false;
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.innerHTML = originalMarkup;
+                }
+            }
+        };
+
         window.upgradeToPro = async function upgradeToProSafe() {
-            window.openPremiumPaywall('upgrade_cta');
+            return window.startPremiumCheckout?.('legacy_paywall_cta');
         };
 
         const patchPremiumManager = () => {
@@ -82967,13 +83093,13 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
             premiumManager.showPaywall = function showPaywallSafe(featureKey) {
                 if (this.isPremium || window.userStatus === 'pro') {
                     hideLegacyPremiumModal();
+                    hideModernPremiumModal();
                     return;
                 }
 
-                hideLegacyPremiumModal();
-                hideOnboardingOverlay();
+                if (showPrimaryPremiumPaywall(featureKey)) return;
 
-                const modal = document.getElementById('premium-paywall-modal') || document.getElementById('premium-modal');
+                const modal = document.getElementById('premium-paywall-modal');
                 const card = document.getElementById('premium-modal-card');
                 if (!modal) return;
 
@@ -83012,6 +83138,7 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
                 }
 
                 hideLegacyPremiumModal();
+                hideModernPremiumModal();
 
                 if (!this.isPremium && isNativeRuntime() && !hasVerifiedPremiumEvidence()) {
                     syncFreePremiumState();
@@ -83047,7 +83174,19 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
             };
         };
 
+        const patchLegacyPricingPlan = () => {
+            if (window.__legacyPricingPlanPatched || typeof window.setPricingPlan !== 'function') return;
+            const originalSetPricingPlan = window.setPricingPlan.bind(window);
+            window.__legacyPricingPlanPatched = true;
+
+            window.setPricingPlan = function setPricingPlanSafe(plan) {
+                window.__legacyPremiumPlan = plan === 'yearly' ? 'yearly' : 'monthly';
+                return originalSetPricingPlan(plan);
+            };
+        };
+
         const applyPremiumFlowFixes = () => {
+            patchLegacyPricingPlan();
             patchPremiumManager();
             patchOnboardingPremiumCTA();
             window.hydratePremiumState?.();
