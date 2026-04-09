@@ -79460,6 +79460,9 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
 
     #reward-popup-modal .reward-stage-panel {
         padding: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     #reward-popup-modal .reward-header {
@@ -79660,12 +79663,14 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
 
     #reward-popup-modal .reward-card-wrapper {
         position: relative;
-        width: 100%;
+        width: min(100%, 308px);
         aspect-ratio: 4 / 5;
-        margin: 0;
+        margin: 0 auto;
         padding: 0;
         border-radius: 24px;
         filter: none !important;
+        display: grid;
+        place-items: center;
     }
 
     #reward-popup-modal .reward-card {
@@ -79693,8 +79698,8 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 12px;
-        padding: 28px 24px;
+        gap: 13px;
+        padding: 30px 24px 32px;
         text-align: center;
         opacity: 0;
         transform: scale(0.96);
@@ -79729,7 +79734,8 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         font-size: 52px;
         line-height: 1;
         animation: none;
-        margin: 0;
+        margin: 0 auto;
+        transform: translateZ(0);
     }
 
     html.dark #reward-popup-modal .reward-icon {
@@ -79745,20 +79751,23 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
     }
 
     #reward-popup-modal .reward-name {
-        margin: 0;
+        margin: 0 auto;
+        max-width: 10ch;
         font-size: 24px;
         font-weight: 900;
         line-height: 1.08;
         letter-spacing: -0.04em;
         color: var(--rw-text) !important;
+        text-wrap: balance;
     }
 
     #reward-popup-modal .reward-desc {
         max-width: 28ch;
-        margin: 0;
+        margin: 0 auto;
         font-size: 14px;
         line-height: 1.7;
         color: var(--rw-text-muted) !important;
+        text-wrap: pretty;
     }
 
     #reward-popup-modal .reward-mystery {
@@ -80137,22 +80146,24 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
     }
 </style>
 <script id="reward-modal-v2-override">
-    window.openRewardPopup = function (rewardData) {
-        rewardData = rewardData || {};
-        if (window._rewardPopupState?.isOpen) return;
+        window.openRewardPopup = function (rewardData) {
+            rewardData = rewardData || {};
+            if (window._rewardPopupState?.isOpen) return;
 
         const existing = document.getElementById('reward-popup-modal');
         if (existing) existing.remove();
 
-        window._rewardPopupState = {
-            isOpen: true,
-            rewardData: rewardData,
-            scratchComplete: false,
-            scratchPercentage: 0,
-            celebrationTriggered: false,
-            soundPlayed: false,
-            confettiPlayed: false
-        };
+            window._rewardPopupState = {
+                isOpen: true,
+                rewardData: rewardData,
+                scratchComplete: false,
+                scratchPercentage: 0,
+                celebrationTriggered: false,
+                soundPlayed: false,
+                confettiPlayed: false,
+                hapticPlayed: false,
+                hapticTimers: []
+            };
 
         const escapeRewardText = function (value) {
             return String(value || '')
@@ -80343,6 +80354,31 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
             }
         }
 
+        window._playRewardWinHaptics = function () {
+            const state = getRewardState();
+            if (state.hapticPlayed) return;
+            state.hapticPlayed = true;
+
+            const haptics = window.FingoHaptics;
+            if (!haptics) return;
+
+            const timers = state.hapticTimers || [];
+            while (timers.length) {
+                clearTimeout(timers.pop());
+            }
+
+            if (prefersReducedMotion()) {
+                haptics.success?.();
+                state.hapticTimers = timers;
+                return;
+            }
+
+            haptics.success?.();
+            timers.push(setTimeout(() => haptics.medium?.(), 120));
+            timers.push(setTimeout(() => haptics.light?.(), 235));
+            state.hapticTimers = timers;
+        };
+
         window._playRewardWinSound = function () {
             const state = getRewardState();
             if (state.soundPlayed) return;
@@ -80358,14 +80394,22 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
 
                 const now = audioContext.currentTime;
                 const master = audioContext.createGain();
-                master.gain.value = prefersReducedMotion() ? 0.045 : 0.075;
+                master.gain.value = prefersReducedMotion() ? 0.038 : 0.06;
                 master.connect(audioContext.destination);
 
-                [
-                    { freq: 783.99, delay: 0.00, duration: 0.12, type: 'triangle', gain: 0.85 },
-                    { freq: 1046.5, delay: 0.08, duration: 0.14, type: 'triangle', gain: 0.75 },
-                    { freq: 1318.51, delay: 0.18, duration: 0.22, type: 'sine', gain: 0.68 }
-                ].forEach(function (note) {
+                const notes = prefersReducedMotion()
+                    ? [
+                        { freq: 987.77, delay: 0.00, duration: 0.12, type: 'triangle', gain: 0.16 },
+                        { freq: 1318.51, delay: 0.09, duration: 0.18, type: 'sine', gain: 0.18 }
+                    ]
+                    : [
+                        { freq: 659.25, delay: 0.00, duration: 0.13, type: 'triangle', gain: 0.11 },
+                        { freq: 987.77, delay: 0.05, duration: 0.14, type: 'triangle', gain: 0.14 },
+                        { freq: 1318.51, delay: 0.12, duration: 0.22, type: 'sine', gain: 0.18 },
+                        { freq: 1760.00, delay: 0.22, duration: 0.24, type: 'sine', gain: 0.1 }
+                    ];
+
+                notes.forEach(function (note, index) {
                     const oscillator = audioContext.createOscillator();
                     const gainNode = audioContext.createGain();
                     const startAt = now + note.delay;
@@ -80374,13 +80418,29 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
                     oscillator.type = note.type;
                     oscillator.frequency.setValueAtTime(note.freq, startAt);
                     gainNode.gain.setValueAtTime(0.0001, startAt);
-                    gainNode.gain.exponentialRampToValueAtTime(note.gain, startAt + 0.02);
+                    gainNode.gain.exponentialRampToValueAtTime(note.gain, startAt + 0.018);
+                    gainNode.gain.exponentialRampToValueAtTime(Math.max(note.gain * 0.36, 0.02), startAt + (note.duration * 0.56));
                     gainNode.gain.exponentialRampToValueAtTime(0.0001, stopAt);
 
                     oscillator.connect(gainNode);
                     gainNode.connect(master);
                     oscillator.start(startAt);
                     oscillator.stop(stopAt + 0.02);
+
+                    if (index === notes.length - 1 && !prefersReducedMotion()) {
+                        const sparkle = audioContext.createOscillator();
+                        const sparkleGain = audioContext.createGain();
+                        const sparkleStart = stopAt - 0.06;
+                        sparkle.type = 'triangle';
+                        sparkle.frequency.setValueAtTime(note.freq * 1.5, sparkleStart);
+                        sparkleGain.gain.setValueAtTime(0.0001, sparkleStart);
+                        sparkleGain.gain.exponentialRampToValueAtTime(0.055, sparkleStart + 0.012);
+                        sparkleGain.gain.exponentialRampToValueAtTime(0.0001, sparkleStart + 0.16);
+                        sparkle.connect(sparkleGain);
+                        sparkleGain.connect(master);
+                        sparkle.start(sparkleStart);
+                        sparkle.stop(sparkleStart + 0.18);
+                    }
                 });
             } catch (error) {
                 state.soundPlayed = false;
@@ -80435,6 +80495,8 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
             state.celebrationTriggered = false;
             state.soundPlayed = false;
             state.confettiPlayed = false;
+            state.hapticPlayed = false;
+            state.hapticTimers = [];
         };
 
         const originalTriggerRewardConfetti = window._triggerRewardConfetti;
@@ -80466,14 +80528,17 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
                 originalTriggerRewardReveal();
             }
 
-            if (window.FingoHaptics?.success) {
-                window.FingoHaptics.success();
-            }
+            window._playRewardWinHaptics();
             window._playRewardWinSound();
         };
 
         const originalCloseRewardPopup = window.closeRewardPopup;
         window.closeRewardPopup = function () {
+            const state = getRewardState();
+            if (Array.isArray(state.hapticTimers)) {
+                state.hapticTimers.forEach((timer) => clearTimeout(timer));
+                state.hapticTimers = [];
+            }
             const modal = document.getElementById('reward-popup-modal');
             if (modal) {
                 const domConfetti = modal.querySelector('.ob-confetti');
