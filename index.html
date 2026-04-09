@@ -83039,6 +83039,59 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
             try { window.updateProfileUI?.(window.currentUserName, window.currentUserTitle, window.currentUserAvatar); } catch (e) { }
         };
 
+        const TEST_PREMIUM_BYPASS = true;
+
+        window.activatePremiumForTesting = async function activatePremiumForTesting(sourceKey = 'test_paywall_cta') {
+            const nowIso = new Date().toISOString();
+            const premiumCache = {
+                isPremium: true,
+                cachedAt: nowIso,
+                source: 'test-bypass'
+            };
+
+            writeUserStatusValue('pro');
+            window.__premiumReady = Promise.resolve(true);
+
+            try {
+                await Promise.all([
+                    AppStorage.set('user_status', 'pro'),
+                    AppStorage.set('user_membership_status', 'pro'),
+                    AppStorage.set('premium', 'true'),
+                    AppStorage.set('premium_cache', JSON.stringify(premiumCache))
+                ]);
+            } catch (e) { }
+
+            localStorage.setItem('user_status', 'pro');
+            localStorage.setItem('user_membership_status', 'pro');
+            localStorage.setItem('premium', 'true');
+            localStorage.setItem('premium_cache', JSON.stringify(premiumCache));
+
+            const premiumManager = window.PremiumManager;
+            if (TEST_PREMIUM_BYPASS) {
+                return window.activatePremiumForTesting?.(sourceKey);
+            }
+            if (premiumManager) {
+                if (typeof premiumManager._updateEntitlement === 'function') {
+                    premiumManager._updateEntitlement(true, 'test-bypass');
+                } else {
+                    premiumManager.isPremium = true;
+                    premiumManager.unlockAllFeatures?.();
+                }
+            }
+
+            hideLegacyPremiumModal();
+            hideModernPremiumModal();
+
+            try { window.updateUserPlanBadge?.(); } catch (e) { }
+            try { window.refreshPremiumLocks?.(); } catch (e) { }
+            try { window.applyPremiumUI?.(); } catch (e) { }
+            try { window.updateProfileUI?.(window.currentUserName, window.currentUserTitle, window.currentUserAvatar); } catch (e) { }
+
+            window.ErrorLogger?.log('info', `Premium test bypass activated: ${sourceKey}`);
+            window.showMicroFeedback?.({ message: 'Test sürümünde premium erişim açıldı.', type: 'success' });
+            return true;
+        };
+
         window.hydratePremiumState = async function hydratePremiumStateSafe() {
             const [asUserStatus, asMembership, asPremiumFlag, asPremiumCache] = await Promise.all([
                 AppStorage.get('user_status'),
@@ -83242,6 +83295,14 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
                 if (featureKey) {
                     window.ErrorLogger?.log('info', `Paywall shown for: ${featureKey}`);
                 }
+            };
+
+            premiumManager.upgradeToPremium = async function upgradeToPremiumSafe() {
+                if (TEST_PREMIUM_BYPASS) {
+                    return window.activatePremiumForTesting?.('modern_paywall_cta');
+                }
+
+                return window.startPremiumCheckout?.('modern_paywall_cta');
             };
 
             const originalCloseModal = typeof premiumManager.closeModal === 'function'
