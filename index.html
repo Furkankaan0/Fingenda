@@ -4470,6 +4470,49 @@
                         getPlugin('Haptics')?.selectionChanged();
                         getPlugin('Haptics')?.selectionEnd();
                     } catch (e) { /* silent */ }
+                },
+
+                // Reward sequence (scratch card / premium wins)
+                reward(tier = 'standard') {
+                    if (!this._enabled) return [];
+
+                    const timers = [];
+                    const schedule = (callback, delay) => {
+                        timers.push(setTimeout(() => {
+                            try { callback(); } catch (e) { /* silent */ }
+                        }, delay));
+                    };
+
+                    const reducedMotion = (() => {
+                        try {
+                            return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                        } catch (e) {
+                            return false;
+                        }
+                    })();
+
+                    if (isNative()) {
+                        if (reducedMotion) {
+                            this.success?.();
+                            return timers;
+                        }
+
+                        if (tier === 'high') {
+                            this.medium?.();
+                            schedule(() => this.success?.(), 95);
+                            schedule(() => this.heavy?.(), 245);
+                        } else {
+                            this.light?.();
+                            schedule(() => this.success?.(), 80);
+                            schedule(() => this.medium?.(), 190);
+                        }
+                        return timers;
+                    }
+
+                    if (navigator.vibrate) {
+                        navigator.vibrate(tier === 'high' ? [24, 40, 34, 55, 52] : [16, 26, 22, 36, 28]);
+                    }
+                    return timers;
                 }
             };
 
@@ -80421,7 +80464,11 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
             state.hapticPlayed = true;
 
             const haptics = window.FingoHaptics;
-            if (!haptics) return;
+            const rewardData = state.rewardData || {};
+            const isHighValue = rewardData.valueTier === 'high' ||
+                rewardData.rarity === 'epic' ||
+                rewardData.rarity === 'legendary';
+            const rewardTier = isHighValue ? 'high' : 'standard';
 
             const timers = state.hapticTimers || [];
             while (timers.length) {
@@ -80429,14 +80476,28 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
             }
 
             if (prefersReducedMotion()) {
-                haptics.success?.();
+                if (haptics) {
+                    haptics.success?.();
+                } else if (navigator.vibrate) {
+                    navigator.vibrate(18);
+                }
                 state.hapticTimers = timers;
                 return;
             }
 
-            haptics.success?.();
-            timers.push(setTimeout(() => haptics.medium?.(), 120));
-            timers.push(setTimeout(() => haptics.light?.(), 235));
+            if (haptics?.reward) {
+                const rewardTimers = haptics.reward(rewardTier);
+                if (Array.isArray(rewardTimers) && rewardTimers.length) {
+                    timers.push(...rewardTimers);
+                }
+            } else if (haptics) {
+                haptics.success?.();
+                timers.push(setTimeout(() => haptics.medium?.(), isHighValue ? 110 : 140));
+                timers.push(setTimeout(() => haptics.light?.(), isHighValue ? 250 : 235));
+            } else if (navigator.vibrate) {
+                navigator.vibrate(isHighValue ? [24, 40, 34, 55, 52] : [16, 26, 22, 36, 28]);
+            }
+
             state.hapticTimers = timers;
         };
 
