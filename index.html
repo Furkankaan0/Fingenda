@@ -20955,11 +20955,19 @@
 
             /* Pricing Toggle */
             .pricing-toggle {
-                background: rgba(255, 255, 255, 0.1);
+                background: rgba(99, 102, 241, 0.08);
+                border: 1px solid rgba(99, 102, 241, 0.12);
                 border-radius: 100px;
                 padding: 4px;
                 display: flex;
                 gap: 4px;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+            }
+
+            html.dark .pricing-toggle {
+                background: rgba(255, 255, 255, 0.08);
+                border-color: rgba(255, 255, 255, 0.08);
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
             }
 
             .pricing-option {
@@ -20969,16 +20977,62 @@
                 font-size: 12px;
                 transition: all 0.3s ease;
                 cursor: pointer;
+                color: #64748b !important;
+                background: transparent !important;
+                box-shadow: none !important;
+            }
+
+            html.dark .pricing-option {
+                color: rgba(255, 255, 255, 0.68) !important;
             }
 
             .pricing-option.active {
-                background: white;
-                color: #1a1a2e;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                background: rgba(255, 255, 255, 0.96) !important;
+                color: #0f172a !important;
+                box-shadow: 0 10px 24px rgba(99, 102, 241, 0.16), 0 2px 8px rgba(15, 23, 42, 0.08) !important;
             }
 
             .pricing-option:not(.active) {
-                color: rgba(255, 255, 255, 0.7);
+                color: #64748b !important;
+            }
+
+            html.dark .pricing-option.active {
+                background: linear-gradient(135deg, rgba(129, 140, 248, 0.3), rgba(168, 85, 247, 0.24)) !important;
+                color: #ffffff !important;
+                box-shadow: 0 12px 28px rgba(79, 70, 229, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+            }
+
+            html.dark .pricing-option:not(.active) {
+                color: rgba(255, 255, 255, 0.62) !important;
+            }
+
+            .paywall-price-amount {
+                color: #0f172a;
+                letter-spacing: -0.04em;
+                text-shadow: 0 2px 14px rgba(99, 102, 241, 0.08);
+            }
+
+            .paywall-price-period {
+                color: rgba(15, 23, 42, 0.58);
+                font-weight: 700;
+            }
+
+            .paywall-price-caption {
+                color: #64748b;
+                font-weight: 600;
+            }
+
+            html.dark .paywall-price-amount {
+                color: #ffffff;
+                text-shadow: 0 6px 24px rgba(99, 102, 241, 0.28);
+            }
+
+            html.dark .paywall-price-period {
+                color: rgba(255, 255, 255, 0.72);
+            }
+
+            html.dark .paywall-price-caption {
+                color: rgba(216, 180, 254, 0.86);
             }
 
             /* Pro Badge Glow (Header) */
@@ -32791,23 +32845,23 @@
 
                     <!-- Pricing Toggle -->
                     <div
-                        class="pricing-toggle mx-auto w-max mb-4 bg-gray-100 p-1 rounded-xl flex gap-1 dark:bg-white/10">
+                        class="pricing-toggle mx-auto w-max mb-4">
                         <span
-                            class="pricing-option active px-4 py-1.5 rounded-lg text-xs font-bold bg-white text-gray-900 shadow-sm cursor-pointer transition-all dark:bg-white/20 dark:text-white"
+                            class="pricing-option active"
                             onclick="window.setPricingPlan('monthly')" data-i18n="premium.monthly">Aylık</span>
                         <span
-                            class="pricing-option px-4 py-1.5 rounded-lg text-xs font-medium text-gray-500 hover:text-gray-900 cursor-pointer transition-all dark:text-white/50 dark:hover:text-white"
+                            class="pricing-option"
                             onclick="window.setPricingPlan('yearly')" data-i18n="premium.yearly">Yıllık</span>
                     </div>
 
                     <!-- Price Display -->
                     <div id="premium-price-display" class="mb-6">
                         <div class="flex items-baseline justify-center gap-1">
-                            <span class="text-4xl font-black text-gray-900 dark:text-white">₺49</span>
-                            <span class="text-gray-500 dark:text-white/50 text-sm"
+                            <span class="paywall-price-amount text-4xl font-black">₺49</span>
+                            <span class="paywall-price-period text-sm"
                                 data-i18n="premium.perMonth">/ay</span>
                         </div>
-                        <p class="text-[10px] text-gray-400 dark:text-purple-300/60 mt-1" data-i18n="premium.trialDesc">
+                        <p class="paywall-price-caption text-[10px] mt-1" data-i18n="premium.trialDesc">
                             7 gün ücretsiz deneme dahil
                         </p>
                     </div>
@@ -34711,19 +34765,19 @@
             <div class="relative inline-block">
                             <span class="save-badge">%40 TASARRUF</span>
                             <div class="flex items-baseline justify-center gap-1">
-                                <span class="text-4xl font-black text-white">₺349</span>
-                                <span class="text-white/50 text-sm">/yıl</span>
+                                <span class="paywall-price-amount text-4xl font-black">₺349</span>
+                                <span class="paywall-price-period text-sm">/yıl</span>
                             </div>
                         </div>
-            <p class="text-[10px] text-purple-300/60 mt-1">Aylık ₺29'a denk gelir</p>
+            <p class="paywall-price-caption text-[10px] mt-1">Aylık ₺29'a denk gelir</p>
         `;
                     } else {
                         priceDisplay.innerHTML = `
             <div class="flex items-baseline justify-center gap-1">
-                            <span class="text-4xl font-black text-white">₺49</span>
-                            <span class="text-white/50 text-sm">/ay</span>
+                            <span class="paywall-price-amount text-4xl font-black">₺49</span>
+                            <span class="paywall-price-period text-sm">/ay</span>
                         </div>
-            <p class="text-[10px] text-purple-300/60 mt-1">7 gün ücretsiz deneme dahil</p>
+            <p class="paywall-price-caption text-[10px] mt-1">7 gün ücretsiz deneme dahil</p>
         `;
                     }
                 }
@@ -67721,13 +67775,13 @@ html.perf: blur(8px) fallback
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 <!-- DYNAMIC ISLAND TOAST NOTIFICATION SYSTEM                                    -->
-<!-- Toast görünürken header gizlenir, toast kapanınca header geri gelir          -->
+<!-- Toast görünürken header korunur; çakışmayı azaltmak için toast aşağı konumlanır -->
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 <style>
     /* === DYNAMIC ISLAND TOAST CONTAINER === */
     #dynamic-island-toast-container {
         position: fixed;
-        top: calc(16px + env(safe-area-inset-top, 0px));
+        top: calc(104px + env(safe-area-inset-top, 0px));
         left: 50%;
         transform: translateX(-50%);
         z-index: 10100;
@@ -67875,21 +67929,36 @@ html.perf: blur(8px) fallback
         border: none !important;
     }
 
-    /* === HEADER HIDE/SHOW ANIMATION === */
+    /* === HEADER TOAST COEXISTENCE === */
     #main-header {
         transition:
-            transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+            box-shadow 0.3s ease,
+            border-color 0.3s ease,
             opacity 0.3s ease !important;
     }
 
-    #main-header.header-hidden {
-        transform: translateY(-100%) scale(0.95) !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
+    #main-header.toast-active {
+        border-color: rgba(129, 140, 248, 0.24) !important;
+        box-shadow:
+            0 12px 36px rgba(79, 70, 229, 0.12),
+            0 4px 18px rgba(15, 23, 42, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+    }
+
+    html.dark #main-header.toast-active {
+        border-color: rgba(199, 210, 254, 0.18) !important;
+        box-shadow:
+            0 14px 40px rgba(0, 0, 0, 0.34),
+            0 0 36px rgba(99, 102, 241, 0.14),
+            inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
     }
 
     /* === RESPONSIVE === */
     @media (max-width: 420px) {
+        #dynamic-island-toast-container {
+            top: calc(96px + env(safe-area-inset-top, 0px));
+        }
+
         .dynamic-island-toast {
             min-width: 260px;
             max-width: calc(100vw - 40px);
@@ -67938,18 +68007,10 @@ html.perf: blur(8px) fallback
         let activeToastCount = 0;
         let toastHideTimeout = null;
 
-        // === SHOW HEADER ===
-        function showHeader() {
-            if (header && activeToastCount === 0) {
-                header.classList.remove('header-hidden');
-            }
-        }
-
-        // === HIDE HEADER ===
-        function hideHeader() {
-            if (header) {
-                header.classList.add('header-hidden');
-            }
+        // === KEEP HEADER STABLE DURING TOASTS ===
+        function syncHeaderToastState(isActive) {
+            if (!header) return;
+            header.classList.toggle('toast-active', !!isActive);
         }
 
         // === DYNAMIC ISLAND TOAST ===
@@ -67960,9 +68021,9 @@ html.perf: blur(8px) fallback
                 return;
             }
 
-            // Hide header when toast appears
-            activeToastCount++;
-            hideHeader();
+            // Keep the header visible; only apply a lightweight accent state
+            activeToastCount = 1;
+            syncHeaderToastState(true);
 
             // Determine icon based on type
             let icon = '✓';
@@ -68020,8 +68081,8 @@ html.perf: blur(8px) fallback
                 // After animation, remove and show header
                 setTimeout(() => {
                     toast.remove();
-                    activeToastCount = Math.max(0, activeToastCount - 1);
-                    showHeader();
+                    activeToastCount = 0;
+                    syncHeaderToastState(false);
                 }, 400);
             }, duration);
 
@@ -68034,8 +68095,8 @@ html.perf: blur(8px) fallback
                 toast.classList.add('hide');
                 setTimeout(() => {
                     toast.remove();
-                    activeToastCount = Math.max(0, activeToastCount - 1);
-                    showHeader();
+                    activeToastCount = 0;
+                    syncHeaderToastState(false);
                 }, 300);
             });
         };
