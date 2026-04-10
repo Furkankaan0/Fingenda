@@ -39544,7 +39544,57 @@
             // --- GÜNCELLENMİŞ EXCEL DIŞA AKTARMA (TÜRKÇE & EMOJİ FIX) ---
             // --- GÜNCELLENMİŞ EXCEL DIŞA AKTARMA (TÜRKÇE & EMOJİ FIX) ---
             // --- GÜNCELLENMİŞ EXCEL DIŞA AKTARMA (EMOJISIZ & DETAYLI) ---
-            window.exportToCSV = function () {
+            function isNativeIOSExportSurface() {
+                return !!(window.Capacitor?.isNativePlatform?.() && window.Capacitor?.getPlatform?.() === 'ios');
+            }
+
+            function blobToDataURL(blob) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(String(reader.result || ''));
+                    reader.onerror = () => reject(reader.error || new Error('Dosya okunamadı.'));
+                    reader.readAsDataURL(blob);
+                });
+            }
+
+            window.shareOrDownloadReportBlob = async function (blob, filename, mimeType, options = {}) {
+                const title = options.title || 'Fingenda Raporu';
+                const nativeExporter = window.Capacitor?.Plugins?.FingendaFileExporter;
+
+                if (isNativeIOSExportSurface() && nativeExporter?.shareBase64File) {
+                    const dataUrl = await blobToDataURL(blob);
+                    const base64 = dataUrl.split(',')[1];
+                    if (!base64) throw new Error('Dosya paylaşım için hazırlanamadı.');
+
+                    await nativeExporter.shareBase64File({
+                        base64,
+                        filename,
+                        mimeType,
+                        title
+                    });
+                    return;
+                }
+
+                if (navigator.share && window.File) {
+                    const file = new File([blob], filename, { type: mimeType });
+                    if (!navigator.canShare || navigator.canShare({ files: [file] })) {
+                        await navigator.share({ title, files: [file] });
+                        return;
+                    }
+                }
+
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = filename;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            };
+
+            window.exportToCSV = async function () {
                 if (!window.checkPremiumFeature('excel_export')) return;
                 if (transactions.length === 0) { window.alertMessage('Uyarı', 'Dışa aktarılacak veri yok.', 'red'); return; }
 
@@ -39581,22 +39631,36 @@
                 });
 
                 const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement("a");
-                const url = URL.createObjectURL(blob);
-                link.setAttribute("href", url);
-                link.setAttribute("download", `Fingenda_Rapor_${new Date().toLocaleDateString('tr-TR').replace(/\./g, '-')}.csv`);
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                const filename = `Fingenda_Rapor_${new Date().toLocaleDateString('tr-TR').replace(/\./g, '-')}.csv`;
+                try {
+                    await window.shareOrDownloadReportBlob(blob, filename, 'text/csv;charset=utf-8;', { title: 'Fingenda Excel Raporu' });
+                    window.showMicroFeedback?.({ message: 'Excel raporu hazırlandı', type: 'success' });
+                } catch (error) {
+                    console.error('CSV export failed:', error);
+                    window.alertMessage('Hata', 'Excel dosyası oluşturulurken bir sorun oluştu.', 'red');
+                }
             };
 
             // --- GÜNCELLENMİŞ PDF RAPORLAMA (PREMIUM & TÜRKÇE FIX) ---
             // --- GÜNCELLENMİŞ PDF RAPORLAMA (TÜRKÇE KARAKTER FIX) ---
             // --- GÜNCELLENMİŞ PDF RAPORLAMA (TÜRKÇE & EMOJİ FIX) ---
             // --- GÜNCELLENMİŞ PDF RAPORLAMA (EMOJISIZ & DETAYLI ÖZET) ---
-            window.downloadPDFReport = function () {
+            window.downloadPDFReport = async function () {
                 if (!window.checkPremiumFeature('excel_export')) return;
                 if (transactions.length === 0) { window.alertMessage('Uyarı', 'Raporlanacak veri bulunamadı.', "red"); return; }
+
+                try {
+                    if (!window.jspdf?.jsPDF && typeof window.ensureJSPDF === 'function') {
+                        await window.ensureJSPDF();
+                    }
+                } catch (error) {
+                    console.error('PDF library load failed:', error);
+                }
+
+                if (!window.jspdf?.jsPDF) {
+                    window.alertMessage('Hata', 'PDF raporu hazırlanamadı. Lütfen tekrar deneyin.', 'red');
+                    return;
+                }
 
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
@@ -39697,7 +39761,14 @@
                     }
                 });
 
-                doc.save(`Fingenda_Detayli_Rapor.pdf`);
+                try {
+                    const blob = doc.output('blob');
+                    await window.shareOrDownloadReportBlob(blob, `Fingenda_Detayli_Rapor.pdf`, 'application/pdf', { title: 'Fingenda PDF Raporu' });
+                    window.showMicroFeedback?.({ message: 'PDF raporu hazırlandı', type: 'success' });
+                } catch (error) {
+                    console.error('PDF export failed:', error);
+                    window.alertMessage('Hata', 'PDF dosyası oluşturulurken bir sorun oluştu.', 'red');
+                }
             };
 
 
@@ -43991,6 +44062,11 @@
                 },
 
                 async downloadOrShare(blob, filename, mimeType) {
+                    if (typeof window.shareOrDownloadReportBlob === 'function') {
+                        await window.shareOrDownloadReportBlob(blob, filename, mimeType, { title: 'Fingenda Dışa Aktarım' });
+                        return;
+                    }
+
                     // Try Capacitor Share first (for iOS Files app)
                     if (window.Capacitor?.Plugins?.Share) {
                         try {

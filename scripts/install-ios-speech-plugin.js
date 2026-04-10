@@ -10,6 +10,7 @@ const SPEECH_BLOCK = `
 // FINGENDA_NATIVE_SPEECH_PLUGIN_BEGIN
 import Speech
 import AVFoundation
+import UIKit
 
 @objc(FingendaSpeechRecognitionPlugin)
 public class FingendaSpeechRecognitionPlugin: CAPPlugin, CAPBridgedPlugin, SFSpeechRecognizerDelegate {
@@ -319,9 +320,96 @@ public class FingendaSpeechRecognitionPlugin: CAPPlugin, CAPBridgedPlugin, SFSpe
     }
 }
 
+@objc(FingendaFileExporterPlugin)
+public class FingendaFileExporterPlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "FingendaFileExporterPlugin"
+    public let jsName = "FingendaFileExporter"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "shareBase64File", returnType: CAPPluginReturnPromise)
+    ]
+
+    @objc func shareBase64File(_ call: CAPPluginCall) {
+        guard let base64 = call.getString("base64"), !base64.isEmpty else {
+            call.reject("File content is missing.")
+            return
+        }
+
+        let requestedFilename = call.getString("filename") ?? "fingenda-export"
+        let filename = sanitizedFilename(requestedFilename)
+
+        guard let data = Data(base64Encoded: base64, options: .ignoreUnknownCharacters) else {
+            call.reject("File content could not be decoded.")
+            return
+        }
+
+        do {
+            let exportDirectory = FileManager.default.temporaryDirectory.appendingPathComponent("FingendaExports", isDirectory: true)
+            try FileManager.default.createDirectory(at: exportDirectory, withIntermediateDirectories: true)
+
+            let fileURL = exportDirectory.appendingPathComponent(filename)
+            if FileManager.default.fileExists(atPath: fileURL.path) {
+                try FileManager.default.removeItem(at: fileURL)
+            }
+            try data.write(to: fileURL, options: .atomic)
+
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                guard let presenter = self.topPresenter(from: self.bridge?.viewController) else {
+                    call.reject("Share sheet could not be presented.")
+                    return
+                }
+
+                let activityController = UIActivityViewController(activityItems: [fileURL], applicationActivities: nil)
+                activityController.excludedActivityTypes = [.assignToContact, .addToReadingList]
+
+                if let popover = activityController.popoverPresentationController {
+                    popover.sourceView = presenter.view
+                    popover.sourceRect = CGRect(x: presenter.view.bounds.midX, y: presenter.view.bounds.midY, width: 0, height: 0)
+                    popover.permittedArrowDirections = []
+                }
+
+                activityController.completionWithItemsHandler = { _, completed, _, error in
+                    if let error {
+                        call.reject("File sharing failed.", nil, error)
+                        return
+                    }
+
+                    call.resolve([
+                        "completed": completed,
+                        "filename": filename
+                    ])
+                }
+
+                presenter.present(activityController, animated: true)
+            }
+        } catch {
+            call.reject("File could not be prepared for sharing.", nil, error)
+        }
+    }
+
+    private func sanitizedFilename(_ rawFilename: String) -> String {
+        let forbiddenCharacters = CharacterSet(charactersIn: "/\\\\:?%*|\\\"<>")
+        let cleaned = rawFilename
+            .components(separatedBy: forbiddenCharacters)
+            .joined(separator: "-")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        return cleaned.isEmpty ? "fingenda-export" : cleaned
+    }
+
+    private func topPresenter(from viewController: UIViewController?) -> UIViewController? {
+        var presenter = viewController
+        while let presented = presenter?.presentedViewController {
+            presenter = presented
+        }
+        return presenter
+    }
+}
+
 class FingendaBridgeViewController: CAPBridgeViewController {
     override open func capacitorDidLoad() {
         bridge?.registerPluginInstance(FingendaSpeechRecognitionPlugin())
+        bridge?.registerPluginInstance(FingendaFileExporterPlugin())
     }
 }
 // FINGENDA_NATIVE_SPEECH_PLUGIN_END
@@ -339,7 +427,7 @@ function patchAppDelegate() {
         throw new Error('AppDelegate.swift beklenen Capacitor importunu icermiyor.');
     }
 
-    const importLines = ['import Speech', 'import AVFoundation'];
+    const importLines = ['import Speech', 'import AVFoundation', 'import UIKit'];
     let nextContent = content;
     for (const importLine of importLines) {
         if (!nextContent.includes(importLine)) {
