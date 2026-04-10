@@ -30,13 +30,15 @@ public class FingendaSpeechRecognitionPlugin: CAPPlugin, CAPBridgedPlugin, SFSpe
     private var recognitionTask: SFSpeechRecognitionTask?
     private var currentTranscript = ""
     private var isStopping = false
+    private var inputTapInstalled = false
 
     @objc func getAvailability(_ call: CAPPluginCall) {
         let locale = call.getString("locale") ?? Locale.current.identifier
         let recognizer = makeRecognizer(locale: locale)
         let speechStatus = SFSpeechRecognizer.authorizationStatus()
         let microphoneStatus = AVAudioSession.sharedInstance().recordPermission
-        let available = recognizer?.isAvailable == true
+        let permissionsResolved = speechStatus == .authorized && microphoneStatus == .granted
+        let available = recognizer != nil && (!permissionsResolved || recognizer?.isAvailable == true)
 
         call.resolve([
             "available": available,
@@ -73,8 +75,8 @@ public class FingendaSpeechRecognitionPlugin: CAPPlugin, CAPBridgedPlugin, SFSpe
 
         if audioEngine.isRunning {
             audioEngine.stop()
-            audioEngine.inputNode.removeTap(onBus: 0)
         }
+        safeRemoveInputTap()
 
         recognitionRequest?.endAudio()
 
@@ -125,7 +127,7 @@ public class FingendaSpeechRecognitionPlugin: CAPPlugin, CAPBridgedPlugin, SFSpe
         let session = AVAudioSession.sharedInstance()
 
         do {
-            try session.setCategory(.record, mode: .measurement, options: [.duckOthers])
+            try session.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker, .allowBluetooth])
             try session.setActive(true, options: .notifyOthersOnDeactivation)
 
             let request = SFSpeechAudioBufferRecognitionRequest()
@@ -134,10 +136,19 @@ public class FingendaSpeechRecognitionPlugin: CAPPlugin, CAPBridgedPlugin, SFSpe
 
             let inputNode = audioEngine.inputNode
             let recordingFormat = inputNode.outputFormat(forBus: 0)
-            inputNode.removeTap(onBus: 0)
+            guard recordingFormat.channelCount > 0 else {
+                let message = "Microphone input is not ready yet. Please try again."
+                cleanupRecognition(deactivateAudio: true)
+                notifyListeners("speechState", data: ["state": "error", "message": message])
+                call.reject(message)
+                return
+            }
+
+            safeRemoveInputTap()
             inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
                 self?.recognitionRequest?.append(buffer)
             }
+            inputTapInstalled = true
 
             audioEngine.prepare()
             try audioEngine.start()
@@ -202,11 +213,17 @@ public class FingendaSpeechRecognitionPlugin: CAPPlugin, CAPBridgedPlugin, SFSpe
         if audioEngine.isRunning {
             audioEngine.stop()
         }
-        audioEngine.inputNode.removeTap(onBus: 0)
+        safeRemoveInputTap()
 
         if deactivateAudio {
             try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         }
+    }
+
+    private func safeRemoveInputTap() {
+        guard inputTapInstalled else { return }
+        audioEngine.inputNode.removeTap(onBus: 0)
+        inputTapInstalled = false
     }
 
     private func requestPermissions(completion: @escaping (Bool, String?) -> Void) {
@@ -255,7 +272,7 @@ public class FingendaSpeechRecognitionPlugin: CAPPlugin, CAPBridgedPlugin, SFSpe
             return "Speech recognition is currently unavailable."
         }
 
-        if speechStatus != .authorized {
+        if speechStatus == .denied || speechStatus == .restricted {
             return authorizationMessage(for: speechStatus)
         }
 

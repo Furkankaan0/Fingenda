@@ -41,6 +41,19 @@
         window.alertMessage?.(window.t('msg.error'), message, 'red');
     }
 
+    function hasUsableNativePlugin(plugin) {
+        return !!(
+            plugin &&
+            typeof plugin.startListening === 'function' &&
+            typeof plugin.stopListening === 'function'
+        );
+    }
+
+    function openVoiceFallback() {
+        resetVoiceState();
+        window.openTransactionVoiceFallbackPrompt?.();
+    }
+
     async function ensureNativeListeners(plugin) {
         if (state.listenersBound || !plugin?.addListener) return;
 
@@ -95,12 +108,18 @@
 
     async function startNativeVoiceInput() {
         const plugin = getPlugin();
-        if (!plugin) {
-            window.openTransactionVoiceFallbackPrompt?.();
+        if (!hasUsableNativePlugin(plugin)) {
+            openVoiceFallback();
             return;
         }
 
-        await ensureNativeListeners(plugin);
+        try {
+            await ensureNativeListeners(plugin);
+        } catch (error) {
+            console.error('[Voice] Native listener binding failed:', error);
+            openVoiceFallback();
+            return;
+        }
 
         if (state.listening) {
             try {
@@ -115,10 +134,18 @@
 
         try {
             const locale = window.FINGENDA_LANG === 'en' ? 'en-US' : 'tr-TR';
+            if (typeof plugin.getAvailability !== 'function') {
+                setVoiceButton(true);
+                await plugin.startListening({ locale });
+                window.currentRecognition = { abort: () => plugin.stopListening() };
+                return;
+            }
+
             const availability = await plugin.getAvailability({ locale });
             if (availability?.available === false) {
                 const reason = availability?.reason || t('Ses tanıma şu an kullanılamıyor.', 'Speech recognition is currently unavailable.');
                 showVoiceError(reason);
+                openVoiceFallback();
                 return;
             }
 
@@ -138,7 +165,7 @@
 
         const originalStartTransactionVoiceInput = window.startTransactionVoiceInput;
         window.startTransactionVoiceInput = function startTransactionVoiceInputNative() {
-            if (!getPlugin()) {
+            if (!hasUsableNativePlugin(getPlugin())) {
                 if (typeof originalStartTransactionVoiceInput === 'function') {
                     return originalStartTransactionVoiceInput();
                 }
