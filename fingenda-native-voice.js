@@ -8,6 +8,18 @@
         startedAt: 0
     };
 
+    function nativeIOSSpeechEnabled() {
+        if (!isNativeIOS()) return false;
+        if (window.FINGENDA_NATIVE_IOS_SPEECH_ENABLED === true) return true;
+
+        try {
+            return window.localStorage?.getItem('fingenda_native_ios_speech') === 'enabled';
+        } catch (error) {
+            console.warn('[Voice] Native iOS speech flag could not be read:', error);
+            return false;
+        }
+    }
+
     function t(tr, en) {
         return window.FINGENDA_LANG === 'en' ? en : tr;
     }
@@ -107,6 +119,11 @@
     }
 
     async function startNativeVoiceInput() {
+        if (!nativeIOSSpeechEnabled()) {
+            openVoiceFallback();
+            return;
+        }
+
         const plugin = getPlugin();
         if (!hasUsableNativePlugin(plugin)) {
             openVoiceFallback();
@@ -164,6 +181,21 @@
         if (!isNativeIOS()) return;
 
         const originalStartTransactionVoiceInput = window.startTransactionVoiceInput;
+
+        if (!nativeIOSSpeechEnabled()) {
+            window.startTransactionVoiceInput = function startTransactionVoiceInputIOSFallback() {
+                resetVoiceState();
+                if (typeof window.openTransactionVoiceFallbackPrompt === 'function') {
+                    return window.openTransactionVoiceFallbackPrompt();
+                }
+                if (typeof originalStartTransactionVoiceInput === 'function') {
+                    return originalStartTransactionVoiceInput();
+                }
+                return false;
+            };
+            return;
+        }
+
         window.startTransactionVoiceInput = function startTransactionVoiceInputNative() {
             if (!hasUsableNativePlugin(getPlugin())) {
                 if (typeof originalStartTransactionVoiceInput === 'function') {

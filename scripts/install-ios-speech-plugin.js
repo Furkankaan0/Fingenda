@@ -25,13 +25,14 @@ public class FingendaSpeechRecognitionPlugin: CAPPlugin, CAPBridgedPlugin, SFSpe
         CAPPluginMethod(name: "removeAllListeners", returnType: CAPPluginReturnPromise)
     ]
 
-    private let audioEngine = AVAudioEngine()
+    private var audioEngine: AVAudioEngine?
     private var speechRecognizer: SFSpeechRecognizer?
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
     private var currentTranscript = ""
     private var isStopping = false
     private var inputTapInstalled = false
+    private var activeInputNode: AVAudioInputNode?
 
     @objc func getAvailability(_ call: CAPPluginCall) {
         let locale = call.getString("locale") ?? Locale.current.identifier
@@ -74,8 +75,8 @@ public class FingendaSpeechRecognitionPlugin: CAPPlugin, CAPBridgedPlugin, SFSpe
     @objc func stopListening(_ call: CAPPluginCall) {
         isStopping = true
 
-        if audioEngine.isRunning {
-            audioEngine.stop()
+        if let engine = audioEngine, engine.isRunning {
+            engine.stop()
         }
         safeRemoveInputTap()
 
@@ -131,11 +132,15 @@ public class FingendaSpeechRecognitionPlugin: CAPPlugin, CAPBridgedPlugin, SFSpe
             try session.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker, .allowBluetooth])
             try session.setActive(true, options: .notifyOthersOnDeactivation)
 
+            let engine = AVAudioEngine()
+            audioEngine = engine
+
             let request = SFSpeechAudioBufferRecognitionRequest()
             request.shouldReportPartialResults = true
             recognitionRequest = request
 
-            let inputNode = audioEngine.inputNode
+            let inputNode = engine.inputNode
+            activeInputNode = inputNode
             let recordingFormat = inputNode.outputFormat(forBus: 0)
             guard recordingFormat.channelCount > 0 else {
                 let message = "Microphone input is not ready yet. Please try again."
@@ -151,37 +156,39 @@ public class FingendaSpeechRecognitionPlugin: CAPPlugin, CAPBridgedPlugin, SFSpe
             }
             inputTapInstalled = true
 
-            audioEngine.prepare()
-            try audioEngine.start()
+            engine.prepare()
+            try engine.start()
             currentTranscript = ""
             isStopping = false
 
             recognitionTask = recognizer.recognitionTask(with: request) { [weak self] result, error in
-                guard let self else { return }
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
 
-                if let result = result {
-                    let transcript = result.bestTranscription.formattedString.trimmingCharacters(in: .whitespacesAndNewlines)
-                    self.currentTranscript = transcript
-                    self.notifyListeners("speechResult", data: [
-                        "transcript": transcript,
-                        "isFinal": result.isFinal
-                    ])
+                    if let result = result {
+                        let transcript = result.bestTranscription.formattedString.trimmingCharacters(in: .whitespacesAndNewlines)
+                        self.currentTranscript = transcript
+                        self.notifyListeners("speechResult", data: [
+                            "transcript": transcript,
+                            "isFinal": result.isFinal
+                        ])
 
-                    if result.isFinal {
-                        self.notifyListeners("speechState", data: ["state": "completed"])
+                        if result.isFinal {
+                            self.notifyListeners("speechState", data: ["state": "completed"])
+                            self.cleanupRecognition(deactivateAudio: true)
+                        }
+                    }
+
+                    if let error = error {
+                        if !self.isStopping {
+                            self.notifyListeners("speechState", data: [
+                                "state": "error",
+                                "message": error.localizedDescription
+                            ])
+                        }
+
                         self.cleanupRecognition(deactivateAudio: true)
                     }
-                }
-
-                if let error = error {
-                    if !self.isStopping {
-                        self.notifyListeners("speechState", data: [
-                            "state": "error",
-                            "message": error.localizedDescription
-                        ])
-                    }
-
-                    self.cleanupRecognition(deactivateAudio: true)
                 }
             }
 
@@ -211,10 +218,14 @@ public class FingendaSpeechRecognitionPlugin: CAPPlugin, CAPBridgedPlugin, SFSpe
         recognitionRequest?.endAudio()
         recognitionRequest = nil
 
-        if audioEngine.isRunning {
-            audioEngine.stop()
+        if let engine = audioEngine, engine.isRunning {
+            engine.stop()
         }
         safeRemoveInputTap()
+        audioEngine = nil
+        activeInputNode = nil
+        speechRecognizer?.delegate = nil
+        speechRecognizer = nil
 
         if deactivateAudio {
             try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
@@ -223,7 +234,7 @@ public class FingendaSpeechRecognitionPlugin: CAPPlugin, CAPBridgedPlugin, SFSpe
 
     private func safeRemoveInputTap() {
         guard inputTapInstalled else { return }
-        audioEngine.inputNode.removeTap(onBus: 0)
+        activeInputNode?.removeTap(onBus: 0)
         inputTapInstalled = false
     }
 
