@@ -33342,8 +33342,25 @@
                 // --- SAVINGS & INVESTMENT DETECTION (Centralized) ---
                 window.isSavingsTransaction = function (t) {
                     if (!t) return false;
-                    const cat = (t.category || '').toLowerCase();
-                    const desc = (t.description || '').toLowerCase();
+                    const normalizeEarlySavingsText = (value) => String(value || '')
+                        .toLocaleLowerCase('tr-TR')
+                        .replace(/ı/g, 'i')
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .replace(/ğ/g, 'g')
+                        .replace(/ü/g, 'u')
+                        .replace(/ş/g, 's')
+                        .replace(/ö/g, 'o')
+                        .replace(/ç/g, 'c')
+                        .replace(/[^a-z0-9]+/g, ' ')
+                        .trim();
+                    const hasEarlySavingsMatch = (text, keyword) => {
+                        const normalizedText = normalizeEarlySavingsText(text);
+                        const normalizedKeyword = normalizeEarlySavingsText(keyword).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        return !!normalizedText && !!normalizedKeyword && new RegExp(`(^|\\s)${normalizedKeyword}(\\s|$)`).test(normalizedText);
+                    };
+                    const cat = t.category || '';
+                    const desc = t.description || '';
 
                     // 1. Kategori Bazlı Kontrol (Kesin)
                     const savingsCats = [
@@ -33352,7 +33369,7 @@
                         'gümüş', 'stok', 'crypto', 'savings', 'invest', 'kumbaram'
                     ];
 
-                    if (savingsCats.some(c => cat.includes(c))) return true;
+                    if (savingsCats.some(c => hasEarlySavingsMatch(cat, c))) return true;
 
                     // 2. Açıklama Bazlı Kontrol (Sadece belirgin yatırım kelimeleri)
                     // Dikkat: "Altın" kelimesi "Altın yüzük aldım" gibi harcamalarda da geçebilir.
@@ -33364,7 +33381,7 @@
                         'hisse senedi', 'fon alım'
                     ];
 
-                    if (strongKeywords.some(k => desc.includes(k))) return true;
+                    if (strongKeywords.some(k => hasEarlySavingsMatch(desc, k))) return true;
 
                     return false;
                 };
@@ -53583,15 +53600,44 @@ KULLANICI NOTU
              */
             function isSavingsCategory(cat) {
                 if (!cat) return false;
-                const c = cat.toLocaleLowerCase('tr-TR');
+                const c = normalizeSavingsKeywordText(cat);
                 const keywords = [
-                    'birikim', 'tasarruf', 'kumbara', 'hedef', 'hedef kumbarası', 'yatırım', 'yatirim',
-                    'dolar', 'usd', 'usdt', 'euro', 'eur', 'altın', 'gram', 'çeyrek', 'gümüş',
+                    'birikim', 'tasarruf', 'kumbara', 'hedef', 'hedef kumbarası', 'yatırım', 'yatirim', 'yatırım fonu',
+                    'dolar', 'usd', 'usdt', 'euro', 'eur', 'altın', 'gram altın', 'çeyrek altın', 'gümüş',
                     'fon', 'etf', 'hisse', 'borsa', 'kripto', 'bitcoin', 'btc', 'eth',
                     'mevduat', 'vadeli', 'bes', 'emeklilik', 'portföy', 'sterlın'
                 ];
-                return keywords.some(k => c.includes(k));
+                return keywords.some(k => savingsKeywordMatches(c, k));
             }
+
+            function normalizeSavingsKeywordText(value) {
+                return String(value || '')
+                    .toLocaleLowerCase('tr-TR')
+                    .replace(/ı/g, 'i')
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .replace(/ğ/g, 'g')
+                    .replace(/ü/g, 'u')
+                    .replace(/ş/g, 's')
+                    .replace(/ö/g, 'o')
+                    .replace(/ç/g, 'c')
+                    .replace(/[^a-z0-9]+/g, ' ')
+                    .trim();
+            }
+
+            function escapeSavingsKeyword(keyword) {
+                return String(keyword || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+
+            function savingsKeywordMatches(normalizedText, keyword) {
+                const normalizedKeyword = normalizeSavingsKeywordText(keyword);
+                if (!normalizedText || !normalizedKeyword) return false;
+                return new RegExp(`(^|\\s)${escapeSavingsKeyword(normalizedKeyword)}(\\s|$)`).test(normalizedText);
+            }
+
+            window.isSavingsKeywordMatch = function (text, keyword) {
+                return savingsKeywordMatches(normalizeSavingsKeywordText(text), keyword);
+            };
 
             // PATCH: Yatırım anahtar kelime kontrolü (Dolar/Euro/Altın vs.)
             function isInvestmentKeyword(cat = "") {
@@ -53606,11 +53652,10 @@ KULLANICI NOTU
 
                 const type = String(t.type || "").toLowerCase();
                 const cat = t.category || "";
-                const desc = t.description || "";
-                const combined = cat + " " + desc;
 
-                // 1) Kategori/isim birikim (kumbara, tasarruf, hedef vs.) ise
-                const byCategory = isSavingsCategory(combined);
+                // 1) Kategori birikim/yatırım ise. Açıklama otomatik sinyal değildir:
+                // "telefon taksit" içindeki "fon" gibi alt metinler yanlış pozitif üretmesin.
+                const byCategory = isSavingsCategory(cat);
 
                 // 2) Kullanıcı "Bakiyeden düşme" seçtiyse (yani: bu işlem gider değil, birikim/yatırım)
                 const byToggle = t.excludeFromBalance === true;
@@ -55881,9 +55926,9 @@ KULLANICI NOTU
                  */
                 isSavingsCategory(category) {
                     if (!category) return false;
-                    const savingsKeywords = ['altın', 'dolar', 'euro', 'birikim', 'yatırım', 'fon', 'hisse', 'kripto', 'btc', 'gold'];
+                    const savingsKeywords = ['altın', 'dolar', 'euro', 'birikim', 'yatırım', 'yatırım fonu', 'fon', 'hisse', 'kripto', 'btc', 'gold'];
                     const lowerCat = category.toLowerCase();
-                    return savingsKeywords.some(kw => lowerCat.includes(kw));
+                    return savingsKeywords.some(kw => window.isSavingsKeywordMatch ? window.isSavingsKeywordMatch(lowerCat, kw) : lowerCat.includes(kw));
                 }
 
                 // ═══════════════════════════════════════════════════════════════════════
@@ -61456,7 +61501,7 @@ KULLANICI NOTU
                 // 3. SADECE kategori kontrolü (açıklama değil - telefon/fon gibi çakışmalar önlenir)
                 const cat = (t.category || '');
                 for (const kw of this.savingsCategories) {
-                    if (cat.includes(kw)) return true;
+                    if (window.isSavingsKeywordMatch ? window.isSavingsKeywordMatch(cat, kw) : cat.includes(kw)) return true;
                 }
                 return false;
             },
