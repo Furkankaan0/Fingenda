@@ -27,6 +27,14 @@
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Fingenda, fis gorsellerini kaydetmek icin fotograf kutuphanenize erisim istiyor.</string>
 
+    <!-- Mikrofon izni (sesle islem ekleme icin) -->
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Fingenda, sesle islem ekleme ozelligi icin mikrofonunuza erisim istiyor.</string>
+
+    <!-- Ses tanima izni -->
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>Fingenda, sesinizi yaziya cevirerek hizli islem girisi yapabilmek icin ses tanima izni istiyor.</string>
+
     <!-- Face ID / Touch ID izni -->
     <key>NSFaceIDUsageDescription</key>
     <string>Fingenda, finansal verilerinizi korumak icin biyometrik kimlik dogrulama kullaniyor.</string>

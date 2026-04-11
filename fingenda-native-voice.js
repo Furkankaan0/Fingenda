@@ -11,13 +11,17 @@
     function nativeIOSSpeechEnabled() {
         if (!isNativeIOS()) return false;
         if (window.FINGENDA_NATIVE_IOS_SPEECH_ENABLED === true) return true;
+        if (window.FINGENDA_NATIVE_IOS_SPEECH_ENABLED === false) return false;
 
         try {
-            return window.localStorage?.getItem('fingenda_native_ios_speech') === 'enabled';
+            const storedPreference = window.localStorage?.getItem('fingenda_native_ios_speech');
+            if (storedPreference === 'disabled') return false;
+            if (storedPreference === 'enabled') return true;
         } catch (error) {
             console.warn('[Voice] Native iOS speech flag could not be read:', error);
-            return false;
         }
+
+        return true;
     }
 
     function t(tr, en) {
@@ -50,7 +54,17 @@
     }
 
     function showVoiceError(message) {
-        window.alertMessage?.(window.t('msg.error'), message, 'red');
+        if (typeof window.alertMessage === 'function') {
+            window.alertMessage(window.t('msg.error'), message, 'red');
+            return;
+        }
+
+        if (typeof window.showMicroFeedback === 'function') {
+            window.showMicroFeedback({ message, type: 'warning' });
+            return;
+        }
+
+        window.alert?.(message);
     }
 
     function hasUsableNativePlugin(plugin) {
