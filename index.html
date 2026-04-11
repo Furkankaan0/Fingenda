@@ -84377,23 +84377,27 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         display: flex !important;
         align-items: center !important;
         justify-content: space-between !important;
-        gap: 14px !important;
+        gap: 18px !important;
         width: 100% !important;
-        margin-top: 10px !important;
-        padding: 9px 2px 2px !important;
-        border: 0 !important;
-        border-top: 1px solid rgba(148, 163, 184, 0.16) !important;
-        border-radius: 0 !important;
-        background: transparent !important;
-        box-shadow: none !important;
-        overflow: visible !important;
-        isolation: auto !important;
+        min-height: 68px !important;
+        margin-top: 12px !important;
+        padding: 17px 20px 17px 22px !important;
+        border: 1px solid rgba(85, 91, 145, 0.42) !important;
+        border-radius: 0 0 24px 24px !important;
+        background: #181832 !important;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.04),
+            0 12px 24px -24px rgba(4, 8, 20, 0.72) !important;
+        overflow: hidden !important;
+        isolation: isolate !important;
     }
 
     html.dark #screen-add #savings-options:not(.hidden) {
-        border-top-color: rgba(255, 255, 255, 0.1) !important;
-        background: transparent !important;
-        box-shadow: none !important;
+        border-color: rgba(85, 91, 145, 0.42) !important;
+        background: #181832 !important;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.04),
+            0 12px 24px -24px rgba(4, 8, 20, 0.72) !important;
     }
 
     #screen-add #savings-options>div:first-child {
@@ -84419,12 +84423,13 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
     }
 
     #screen-add #savings-options label[for="input-exclude-balance"] {
-        color: #1e293b !important;
-        font-size: 12.5px !important;
-        font-weight: 800 !important;
-        line-height: 1.18 !important;
-        letter-spacing: -0.006em !important;
-        white-space: normal !important;
+        color: #f8fafc !important;
+        font-size: 16px !important;
+        font-weight: 850 !important;
+        line-height: 1.1 !important;
+        letter-spacing: -0.018em !important;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.18) !important;
+        white-space: nowrap !important;
     }
 
     html.dark #screen-add #savings-options label[for="input-exclude-balance"] {
@@ -84441,8 +84446,8 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
 
     #screen-add #savings-options>label {
         flex: 0 0 auto !important;
-        width: 48px !important;
-        height: 28px !important;
+        width: 74px !important;
+        height: 38px !important;
         justify-content: center !important;
         justify-self: end !important;
         border-radius: 999px !important;
@@ -84452,10 +84457,10 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
 
     #screen-add #input-exclude-balance+div {
         position: relative !important;
-        width: 46px !important;
-        height: 28px !important;
+        width: 72px !important;
+        height: 36px !important;
         border-radius: 999px !important;
-        background: #1f2937 !important;
+        background: #4d566d !important;
         border: 0 !important;
         box-shadow:
             inset 0 1px 0 rgba(255, 255, 255, 0.08),
@@ -84466,7 +84471,7 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
     }
 
     html.dark #screen-add #input-exclude-balance+div {
-        background: #111827 !important;
+        background: #4d566d !important;
         box-shadow:
             inset 0 1px 0 rgba(255, 255, 255, 0.08),
             inset 0 -1px 0 rgba(0, 0, 0, 0.28) !important;
@@ -84474,9 +84479,9 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
 
     #screen-add #input-exclude-balance+div::after {
         top: 4px !important;
-        left: 4px !important;
-        width: 20px !important;
-        height: 20px !important;
+        left: 5px !important;
+        width: 28px !important;
+        height: 28px !important;
         border: 0 !important;
         border-radius: 999px !important;
         background: #f8fafc !important;
@@ -84489,25 +84494,25 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
     }
 
     #screen-add #input-exclude-balance:checked+div {
-        background: #111827 !important;
+        background: #060d1a !important;
         box-shadow:
             inset 0 1px 0 rgba(255, 255, 255, 0.1),
             0 6px 16px -14px rgba(15, 23, 42, 0.8) !important;
     }
 
     #screen-add #input-exclude-balance:checked+div::after {
-        transform: translateX(18px) !important;
+        transform: translateX(34px) !important;
     }
 
     #screen-add #input-exclude-balance:focus-visible+div {
-        outline: 3px solid rgba(15, 23, 42, 0.18) !important;
+        outline: 3px solid rgba(255, 255, 255, 0.22) !important;
         outline-offset: 3px !important;
     }
 
     @media (max-width: 380px) {
         #screen-add #savings-options:not(.hidden) {
-            gap: 10px !important;
-            padding-top: 8px !important;
+            gap: 14px !important;
+            padding: 16px 17px !important;
         }
     }
 </style>
