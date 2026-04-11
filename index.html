@@ -84524,5 +84524,758 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         }
     }
 </style>
+<style id="tool-calculator-award-redesign">
+    #currency-modal.tool-calculator-modal,
+    #loan-modal.tool-calculator-modal {
+        --tool-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 249, 252, 0.96) 100%);
+        --tool-border: rgba(226, 232, 240, 0.92);
+        --tool-text: #101827;
+        --tool-muted: #667085;
+        --tool-soft: rgba(248, 250, 252, 0.94);
+        --tool-soft-border: rgba(226, 232, 240, 0.88);
+        --tool-control: rgba(255, 255, 255, 0.96);
+        --tool-control-border: rgba(203, 213, 225, 0.86);
+        --tool-control-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 10px 26px -24px rgba(15, 23, 42, 0.42);
+        --tool-focus: 0 0 0 4px rgba(37, 99, 235, 0.12);
+        --tool-result: linear-gradient(180deg, rgba(236, 253, 245, 0.98) 0%, rgba(220, 252, 231, 0.92) 100%);
+        --tool-result-border: rgba(16, 185, 129, 0.2);
+        --tool-accent: #059669;
+        --tool-accent-strong: #047857;
+        --tool-icon: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        --tool-cta: linear-gradient(135deg, #0f172a 0%, #1f2937 100%);
+        --tool-card-shadow: 0 34px 78px -42px rgba(15, 23, 42, 0.42), 0 18px 44px -34px rgba(16, 185, 129, 0.22);
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 9999 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: calc(18px + env(safe-area-inset-top, 0px)) 16px calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 180ms ease;
+    }
+
+    #loan-modal.tool-calculator-modal {
+        --tool-result: linear-gradient(180deg, rgba(238, 242, 255, 0.98) 0%, rgba(224, 231, 255, 0.92) 100%);
+        --tool-result-border: rgba(99, 102, 241, 0.2);
+        --tool-accent: #4f46e5;
+        --tool-accent-strong: #4338ca;
+        --tool-icon: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        --tool-card-shadow: 0 34px 78px -42px rgba(15, 23, 42, 0.42), 0 18px 44px -34px rgba(79, 70, 229, 0.24);
+    }
+
+    html.dark #currency-modal.tool-calculator-modal,
+    html.dark #loan-modal.tool-calculator-modal {
+        --tool-bg: linear-gradient(180deg, rgba(24, 31, 45, 0.98) 0%, rgba(12, 18, 32, 0.98) 100%);
+        --tool-border: rgba(71, 85, 105, 0.66);
+        --tool-text: #f8fafc;
+        --tool-muted: #a8b3c7;
+        --tool-soft: rgba(30, 41, 59, 0.74);
+        --tool-soft-border: rgba(71, 85, 105, 0.62);
+        --tool-control: rgba(15, 23, 42, 0.86);
+        --tool-control-border: rgba(71, 85, 105, 0.7);
+        --tool-control-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 26px -24px rgba(2, 6, 23, 0.9);
+        --tool-focus: 0 0 0 4px rgba(129, 140, 248, 0.16);
+        --tool-result: linear-gradient(180deg, rgba(6, 78, 59, 0.36) 0%, rgba(6, 95, 70, 0.24) 100%);
+        --tool-result-border: rgba(52, 211, 153, 0.2);
+        --tool-accent: #34d399;
+        --tool-accent-strong: #a7f3d0;
+        --tool-cta: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+        --tool-card-shadow: 0 40px 86px -42px rgba(2, 6, 23, 0.96), 0 18px 44px -34px rgba(16, 185, 129, 0.28);
+    }
+
+    html.dark #loan-modal.tool-calculator-modal {
+        --tool-result: linear-gradient(180deg, rgba(49, 46, 129, 0.3) 0%, rgba(67, 56, 202, 0.2) 100%);
+        --tool-result-border: rgba(129, 140, 248, 0.22);
+        --tool-accent: #a5b4fc;
+        --tool-accent-strong: #c7d2fe;
+    }
+
+    #currency-modal.tool-calculator-modal.is-open,
+    #loan-modal.tool-calculator-modal.is-open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .tool-calculator-backdrop {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(15, 23, 42, 0.34) 0%, rgba(15, 23, 42, 0.58) 100%) !important;
+        backdrop-filter: blur(18px) saturate(145%);
+        -webkit-backdrop-filter: blur(18px) saturate(145%);
+    }
+
+    html.dark .tool-calculator-backdrop {
+        background: linear-gradient(180deg, rgba(2, 6, 23, 0.58) 0%, rgba(2, 6, 23, 0.82) 100%) !important;
+    }
+
+    .tool-calculator-card {
+        position: relative;
+        width: min(100%, 454px);
+        max-height: min(720px, calc(100vh - 34px));
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border-radius: 34px;
+        border: 1px solid var(--tool-border);
+        background: var(--tool-bg) !important;
+        color: var(--tool-text);
+        box-shadow: var(--tool-card-shadow);
+        transform: translateY(14px) scale(0.98);
+        transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+        isolation: isolate;
+    }
+
+    .tool-calculator-modal.is-open .tool-calculator-card {
+        transform: translateY(0) scale(1);
+    }
+
+    .tool-calculator-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+            radial-gradient(circle at 85% 0%, color-mix(in srgb, var(--tool-accent) 18%, transparent) 0%, transparent 34%),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 32%);
+        z-index: 0;
+    }
+
+    .tool-calculator-head,
+    .tool-calculator-body,
+    .tool-calculator-actions {
+        position: relative;
+        z-index: 1;
+    }
+
+    .tool-calculator-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 24px 24px 16px;
+    }
+
+    .tool-calculator-title-wrap {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .tool-calculator-icon {
+        width: 50px;
+        height: 50px;
+        flex: 0 0 auto;
+        display: grid;
+        place-items: center;
+        border-radius: 18px;
+        background: var(--tool-icon);
+        color: #ffffff;
+        font-size: 22px;
+        box-shadow: 0 18px 36px -28px var(--tool-accent);
+    }
+
+    .tool-calculator-title {
+        margin: 0;
+        font-size: 22px;
+        line-height: 1.04;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        color: var(--tool-text);
+    }
+
+    .tool-calculator-subtitle {
+        margin: 6px 0 0;
+        font-size: 13px;
+        line-height: 1.35;
+        font-weight: 650;
+        color: var(--tool-muted);
+    }
+
+    .tool-calculator-close {
+        width: 42px;
+        height: 42px;
+        flex: 0 0 auto;
+        display: grid;
+        place-items: center;
+        border-radius: 15px;
+        border: 1px solid var(--tool-soft-border);
+        background: var(--tool-soft);
+        color: var(--tool-muted);
+        transition: transform 160ms ease, color 160ms ease, border-color 160ms ease;
+    }
+
+    .tool-calculator-close:active {
+        transform: scale(0.96);
+    }
+
+    .tool-calculator-body {
+        overflow: auto;
+        padding: 4px 24px 8px;
+    }
+
+    .tool-calculator-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .tool-calculator-field {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+    }
+
+    .tool-calculator-label {
+        font-size: 11px;
+        font-weight: 850;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+        color: var(--tool-muted);
+    }
+
+    .tool-calculator-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 13px;
+    }
+
+    .tool-calculator-currency-row {
+        display: grid;
+        grid-template-columns: 118px minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    .tool-calculator-control {
+        position: relative;
+        min-height: 58px;
+        display: flex;
+        align-items: center;
+        border-radius: 20px;
+        border: 1px solid var(--tool-control-border);
+        background: var(--tool-control);
+        box-shadow: var(--tool-control-shadow);
+        overflow: hidden;
+    }
+
+    .tool-calculator-control input,
+    .tool-calculator-control select {
+        width: 100%;
+        min-height: 58px;
+        border: 0 !important;
+        outline: 0 !important;
+        background: transparent !important;
+        color: var(--tool-text) !important;
+        font-size: 16px !important;
+        font-weight: 800 !important;
+        box-shadow: none !important;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    .tool-calculator-control input {
+        padding: 0 16px !important;
+    }
+
+    .tool-calculator-control select {
+        padding: 0 46px 0 16px !important;
+    }
+
+    .tool-calculator-control:focus-within {
+        border-color: var(--tool-accent) !important;
+        box-shadow: var(--tool-focus) !important;
+    }
+
+    .tool-calculator-control--prefix input {
+        padding-left: 42px !important;
+    }
+
+    .tool-calculator-prefix {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--tool-muted);
+        font-weight: 900;
+        pointer-events: none;
+    }
+
+    .tool-calculator-chevron {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        width: 9px;
+        height: 9px;
+        border-right: 2px solid var(--tool-muted);
+        border-bottom: 2px solid var(--tool-muted);
+        transform: translateY(-65%) rotate(45deg);
+        pointer-events: none;
+    }
+
+    .tool-calculator-swap {
+        display: flex;
+        justify-content: center;
+        margin: -2px 0;
+    }
+
+    .tool-calculator-swap button {
+        width: 48px;
+        height: 48px;
+        display: grid;
+        place-items: center;
+        border-radius: 17px;
+        border: 1px solid var(--tool-soft-border);
+        background: var(--tool-soft);
+        color: var(--tool-accent);
+        transition: transform 170ms ease;
+    }
+
+    .tool-calculator-swap button:active {
+        transform: rotate(10deg) scale(0.96);
+    }
+
+    .tool-calculator-result {
+        border: 1px solid var(--tool-result-border);
+        border-radius: 26px;
+        padding: 20px;
+        background: var(--tool-result);
+        box-shadow: 0 20px 40px -34px var(--tool-accent);
+    }
+
+    .tool-calculator-result--center {
+        text-align: center;
+    }
+
+    .tool-calculator-eyebrow {
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--tool-accent-strong);
+    }
+
+    .tool-calculator-value {
+        margin-top: 8px;
+        font-size: clamp(2rem, 7vw, 3.1rem);
+        line-height: 0.96;
+        font-weight: 950;
+        letter-spacing: -0.065em;
+        color: var(--tool-accent) !important;
+        word-break: break-word;
+    }
+
+    .tool-calculator-note {
+        margin-top: 10px;
+        font-size: 12px;
+        line-height: 1.45;
+        font-weight: 700;
+        color: var(--tool-accent-strong);
+    }
+
+    .tool-calculator-metrics {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 18px;
+        padding-top: 18px;
+        border-top: 1px solid color-mix(in srgb, var(--tool-accent) 22%, transparent);
+    }
+
+    .tool-calculator-metric {
+        min-width: 0;
+        padding: 12px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.34);
+    }
+
+    html.dark .tool-calculator-metric {
+        background: rgba(15, 23, 42, 0.24);
+    }
+
+    .tool-calculator-metric span {
+        display: block;
+        font-size: 10px;
+        line-height: 1.25;
+        font-weight: 850;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--tool-muted);
+    }
+
+    .tool-calculator-metric strong {
+        display: block;
+        margin-top: 6px;
+        font-size: 17px;
+        line-height: 1.1;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        color: var(--tool-text);
+    }
+
+    .tool-calculator-actions {
+        padding: 16px 24px calc(24px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .tool-calculator-primary {
+        width: 100%;
+        min-height: 58px;
+        border-radius: 20px;
+        background: var(--tool-cta);
+        color: #ffffff;
+        font-size: 16px;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        box-shadow: 0 24px 42px -28px rgba(15, 23, 42, 0.68);
+        transition: transform 170ms ease, filter 170ms ease;
+    }
+
+    .tool-calculator-primary:active {
+        transform: scale(0.985);
+        filter: brightness(0.98);
+    }
+
+    @media (max-width: 420px) {
+        #currency-modal.tool-calculator-modal,
+        #loan-modal.tool-calculator-modal {
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+        }
+
+        .tool-calculator-card {
+            border-radius: 30px;
+            max-height: calc(100vh - 24px);
+        }
+
+        .tool-calculator-head,
+        .tool-calculator-body,
+        .tool-calculator-actions {
+            padding-left: 18px;
+            padding-right: 18px;
+        }
+
+        .tool-calculator-grid,
+        .tool-calculator-currency-row,
+        .tool-calculator-metrics {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+<script id="tool-calculator-award-redesign">
+    (function () {
+        'use strict';
+
+        const currencyMeta = {
+            TRY: { name: 'Türk Lirası', symbol: '₺' },
+            USD: { name: 'Amerikan Doları', symbol: '$' },
+            EUR: { name: 'Euro', symbol: '€' },
+            GBP: { name: 'İngiliz Sterlini', symbol: '£' }
+        };
+
+        const moneyFormat = new Intl.NumberFormat('tr-TR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        const integerMoneyFormat = new Intl.NumberFormat('tr-TR', {
+            maximumFractionDigits: 0
+        });
+
+        function normalizeNumber(value) {
+            if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+            const raw = String(value || '')
+                .trim()
+                .replace(/\s/g, '');
+
+            let normalized = raw;
+            if (raw.includes(',') && raw.includes('.')) {
+                normalized = raw.replace(/\./g, '').replace(',', '.');
+            } else if (raw.includes(',')) {
+                normalized = raw.replace(/\./g, '').replace(',', '.');
+            } else if (raw.includes('.')) {
+                const lastDot = raw.lastIndexOf('.');
+                const decimals = raw.slice(lastDot + 1);
+                const hasSingleDot = raw.indexOf('.') === lastDot;
+                normalized = hasSingleDot && decimals.length > 0 && decimals.length < 3
+                    ? raw
+                    : raw.replace(/\./g, '');
+            }
+
+            normalized = normalized
+                .replace(/\s/g, '')
+                .replace(/[^\d.-]/g, '');
+            const parsed = Number.parseFloat(normalized);
+            return Number.isFinite(parsed) ? parsed : 0;
+        }
+
+        function closeToolCalculator(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.remove('is-open');
+            window.setTimeout(() => modal.remove(), 180);
+        }
+
+        function createToolCalculatorModal({ id, tone, title, subtitle, icon, body, actionLabel, onAction }) {
+            const existing = document.getElementById(id);
+            if (existing) existing.remove();
+
+            const modal = document.createElement('div');
+            modal.id = id;
+            modal.className = `tool-calculator-modal tool-calculator-modal--${tone}`;
+            modal.setAttribute('role', 'dialog');
+            modal.setAttribute('aria-modal', 'true');
+            modal.setAttribute('aria-labelledby', `${id}-title`);
+
+            modal.innerHTML = `
+                <div class="tool-calculator-backdrop" data-tool-close="true"></div>
+                <section class="tool-calculator-card" tabindex="-1">
+                    <header class="tool-calculator-head">
+                        <div class="tool-calculator-title-wrap">
+                            <div class="tool-calculator-icon" aria-hidden="true">${icon}</div>
+                            <div>
+                                <h3 class="tool-calculator-title" id="${id}-title">${title}</h3>
+                                <p class="tool-calculator-subtitle">${subtitle}</p>
+                            </div>
+                        </div>
+                        <button type="button" class="tool-calculator-close" aria-label="${title} penceresini kapat" data-tool-close="true">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                    </header>
+                    <div class="tool-calculator-body">${body}</div>
+                    <footer class="tool-calculator-actions">
+                        <button type="button" class="tool-calculator-primary" data-tool-action="true">${actionLabel}</button>
+                    </footer>
+                </section>
+            `;
+
+            modal.addEventListener('click', (event) => {
+                if (event.target.closest('[data-tool-close="true"]')) {
+                    closeToolCalculator(id);
+                    return;
+                }
+
+                if (event.target.closest('[data-tool-action="true"]')) {
+                    onAction?.();
+                }
+            });
+
+            document.body.appendChild(modal);
+            requestAnimationFrame(() => modal.classList.add('is-open'));
+            modal.querySelector('.tool-calculator-card')?.focus({ preventScroll: true });
+        }
+
+        window.closeToolCalculator = closeToolCalculator;
+
+        window.openCurrencyModal = function () {
+            window.FingoHaptics?.light?.();
+            const body = `
+                <div class="tool-calculator-stack">
+                    <div class="tool-calculator-field">
+                        <label class="tool-calculator-label" for="currency-amount">Kaynak tutar</label>
+                        <div class="tool-calculator-currency-row">
+                            <div class="tool-calculator-control">
+                                <select id="currency-from" onchange="window.convertCurrency()" aria-label="Kaynak para birimi">
+                                    <option value="TRY" selected>TRY</option>
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                    <option value="GBP">GBP</option>
+                                </select>
+                                <span class="tool-calculator-chevron" aria-hidden="true"></span>
+                            </div>
+                            <div class="tool-calculator-control">
+                                <input type="text" inputmode="decimal" id="currency-amount" value="1000" aria-label="Çevrilecek tutar" oninput="window.convertCurrency()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tool-calculator-swap">
+                        <button type="button" onclick="window.swapCurrencies()" aria-label="Kaynak ve hedef para birimlerini değiştir">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M7 7h11m0 0-3-3m3 3-3 3M17 17H6m0 0 3 3m-3-3 3-3"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="tool-calculator-field">
+                        <label class="tool-calculator-label" for="currency-to">Hedef para birimi</label>
+                        <div class="tool-calculator-control">
+                            <select id="currency-to" onchange="window.convertCurrency()" aria-label="Hedef para birimi">
+                                <option value="USD" selected>USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                                <option value="TRY">TRY</option>
+                            </select>
+                            <span class="tool-calculator-chevron" aria-hidden="true"></span>
+                        </div>
+                    </div>
+
+                    <div class="tool-calculator-result tool-calculator-result--center" aria-live="polite">
+                        <div class="tool-calculator-eyebrow">Çevrim sonucu</div>
+                        <div id="currency-result" class="tool-calculator-value">Hesaplanıyor...</div>
+                        <div id="currency-rate" class="tool-calculator-note">Anlık kur bilgisi hazırlanıyor</div>
+                    </div>
+                </div>
+            `;
+
+            createToolCalculatorModal({
+                id: 'currency-modal',
+                tone: 'currency',
+                title: 'Döviz Çevirici',
+                subtitle: 'Seçtiğiniz para birimleri arasında sade ve hızlı hesaplama.',
+                icon: '₺',
+                body,
+                actionLabel: 'Çevir',
+                onAction: window.convertCurrency
+            });
+
+            window.setTimeout(() => window.convertCurrency(), 60);
+        };
+
+        window.closeCurrencyModal = function () {
+            closeToolCalculator('currency-modal');
+        };
+
+        window.swapCurrencies = function () {
+            const from = document.getElementById('currency-from');
+            const to = document.getElementById('currency-to');
+            if (!from || !to) return;
+            const nextFrom = to.value;
+            to.value = from.value;
+            from.value = nextFrom;
+            window.FingoHaptics?.selection?.();
+            window.convertCurrency();
+        };
+
+        window.convertCurrency = function () {
+            const fromEl = document.getElementById('currency-from');
+            const toEl = document.getElementById('currency-to');
+            const amountEl = document.getElementById('currency-amount');
+            const resultEl = document.getElementById('currency-result');
+            const rateEl = document.getElementById('currency-rate');
+            if (!fromEl || !toEl || !amountEl || !resultEl || !rateEl) return;
+
+            const ratesSource = window.liveRates || {};
+            const rates = {
+                USD: Number(ratesSource.USD) || 34.50,
+                EUR: Number(ratesSource.EUR) || 37.50,
+                GBP: Number(ratesSource.GBP) || 44.20,
+                TRY: 1
+            };
+
+            const from = fromEl.value || 'TRY';
+            const to = toEl.value || 'USD';
+            const amount = normalizeNumber(amountEl.value);
+            const resultValue = (amount * (rates[from] || 1)) / (rates[to] || 1);
+            const currentRate = (rates[from] || 1) / (rates[to] || 1);
+            const target = currencyMeta[to] || { symbol: to, name: to };
+
+            resultEl.textContent = `${moneyFormat.format(resultValue)} ${target.symbol}`;
+            rateEl.textContent = `1 ${from} = ${currentRate.toLocaleString('tr-TR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })} ${to}`;
+        };
+
+        window.openLoanModal = function () {
+            window.FingoHaptics?.light?.();
+            const body = `
+                <div class="tool-calculator-stack">
+                    <div class="tool-calculator-field">
+                        <label class="tool-calculator-label" for="loan-amount">Kredi tutarı</label>
+                        <div class="tool-calculator-control tool-calculator-control--prefix">
+                            <span class="tool-calculator-prefix" aria-hidden="true">₺</span>
+                            <input type="text" inputmode="decimal" id="loan-amount" value="50000" aria-label="Kredi tutarı" oninput="window.calculateLoan()">
+                        </div>
+                    </div>
+
+                    <div class="tool-calculator-grid">
+                        <div class="tool-calculator-field">
+                            <label class="tool-calculator-label" for="loan-rate">Aylık faiz</label>
+                            <div class="tool-calculator-control tool-calculator-control--prefix">
+                                <span class="tool-calculator-prefix" aria-hidden="true">%</span>
+                                <input type="number" inputmode="decimal" id="loan-rate" value="3.5" step="0.01" aria-label="Aylık faiz oranı" oninput="window.calculateLoan()">
+                            </div>
+                        </div>
+                        <div class="tool-calculator-field">
+                            <label class="tool-calculator-label" for="loan-term">Vade</label>
+                            <div class="tool-calculator-control">
+                                <select id="loan-term" aria-label="Kredi vadesi" onchange="window.calculateLoan()">
+                                    <option value="12">12 Ay</option>
+                                    <option value="24">24 Ay</option>
+                                    <option value="36" selected>36 Ay</option>
+                                    <option value="48">48 Ay</option>
+                                    <option value="60">60 Ay</option>
+                                </select>
+                                <span class="tool-calculator-chevron" aria-hidden="true"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tool-calculator-result" aria-live="polite">
+                        <div class="tool-calculator-eyebrow">Aylık taksit</div>
+                        <div id="loan-monthly" class="tool-calculator-value">Hesaplanıyor...</div>
+                        <div class="tool-calculator-metrics">
+                            <div class="tool-calculator-metric">
+                                <span>Toplam ödeme</span>
+                                <strong id="loan-total">...</strong>
+                            </div>
+                            <div class="tool-calculator-metric">
+                                <span>Toplam faiz</span>
+                                <strong id="loan-interest">...</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            createToolCalculatorModal({
+                id: 'loan-modal',
+                tone: 'loan',
+                title: 'Kredi Hesaplama',
+                subtitle: 'Aylık taksit, toplam ödeme ve faiz yükünü tek bakışta görün.',
+                icon: '₺',
+                body,
+                actionLabel: 'Hesapla',
+                onAction: window.calculateLoan
+            });
+
+            window.setTimeout(() => window.calculateLoan(), 60);
+        };
+
+        window.closeLoanModal = function () {
+            closeToolCalculator('loan-modal');
+        };
+
+        window.calculateLoan = function () {
+            const amountEl = document.getElementById('loan-amount');
+            const rateEl = document.getElementById('loan-rate');
+            const termEl = document.getElementById('loan-term');
+            const monthlyEl = document.getElementById('loan-monthly');
+            const totalEl = document.getElementById('loan-total');
+            const interestEl = document.getElementById('loan-interest');
+            if (!amountEl || !rateEl || !termEl || !monthlyEl || !totalEl || !interestEl) return;
+
+            const principal = normalizeNumber(amountEl.value);
+            const monthlyRate = normalizeNumber(rateEl.value) / 100;
+            const months = Number.parseInt(termEl.value, 10) || 36;
+            let monthlyPayment = 0;
+
+            if (principal > 0 && monthlyRate > 0) {
+                const factor = Math.pow(1 + monthlyRate, months);
+                monthlyPayment = principal * monthlyRate * factor / (factor - 1);
+            } else if (principal > 0) {
+                monthlyPayment = principal / months;
+            }
+
+            const totalPayment = monthlyPayment * months;
+            const totalInterest = Math.max(0, totalPayment - principal);
+            const format = (value) => `${integerMoneyFormat.format(value)} ₺`;
+
+            monthlyEl.textContent = format(monthlyPayment);
+            totalEl.textContent = format(totalPayment);
+            interestEl.textContent = format(totalInterest);
+        };
+    })();
+</script>
 </body>
 </html>
