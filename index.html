@@ -40721,8 +40721,8 @@
                         try {
                             if (badge.condition()) {
                                 myBadges.push(badge.id);
-                                // PATCH: Store badge earned timestamp
-                                badgesMeta[badge.id] = new Date().toISOString();
+                                // PATCH: Store badge earned timestamp in the current meta shape.
+                                badgesMeta[badge.id] = { earnedAt: new Date().toISOString() };
                                 newBadge = true;
                                 window.showBadgeCelebration(badge); // Kutlama modalını aç
                             }
@@ -45874,7 +45874,8 @@ KULLANICI NOTU
             // Meta verisini localStorage'dan yükle
             function loadBadgeMeta() {
                 try {
-                    return JSON.parse(localStorage.getItem(getBadgeMetaKey()) || '{}');
+                    const parsed = JSON.parse(localStorage.getItem(getBadgeMetaKey()) || '{}');
+                    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
                 } catch (e) {
                     console.error('Badge meta yüklenirken hata:', e);
                     return {};
@@ -45886,27 +45887,76 @@ KULLANICI NOTU
                 localStorage.setItem(getBadgeMetaKey(), JSON.stringify(meta || {}));
             }
 
+            function isValidBadgeEarnedAt(value) {
+                return typeof value === 'string' && !Number.isNaN(new Date(value).getTime());
+            }
+
+            function normalizeBadgeMetaEntry(entry, fallbackISO) {
+                const safeFallback = fallbackISO || new Date().toISOString();
+
+                if (isValidBadgeEarnedAt(entry)) {
+                    return { earnedAt: entry };
+                }
+
+                if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
+                    if (isValidBadgeEarnedAt(entry.earnedAt)) return entry;
+                    return {
+                        ...entry,
+                        earnedAt: safeFallback,
+                        recoveredAt: entry.recoveredAt || safeFallback
+                    };
+                }
+
+                return {
+                    earnedAt: safeFallback,
+                    recoveredAt: safeFallback
+                };
+            }
+
+            function getBadgeEarnedAt(meta, badgeId) {
+                const entry = meta?.[badgeId];
+                if (isValidBadgeEarnedAt(entry)) return entry;
+                if (entry && isValidBadgeEarnedAt(entry.earnedAt)) return entry.earnedAt;
+                return null;
+            }
+
+            function formatBadgeEarnedDate(earnedAtISO) {
+                if (!isValidBadgeEarnedAt(earnedAtISO)) return '—';
+                return new Date(earnedAtISO).toLocaleDateString('tr-TR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            }
+
             // Rozet kazanıldığında tarih kaydet (sonradan overwrite etme!)
             function recordBadgeEarnedAt(badgeId, earnedAtISO) {
                 const meta = loadBadgeMeta();
-                if (!meta[badgeId]) meta[badgeId] = {};
+                if (isValidBadgeEarnedAt(meta[badgeId])) {
+                    meta[badgeId] = { earnedAt: meta[badgeId] };
+                    saveBadgeMeta(meta);
+                    return;
+                }
+                if (!meta[badgeId] || typeof meta[badgeId] !== 'object') meta[badgeId] = {};
                 // Eğer daha önce kaydedilmemişse yaz
-                if (!meta[badgeId].earnedAt) {
+                if (!isValidBadgeEarnedAt(meta[badgeId].earnedAt)) {
                     meta[badgeId].earnedAt = earnedAtISO || new Date().toISOString();
                     saveBadgeMeta(meta);
                 }
             }
 
-            // Eski rozetler için migration: earnedAt yoksa null olarak işaretle
+            // Eski rozetler için migration: string/null meta kayıtlarını tek formata taşı
             (function migrateBadgesMeta() {
                 const currentYear = (typeof APP_YEAR !== 'undefined') ? APP_YEAR : new Date().getFullYear();
                 const unlocked = JSON.parse(localStorage.getItem(`my_badges_${currentYear}`) || '[]');
                 const meta = loadBadgeMeta();
+                const migrationISO = new Date().toISOString();
 
                 let changed = false;
                 for (const id of unlocked) {
-                    if (!meta[id]) {
-                        meta[id] = { earnedAt: null }; // Eski rozetler için null = "—" gösterilir
+                    const normalized = normalizeBadgeMetaEntry(meta[id], migrationISO);
+                    if (JSON.stringify(meta[id]) !== JSON.stringify(normalized)) {
+                        meta[id] = normalized;
                         changed = true;
                     }
                 }
@@ -46003,10 +46053,8 @@ KULLANICI NOTU
 
                 // Veriler - Kaydedilmiş earnedAt tarihini kullan
                 const meta = loadBadgeMeta();
-                const earnedAtISO = meta[badgeId]?.earnedAt || null;
-                const badgeDate = (isUnlocked && earnedAtISO)
-                    ? new Date(earnedAtISO).toLocaleDateString('tr-TR')
-                    : '—';
+                const earnedAtISO = getBadgeEarnedAt(meta, badgeId);
+                const badgeDate = isUnlocked ? formatBadgeEarnedDate(earnedAtISO) : '—';
                 const statusText = isUnlocked ? 'KAZANILDI' : 'KİLİTLİ';
 
                 // Stil Sınıfları
