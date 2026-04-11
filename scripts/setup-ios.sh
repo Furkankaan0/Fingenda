@@ -51,6 +51,11 @@ else
 fi
 echo ""
 
+# 5.1 Native launch screen olustur
+echo "Native iOS launch screen olusturuluyor..."
+node scripts/generate-ios-launchscreen.js
+echo ""
+
 # 6. Info.plist guncellemeleri
 PLIST_PATH="ios/App/App/Info.plist"
 if [ -f "$PLIST_PATH" ]; then
