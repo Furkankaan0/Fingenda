@@ -76,6 +76,8 @@ workflows:
           add_or_set_plist_value NSPhotoLibraryUsageDescription string "Fingenda, fis gorsellerini kaydetmek icin fotograf kutuphanenize erisim istiyor."
           add_or_set_plist_value NSMicrophoneUsageDescription string "Fingenda, sesle islem ekleme ozelligi icin mikrofonunuza erisim istiyor."
           add_or_set_plist_value NSSpeechRecognitionUsageDescription string "Fingenda, sesinizi yaziya cevirerek hizli islem girisi yapabilmek icin ses tanima izni istiyor."
+          /usr/libexec/PlistBuddy -c "Print :NSMicrophoneUsageDescription" "$APP_PLIST"
+          /usr/libexec/PlistBuddy -c "Print :NSSpeechRecognitionUsageDescription" "$APP_PLIST"
           add_or_set_plist_value NSFaceIDUsageDescription string "Fingenda, finansal verilerinizi korumak icin biyometrik kimlik dogrulama kullaniyor."
           add_or_set_plist_value UIViewControllerBasedStatusBarAppearance bool true
           add_or_set_plist_value UILaunchStoryboardName string "LaunchScreen"
@@ -203,6 +205,8 @@ workflows:
           add_or_set_plist_value NSPhotoLibraryUsageDescription string "Fingenda, fis gorsellerini kaydetmek icin fotograf kutuphanenize erisim istiyor."
           add_or_set_plist_value NSMicrophoneUsageDescription string "Fingenda, sesle islem ekleme ozelligi icin mikrofonunuza erisim istiyor."
           add_or_set_plist_value NSSpeechRecognitionUsageDescription string "Fingenda, sesinizi yaziya cevirerek hizli islem girisi yapabilmek icin ses tanima izni istiyor."
+          /usr/libexec/PlistBuddy -c "Print :NSMicrophoneUsageDescription" "$APP_PLIST"
+          /usr/libexec/PlistBuddy -c "Print :NSSpeechRecognitionUsageDescription" "$APP_PLIST"
           add_or_set_plist_value NSFaceIDUsageDescription string "Fingenda, finansal verilerinizi korumak icin biyometrik kimlik dogrulama kullaniyor."
           add_or_set_plist_value UIViewControllerBasedStatusBarAppearance bool true
           add_or_set_plist_value UILaunchStoryboardName string "LaunchScreen"

@@ -4,6 +4,7 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const IOS_APP_DIR = path.join(ROOT, 'ios', 'App', 'App');
 const APP_DELEGATE_PATH = path.join(IOS_APP_DIR, 'AppDelegate.swift');
+const INFO_PLIST_PATH = path.join(IOS_APP_DIR, 'Info.plist');
 const STORYBOARD_PATH = path.join(IOS_APP_DIR, 'Base.lproj', 'Main.storyboard');
 
 const SPEECH_BLOCK = `
@@ -20,9 +21,7 @@ public class FingendaSpeechRecognitionPlugin: CAPPlugin, CAPBridgedPlugin, SFSpe
         CAPPluginMethod(name: "getAvailability", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "startListening", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "stopListening", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "cancelListening", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "addListener", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "removeAllListeners", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "cancelListening", returnType: CAPPluginReturnPromise)
     ]
 
     private var audioEngine: AVAudioEngine?
@@ -239,6 +238,12 @@ public class FingendaSpeechRecognitionPlugin: CAPPlugin, CAPBridgedPlugin, SFSpe
     }
 
     private func requestPermissions(completion: @escaping (Bool, String?) -> Void) {
+        let missingDescriptions = missingUsageDescriptions()
+        guard missingDescriptions.isEmpty else {
+            completion(false, "Missing iOS permission descriptions: \\(missingDescriptions.joined(separator: ", ")).")
+            return
+        }
+
         SFSpeechRecognizer.requestAuthorization { [weak self] status in
             DispatchQueue.main.async {
                 guard let self else { return }
@@ -254,6 +259,21 @@ public class FingendaSpeechRecognitionPlugin: CAPPlugin, CAPBridgedPlugin, SFSpe
                     }
                 }
             }
+        }
+    }
+
+    private func missingUsageDescriptions() -> [String] {
+        let requiredKeys = [
+            "NSMicrophoneUsageDescription",
+            "NSSpeechRecognitionUsageDescription"
+        ]
+
+        return requiredKeys.filter { key in
+            guard let value = Bundle.main.object(forInfoDictionaryKey: key) as? String else {
+                return true
+            }
+
+            return value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
     }
 
@@ -426,6 +446,32 @@ class FingendaBridgeViewController: CAPBridgeViewController {
 // FINGENDA_NATIVE_SPEECH_PLUGIN_END
 `;
 
+function setPlistString(content, key, value) {
+    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const keyValuePattern = new RegExp(`\\s*<key>${escapedKey}<\\/key>\\s*<string>[\\s\\S]*?<\\/string>`, 'g');
+    const nextEntry = `\n\t<key>${key}</key>\n\t<string>${value}</string>`;
+
+    if (keyValuePattern.test(content)) {
+        return content.replace(keyValuePattern, nextEntry);
+    }
+
+    return content.replace(/\n<\/dict>\s*<\/plist>\s*$/u, `${nextEntry}\n</dict>\n</plist>\n`);
+}
+
+function patchInfoPlist() {
+    if (!fs.existsSync(INFO_PLIST_PATH)) {
+        console.log('[iOS Speech] Info.plist bulunamadi, izin metni patch atlandi.');
+        return;
+    }
+
+    let content = fs.readFileSync(INFO_PLIST_PATH, 'utf8');
+    content = setPlistString(content, 'NSMicrophoneUsageDescription', 'Fingenda, sesle islem ekleme ozelligi icin mikrofonunuza erisim istiyor.');
+    content = setPlistString(content, 'NSSpeechRecognitionUsageDescription', 'Fingenda, sesinizi yaziya cevirerek hizli islem girisi yapabilmek icin ses tanima izni istiyor.');
+
+    fs.writeFileSync(INFO_PLIST_PATH, content, 'utf8');
+    console.log('[iOS Speech] Info.plist mikrofon ve ses tanima izin metinleri dogrulandi.');
+}
+
 function patchAppDelegate() {
     if (!fs.existsSync(APP_DELEGATE_PATH)) {
         console.log('[iOS Speech] AppDelegate.swift bulunamadi, patch atlandi.');
@@ -474,5 +520,6 @@ function patchStoryboard() {
     console.log('[iOS Speech] Main.storyboard guncellendi.');
 }
 
+patchInfoPlist();
 patchAppDelegate();
 patchStoryboard();
