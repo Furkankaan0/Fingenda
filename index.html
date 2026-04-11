@@ -31742,22 +31742,6 @@
                         </div>
                     </button>
 
-                    <!-- Geçmiş - Timeline Icon -->
-                    <button onclick="window.switchTab('history')" id="nav-history" aria-label="Geçmiş İşlemler"
-                        data-i18n-aria="transaction.history"
-                        class="nav-item flex items-center justify-center w-14 h-14 transition-all duration-300 rounded-2xl relative z-10">
-                        <div class="nav-icon-box w-12 h-12 rounded-xl flex items-center justify-center"
-                            style="background: transparent;">
-                            <svg class="w-7 h-7" style="color: var(--text-secondary);" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="1.8">
-                                <path d="M12 8v5l3 2" stroke-linecap="round" stroke-linejoin="round" />
-                                <path
-                                    d="M3.05 11A9 9 0 1 1 5.64 17.36M3.05 11H7M3.05 11V7"
-                                    stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </div>
-                    </button>
-
                     <!-- Ortadaki Ekle Butonu - Premium 3D Floating -->
                     <button onclick="window.switchTab('add')" id="nav-add" aria-label="Yeni İşlem Ekle"
                         data-i18n-aria="nav.addTransaction"
@@ -31772,22 +31756,6 @@
                             <svg class="w-7 h-7 relative z-10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2.5">
                                 <path d="M12 5V19M5 12H19" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </div>
-                    </button>
-
-                    <!-- Hedefler - Goal Icon -->
-                    <button onclick="window.switchTab('goals')" id="nav-goals" aria-label="Hedef Kumbarası"
-                        data-i18n-aria="goals.title"
-                        class="nav-item flex items-center justify-center w-14 h-14 transition-all duration-300 rounded-2xl relative z-10">
-                        <div class="nav-icon-box w-12 h-12 rounded-xl flex items-center justify-center"
-                            style="background: transparent;">
-                            <svg class="w-7 h-7" style="color: var(--text-secondary);" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="1.8">
-                                <circle cx="12" cy="12" r="8" stroke-linecap="round" stroke-linejoin="round" />
-                                <circle cx="12" cy="12" r="3" stroke-linecap="round" stroke-linejoin="round" />
-                                <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke-linecap="round"
-                                    stroke-linejoin="round" />
                             </svg>
                         </div>
                     </button>
@@ -36815,7 +36783,7 @@
                     if (blob && nav && activeItem) {
                         const navRect = nav.getBoundingClientRect();
                         const btnRect = activeItem.getBoundingClientRect();
-                        const leftPos = activeItem.offsetLeft + (activeItem.offsetWidth / 2) - 28;
+                        const leftPos = btnRect.left - navRect.left + (btnRect.width / 2) - 28;
                         blob.style.transition = 'none';
                         blob.style.left = `${leftPos}px`;
                         blob.style.opacity = '1';
@@ -36836,7 +36804,6 @@
                 const nav = document.getElementById('main-nav');
                 const blob = document.getElementById('nav-liquid-blob');
                 if (!nav || !blob || !navContainer) return;
-                const isNavScrollable = () => nav.scrollWidth > nav.clientWidth + 4;
 
                 let isDragging = false;
                 let isPressed = false;
@@ -36877,7 +36844,6 @@
 
                 // Sürükleme başlat
                 const startDrag = (e) => {
-                    if (isNavScrollable()) return;
                     if (e.target.closest('#nav-add')) return; // Ekle butonu hariç
 
                     isPressed = true;
@@ -39131,7 +39097,7 @@
             // --- iOS 26 LIQUID GLASS BLOB & DRAG-TAP NAVIGATION ---
 
             // Tab sırası (ortadaki 'add' hariç, sürükleme ile değiştirilemez)
-            const navTabOrder = ['dashboard', 'notes', 'history', 'goals', 'doviz', 'wallet'];
+            const navTabOrder = ['dashboard', 'notes', 'doviz', 'wallet'];
             let currentActiveTab = 'dashboard';
             let navDragState = {
                 isDragging: false,
@@ -39168,8 +39134,11 @@
                 const btn = document.getElementById(navBtnId);
                 if (!btn) return;
 
+                const btnRect = btn.getBoundingClientRect();
+                const navRect = nav.getBoundingClientRect();
+
                 // Pozisyonu hesapla
-                const left = btn.offsetLeft + (btn.offsetWidth / 2) - 30;
+                const left = btnRect.left - navRect.left + (btnRect.width / 2) - 30;
 
                 if (animate) {
                     blob.classList.add('bounce-back');
@@ -39181,13 +39150,6 @@
                 blob.style.left = left + 'px';
                 blob.style.width = '60px';
                 blob.style.transform = 'translateY(-50%) scaleX(1) scaleY(1)';
-                if (nav.scrollWidth > nav.clientWidth + 4) {
-                    btn.scrollIntoView({
-                        behavior: animate ? 'smooth' : 'auto',
-                        block: 'nearest',
-                        inline: 'center'
-                    });
-                }
 
                 // Animasyon sonrası sınıfları temizle
                 if (animate) {
@@ -39246,13 +39208,6 @@
                 const touch = e.touches ? e.touches[0] : e;
                 const deltaX = touch.clientX - navDragState.startX;
                 const deltaY = touch.clientY - navDragState.startY;
-                const nav = document.getElementById('main-nav');
-
-                if (nav && nav.scrollWidth > nav.clientWidth + 4) {
-                    navDragState.hasMoved = Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY);
-                    navDragState.currentX = touch.clientX;
-                    return;
-                }
 
                 // Yatay sürükleme kontrolü (dikey sürüklemeden ayır)
                 if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
@@ -39274,7 +39229,6 @@
 
                 const deltaX = navDragState.currentX - navDragState.startX;
                 const threshold = 50; // Minimum sürükleme mesafesi
-                const nav = document.getElementById('main-nav');
 
                 // Drag sınıfını kaldır
                 document.body.classList.remove('nav-dragging');
@@ -39294,12 +39248,6 @@
                 // Yeterli mesafe sürüklendiyse tab değiştir
                 // Flag kontrolü: Programmatic scroll sırasında tab değiştirme
                 if (isProgrammaticScroll) {
-                    navDragState.isDragging = false;
-                    navDragState.hasMoved = false;
-                    return;
-                }
-
-                if (nav && nav.scrollWidth > nav.clientWidth + 4) {
                     navDragState.isDragging = false;
                     navDragState.hasMoved = false;
                     return;
@@ -83984,78 +83932,6 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         setTimeout(applyPremiumFlowFixes, 0);
     })();
 </script>
-<style>
-    /* Bottom dock overflow fix: reveal secondary tabs with native horizontal swipe. */
-    #main-nav {
-        display: flex !important;
-        flex-wrap: nowrap !important;
-        align-items: center !important;
-        justify-content: flex-start !important;
-        gap: 10px !important;
-        overflow-x: auto !important;
-        overflow-y: visible !important;
-        -webkit-overflow-scrolling: touch !important;
-        overscroll-behavior-x: contain !important;
-        scroll-snap-type: x proximity !important;
-        scroll-padding-inline: 18px !important;
-        scrollbar-width: none !important;
-        touch-action: pan-x !important;
-        padding: 16px 18px 12px !important;
-        -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%);
-        mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%);
-    }
-
-    #main-nav::-webkit-scrollbar {
-        display: none !important;
-    }
-
-    #main-nav > .nav-item,
-    #main-nav > #nav-add {
-        flex: 0 0 auto !important;
-        scroll-snap-align: center !important;
-    }
-
-    #main-nav > #nav-add {
-        width: 64px !important;
-        min-width: 64px !important;
-        margin-top: 0 !important;
-        margin-left: 2px !important;
-        margin-right: 2px !important;
-        transform: translateY(-10px) !important;
-    }
-
-    #main-nav > #nav-add:active {
-        transform: translateY(-10px) scale(0.92) !important;
-    }
-
-    #nav-wrapper {
-        overflow: visible !important;
-    }
-
-    @media (max-width: 768px) {
-        #nav-wrapper {
-            left: 0 !important;
-            right: 0 !important;
-            width: 100% !important;
-            padding-left: max(14px, env(safe-area-inset-left)) !important;
-            padding-right: max(14px, env(safe-area-inset-right)) !important;
-            pointer-events: none !important;
-        }
-
-        #nav-wrapper #main-nav {
-            position: relative !important;
-            bottom: auto !important;
-            pointer-events: auto !important;
-            left: auto !important;
-            right: auto !important;
-            width: 100% !important;
-            min-height: 76px !important;
-            max-width: 100% !important;
-            margin-left: auto !important;
-            margin-right: auto !important;
-        }
-    }
-</style>
 <style id="notes-category-picker-polish-v1">
     #notes-modal .note-category-picker-v2,
     #notes-modal .note-cat-btn {
