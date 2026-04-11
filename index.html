@@ -84056,5 +84056,279 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         }
     }
 </style>
+<style id="notes-category-picker-polish-v1">
+    #notes-modal .note-category-picker-v2,
+    #notes-modal .note-cat-btn {
+        box-sizing: border-box !important;
+    }
+
+    #notes-modal .note-category-picker-v2 {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+        padding: 10px !important;
+        border-radius: 24px !important;
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(255, 248, 225, 0.58)) !important;
+        border: 1px solid rgba(245, 158, 11, 0.16) !important;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.84),
+            0 14px 34px -30px rgba(146, 64, 14, 0.42) !important;
+    }
+
+    html.dark #notes-modal .note-category-picker-v2 {
+        background:
+            linear-gradient(180deg, rgba(17, 24, 39, 0.82), rgba(30, 27, 75, 0.52)) !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.08),
+            0 18px 38px -28px rgba(0, 0, 0, 0.64) !important;
+    }
+
+    #notes-modal .note-cat-btn {
+        position: relative !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        min-width: 0 !important;
+        min-height: 54px !important;
+        width: 100% !important;
+        padding: 10px 12px !important;
+        gap: 9px !important;
+        border-radius: 18px !important;
+        border: 1px solid rgba(148, 163, 184, 0.18) !important;
+        background: rgba(255, 255, 255, 0.78) !important;
+        color: #1f2937 !important;
+        font-size: 13px !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.01em !important;
+        line-height: 1.15 !important;
+        text-align: left !important;
+        box-shadow:
+            0 10px 24px -22px rgba(15, 23, 42, 0.42),
+            inset 0 1px 0 rgba(255, 255, 255, 0.72) !important;
+        transform: none !important;
+        transition:
+            transform 160ms ease,
+            border-color 160ms ease,
+            background 160ms ease,
+            box-shadow 160ms ease,
+            color 160ms ease !important;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    html.dark #notes-modal .note-cat-btn {
+        background: rgba(15, 23, 42, 0.72) !important;
+        color: #e5e7eb !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+        box-shadow:
+            0 12px 26px -24px rgba(0, 0, 0, 0.72),
+            inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+    }
+
+    #notes-modal .note-cat-btn:active {
+        transform: scale(0.985) !important;
+    }
+
+    #notes-modal .note-cat-btn.is-selected {
+        color: #111827 !important;
+        background:
+            linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 251, 235, 0.92)) !important;
+        border-color: var(--note-cat-accent, #f59e0b) !important;
+        box-shadow:
+            0 14px 28px -22px rgba(245, 158, 11, 0.62),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+    }
+
+    html.dark #notes-modal .note-cat-btn.is-selected {
+        color: #f8fafc !important;
+        background:
+            linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.88)) !important;
+        box-shadow:
+            0 16px 34px -24px rgba(0, 0, 0, 0.8),
+            0 0 0 1px rgba(255, 255, 255, 0.04),
+            inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    }
+
+    #notes-modal .note-cat-icon {
+        flex: 0 0 32px !important;
+        width: 32px !important;
+        height: 32px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 12px !important;
+        background: rgba(255, 255, 255, 0.86) !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72) !important;
+        font-size: 17px !important;
+        line-height: 1 !important;
+    }
+
+    html.dark #notes-modal .note-cat-icon {
+        background: rgba(255, 255, 255, 0.08) !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    }
+
+    #notes-modal .note-cat-text {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    #notes-modal .note-cat-check {
+        flex: 0 0 18px !important;
+        width: 18px !important;
+        height: 18px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 999px !important;
+        opacity: 0 !important;
+        transform: scale(0.78) !important;
+        color: #ffffff !important;
+        background: var(--note-cat-accent, #f59e0b) !important;
+        font-size: 11px !important;
+        font-weight: 900 !important;
+        transition: opacity 160ms ease, transform 160ms ease !important;
+    }
+
+    #notes-modal .note-cat-btn.is-selected .note-cat-check {
+        opacity: 1 !important;
+        transform: scale(1) !important;
+    }
+
+    @media (max-width: 380px) {
+        #notes-modal .note-category-picker-v2 {
+            grid-template-columns: 1fr !important;
+        }
+    }
+</style>
+<script id="notes-category-picker-polish-v1">
+    (() => {
+        const categoryMeta = {
+            todo: { accent: '#10b981', icon: '&#9989;', tr: 'Yap\u0131lacak', en: 'To-Do' },
+            important: { accent: '#f59e0b', icon: '&#11088;', tr: '\u00d6nemli', en: 'Important' },
+            idea: { accent: '#8b5cf6', icon: '&#128161;', tr: 'Fikir', en: 'Idea' },
+            financial: { accent: '#2563eb', icon: '&#128176;', tr: 'Finansal', en: 'Financial' }
+        };
+
+        const modalCopy = {
+            tr: {
+                title: '&#9999;&#65039; Yeni Not',
+                titleLabel: 'Ba\u015fl\u0131k',
+                titlePlaceholder: 'Not ba\u015fl\u0131\u011f\u0131...',
+                contentLabel: '\u0130\u00e7erik',
+                contentPlaceholder: 'Notunuzu yaz\u0131n...',
+                categoryLabel: 'Kategori',
+                save: '&#128190; Notu Kaydet'
+            },
+            en: {
+                title: '&#9999;&#65039; New Note',
+                titleLabel: 'Title',
+                titlePlaceholder: 'Note title...',
+                contentLabel: 'Content',
+                contentPlaceholder: 'Write your note...',
+                categoryLabel: 'Category',
+                save: '&#128190; Save Note'
+            }
+        };
+
+        const getLang = () => (window.FINGENDA_LANG === 'en' ? 'en' : 'tr');
+
+        const setLabelForInput = (inputId, text) => {
+            const input = document.getElementById(inputId);
+            const label = input?.closest('div')?.querySelector('label');
+            if (label) label.textContent = text;
+        };
+
+        const refreshNoteModalCopy = () => {
+            const lang = getLang();
+            const copy = modalCopy[lang];
+            const modal = document.getElementById('notes-modal-content');
+            if (!modal) return;
+
+            const title = modal.querySelector('h3');
+            if (title) title.innerHTML = copy.title;
+
+            setLabelForInput('note-title', copy.titleLabel);
+            setLabelForInput('note-content', copy.contentLabel);
+
+            const noteTitle = document.getElementById('note-title');
+            if (noteTitle) noteTitle.placeholder = copy.titlePlaceholder;
+
+            const noteContent = document.getElementById('note-content');
+            if (noteContent) noteContent.placeholder = copy.contentPlaceholder;
+
+            const categoryLabel = document.getElementById('note-category')?.closest('div')?.querySelector('label');
+            if (categoryLabel) categoryLabel.textContent = copy.categoryLabel;
+
+            const saveButton = modal.querySelector('button[onclick="window.saveNote()"]');
+            if (saveButton) saveButton.innerHTML = copy.save;
+        };
+
+        const decorateNoteCategoryButtons = () => {
+            const buttons = Array.from(document.querySelectorAll('#notes-modal .note-cat-btn'));
+            if (!buttons.length) return;
+
+            const picker = document.getElementById('note-category')?.previousElementSibling;
+            if (picker) {
+                picker.classList.add('note-category-picker-v2');
+                picker.setAttribute('role', 'radiogroup');
+                picker.setAttribute('aria-label', getLang() === 'en' ? 'Note category' : 'Not kategorisi');
+            }
+
+            const lang = getLang();
+            buttons.forEach(btn => {
+                const meta = categoryMeta[btn.dataset.category] || categoryMeta.todo;
+                btn.classList.add('note-cat-btn-v2');
+                btn.style.setProperty('--note-cat-accent', meta.accent);
+                btn.setAttribute('role', 'radio');
+                btn.innerHTML = [
+                    `<span class="note-cat-icon" aria-hidden="true">${meta.icon}</span>`,
+                    `<span class="note-cat-text">${meta[lang]}</span>`,
+                    '<span class="note-cat-check" aria-hidden="true">&#10003;</span>'
+                ].join('');
+            });
+        };
+
+        const syncNoteCategorySelection = category => {
+            const selectedCategory = category || document.getElementById('note-category')?.value || 'todo';
+            document.querySelectorAll('#notes-modal .note-cat-btn').forEach(btn => {
+                const selected = btn.dataset.category === selectedCategory;
+                btn.classList.toggle('is-selected', selected);
+                btn.setAttribute('aria-checked', selected ? 'true' : 'false');
+                btn.setAttribute('aria-pressed', selected ? 'true' : 'false');
+                btn.style.transform = '';
+            });
+        };
+
+        const applyNoteCategoryPolish = () => {
+            refreshNoteModalCopy();
+            decorateNoteCategoryButtons();
+            syncNoteCategorySelection();
+        };
+
+        const selectNoteCategory = category => {
+            const nextCategory = categoryMeta[category] ? category : 'todo';
+            const input = document.getElementById('note-category');
+            if (input) input.value = nextCategory;
+            decorateNoteCategoryButtons();
+            syncNoteCategorySelection(nextCategory);
+        };
+
+        window.selectNoteCategory = selectNoteCategory;
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', applyNoteCategoryPolish, { once: true });
+        } else {
+            applyNoteCategoryPolish();
+        }
+
+        window.addEventListener('languageChanged', applyNoteCategoryPolish);
+        window.addEventListener('notes:change', applyNoteCategoryPolish);
+    })();
+</script>
 </body>
 </html>
