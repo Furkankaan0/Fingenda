@@ -84207,197 +84207,42 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
     })();
 </script>
 <style id="investment-balance-toggle-polish-v1">
+    /* v1 intentionally emptied - all rules consolidated in v2 below */
+</style>
+<style id="investment-balance-toggle-polish-v2">
     #screen-add #savings-options {
         box-sizing: border-box !important;
         min-width: 0 !important;
+        border-top: none !important;
     }
 
-    #screen-add #savings-options:not(.hidden) {
-        display: grid !important;
-        grid-template-columns: minmax(0, 1fr) auto !important;
-        align-items: center !important;
-        gap: 14px !important;
-        width: 100% !important;
-        margin-top: 14px !important;
-        padding: 14px !important;
-        border: 1px solid rgba(251, 146, 60, 0.18) !important;
-        border-radius: 22px !important;
-        background:
-            linear-gradient(135deg, rgba(255, 247, 237, 0.94), rgba(255, 255, 255, 0.82)) !important;
-        box-shadow:
-            0 16px 36px -30px rgba(154, 52, 18, 0.34),
-            inset 0 1px 0 rgba(255, 255, 255, 0.82) !important;
-    }
-
-    html.dark #screen-add #savings-options:not(.hidden) {
-        border-color: rgba(251, 146, 60, 0.22) !important;
-        background:
-            linear-gradient(135deg, rgba(67, 20, 7, 0.5), rgba(15, 23, 42, 0.72)) !important;
-        box-shadow:
-            0 18px 38px -30px rgba(0, 0, 0, 0.72),
-            inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-    }
-
-    #screen-add #savings-options>div:first-child {
-        display: grid !important;
-        grid-template-columns: 40px minmax(0, 1fr) !important;
-        align-items: center !important;
-        gap: 12px !important;
-        min-width: 0 !important;
-    }
-
-    #screen-add #savings-options>div:first-child>div:first-child {
-        width: 40px !important;
-        height: 40px !important;
-        border-radius: 16px !important;
-        background: linear-gradient(135deg, #ffedd5, #fed7aa) !important;
-        color: #ea580c !important;
-        box-shadow:
-            0 10px 20px -16px rgba(234, 88, 12, 0.72),
-            inset 0 1px 0 rgba(255, 255, 255, 0.72) !important;
-        font-size: 15px !important;
-    }
-
-    html.dark #screen-add #savings-options>div:first-child>div:first-child {
-        background: linear-gradient(135deg, rgba(154, 52, 18, 0.48), rgba(67, 20, 7, 0.76)) !important;
-        color: #fdba74 !important;
-        box-shadow:
-            0 12px 22px -18px rgba(0, 0, 0, 0.82),
-            inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-    }
-
-    #screen-add #savings-options>div:first-child>div:nth-child(2) {
-        min-width: 0 !important;
-        gap: 3px !important;
-    }
-
-    #screen-add #savings-options label[for="input-exclude-balance"] {
-        color: #7c2d12 !important;
-        font-size: 13px !important;
-        font-weight: 850 !important;
-        line-height: 1.2 !important;
-        letter-spacing: -0.01em !important;
-        white-space: normal !important;
-    }
-
-    html.dark #screen-add #savings-options label[for="input-exclude-balance"] {
-        color: #ffedd5 !important;
-    }
-
-    #screen-add #savings-options span[data-i18n="installment.excludeBalanceDesc"] {
-        display: block !important;
-        max-width: 100% !important;
-        color: #9a3412 !important;
-        font-size: 10.5px !important;
-        font-weight: 700 !important;
-        line-height: 1.35 !important;
-        opacity: 0.78 !important;
-        overflow-wrap: anywhere !important;
-    }
-
-    html.dark #screen-add #savings-options span[data-i18n="installment.excludeBalanceDesc"] {
-        color: #fed7aa !important;
-        opacity: 0.78 !important;
-    }
-
-    #screen-add #savings-options>label {
-        flex: 0 0 auto !important;
-        width: 58px !important;
-        height: 34px !important;
-        justify-content: center !important;
-        border-radius: 999px !important;
-        padding: 0 !important;
-        margin-left: 2px !important;
-    }
-
-    #screen-add #input-exclude-balance+div {
-        position: relative !important;
-        width: 54px !important;
-        height: 32px !important;
-        border-radius: 999px !important;
-        background: rgba(148, 163, 184, 0.26) !important;
-        border: 1px solid rgba(148, 163, 184, 0.18) !important;
-        box-shadow:
-            inset 0 1px 2px rgba(15, 23, 42, 0.1),
-            inset 0 -1px 0 rgba(255, 255, 255, 0.64) !important;
-        transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease !important;
-    }
-
-    html.dark #screen-add #input-exclude-balance+div {
-        background: rgba(30, 41, 59, 0.88) !important;
-        border-color: rgba(255, 255, 255, 0.1) !important;
-        box-shadow:
-            inset 0 1px 3px rgba(0, 0, 0, 0.42),
-            inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
-    }
-
-    #screen-add #input-exclude-balance+div::after {
-        top: 3px !important;
-        left: 3px !important;
-        width: 24px !important;
-        height: 24px !important;
-        border: 0 !important;
-        border-radius: 999px !important;
-        background: #ffffff !important;
-        box-shadow:
-            0 8px 16px -10px rgba(15, 23, 42, 0.7),
-            0 1px 2px rgba(15, 23, 42, 0.18) !important;
-        transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 180ms ease !important;
-    }
-
-    #screen-add #input-exclude-balance:checked+div {
-        background: linear-gradient(135deg, #fb923c, #f97316) !important;
-        border-color: rgba(251, 146, 60, 0.54) !important;
-        box-shadow:
-            0 10px 22px -16px rgba(249, 115, 22, 0.72),
-            inset 0 1px 0 rgba(255, 255, 255, 0.26) !important;
-    }
-
-    #screen-add #input-exclude-balance:checked+div::after {
-        transform: translateX(22px) !important;
-    }
-
-    #screen-add #input-exclude-balance:focus-visible+div {
-        outline: 3px solid rgba(251, 146, 60, 0.28) !important;
-        outline-offset: 3px !important;
-    }
-
-    @media (max-width: 380px) {
-        #screen-add #savings-options:not(.hidden) {
-            grid-template-columns: 1fr !important;
-        }
-
-        #screen-add #savings-options>label {
-            justify-self: end !important;
-        }
-    }
-</style>
-<style id="investment-balance-toggle-polish-v2">
     #screen-add #savings-options:not(.hidden) {
         display: flex !important;
         align-items: center !important;
         justify-content: space-between !important;
-        gap: 18px !important;
+        gap: 16px !important;
         width: 100% !important;
-        min-height: 68px !important;
-        margin-top: 12px !important;
-        padding: 17px 20px 17px 22px !important;
-        border: 1px solid rgba(85, 91, 145, 0.42) !important;
-        border-radius: 0 0 24px 24px !important;
-        background: #181832 !important;
+        min-height: 58px !important;
+        margin-top: 10px !important;
+        padding: 13px 18px !important;
+        border: 1px solid rgba(148, 163, 184, 0.2) !important;
+        border-radius: 20px !important;
+        background:
+            linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(241, 245, 249, 0.88)) !important;
         box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.04),
-            0 12px 24px -24px rgba(4, 8, 20, 0.72) !important;
+            inset 0 1px 0 rgba(255, 255, 255, 0.9),
+            0 12px 28px -26px rgba(15, 23, 42, 0.32) !important;
         overflow: hidden !important;
         isolation: isolate !important;
     }
 
     html.dark #screen-add #savings-options:not(.hidden) {
-        border-color: rgba(85, 91, 145, 0.42) !important;
-        background: #181832 !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        background:
+            linear-gradient(180deg, rgba(30, 41, 59, 0.86), rgba(15, 23, 42, 0.82)) !important;
         box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.04),
-            0 12px 24px -24px rgba(4, 8, 20, 0.72) !important;
+            inset 0 1px 0 rgba(255, 255, 255, 0.08),
+            0 14px 30px -26px rgba(0, 0, 0, 0.76) !important;
     }
 
     #screen-add #savings-options>div:first-child {
@@ -84423,12 +84268,12 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
     }
 
     #screen-add #savings-options label[for="input-exclude-balance"] {
-        color: #f8fafc !important;
-        font-size: 16px !important;
-        font-weight: 850 !important;
+        color: #334155 !important;
+        font-size: 14px !important;
+        font-weight: 800 !important;
         line-height: 1.1 !important;
-        letter-spacing: -0.018em !important;
-        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.18) !important;
+        letter-spacing: 0.08em !important;
+        text-shadow: none !important;
         white-space: nowrap !important;
     }
 
@@ -84446,8 +84291,8 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
 
     #screen-add #savings-options>label {
         flex: 0 0 auto !important;
-        width: 74px !important;
-        height: 38px !important;
+        width: 54px !important;
+        height: 32px !important;
         justify-content: center !important;
         justify-self: end !important;
         border-radius: 999px !important;
@@ -84455,38 +84300,59 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         margin-left: 0 !important;
     }
 
+    #screen-add #input-exclude-balance {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+
     #screen-add #input-exclude-balance+div {
         position: relative !important;
-        width: 72px !important;
-        height: 36px !important;
+        width: 52px !important;
+        height: 30px !important;
         border-radius: 999px !important;
-        background: #4d566d !important;
+        background: #cfd5de !important;
         border: 0 !important;
         box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.08),
-            inset 0 -1px 0 rgba(0, 0, 0, 0.18) !important;
+            inset 0 1px 2px rgba(15, 23, 42, 0.12),
+            inset 0 1px 0 rgba(255, 255, 255, 0.74) !important;
         transition:
             background 180ms ease,
             box-shadow 180ms ease !important;
     }
 
     html.dark #screen-add #input-exclude-balance+div {
-        background: #4d566d !important;
+        background: #475569 !important;
         box-shadow:
             inset 0 1px 0 rgba(255, 255, 255, 0.08),
             inset 0 -1px 0 rgba(0, 0, 0, 0.28) !important;
     }
 
+    #screen-add #input-exclude-balance+div::before {
+        content: none !important;
+        display: none !important;
+    }
+
     #screen-add #input-exclude-balance+div::after {
-        top: 4px !important;
-        left: 5px !important;
-        width: 28px !important;
-        height: 28px !important;
+        content: '' !important;
+        position: absolute !important;
+        top: 3px !important;
+        left: 3px !important;
+        width: 24px !important;
+        height: 24px !important;
         border: 0 !important;
         border-radius: 999px !important;
         background: #f8fafc !important;
         box-shadow:
-            0 3px 8px -5px rgba(0, 0, 0, 0.74),
+            0 4px 10px -6px rgba(15, 23, 42, 0.72),
             0 1px 1px rgba(15, 23, 42, 0.18) !important;
         transition:
             transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
@@ -84494,14 +84360,14 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
     }
 
     #screen-add #input-exclude-balance:checked+div {
-        background: #060d1a !important;
+        background: #111827 !important;
         box-shadow:
             inset 0 1px 0 rgba(255, 255, 255, 0.1),
             0 6px 16px -14px rgba(15, 23, 42, 0.8) !important;
     }
 
     #screen-add #input-exclude-balance:checked+div::after {
-        transform: translateX(34px) !important;
+        transform: translateX(22px) !important;
     }
 
     #screen-add #input-exclude-balance:focus-visible+div {
@@ -84511,8 +84377,8 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
 
     @media (max-width: 380px) {
         #screen-add #savings-options:not(.hidden) {
-            gap: 14px !important;
-            padding: 16px 17px !important;
+            gap: 12px !important;
+            padding: 12px 15px !important;
         }
     }
 </style>
