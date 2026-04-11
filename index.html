@@ -84206,6 +84206,141 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         window.addEventListener('notes:change', applyNoteCategoryPolish);
     })();
 </script>
+<style id="notes-filter-rail-scroll-fix-v1">
+    #screen-notes .notes-filter-rail {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 12px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding: 4px 18px 10px 4px !important;
+        margin: 0 !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        overscroll-behavior-x: contain !important;
+        overscroll-behavior-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        scroll-snap-type: x proximity !important;
+        scroll-padding-inline: 4px !important;
+        touch-action: pan-x pan-y pinch-zoom !important;
+        scrollbar-width: none !important;
+        cursor: grab !important;
+    }
+
+    #screen-notes .notes-filter-rail::-webkit-scrollbar {
+        display: none !important;
+    }
+
+    #screen-notes .notes-filter-rail.is-dragging {
+        cursor: grabbing !important;
+        scroll-snap-type: none !important;
+    }
+
+    #screen-notes .notes-filter-rail .notes-filter-btn {
+        flex: 0 0 auto !important;
+        min-width: max-content !important;
+        white-space: nowrap !important;
+        scroll-snap-align: start !important;
+        touch-action: pan-x pan-y pinch-zoom !important;
+        -webkit-tap-highlight-color: transparent !important;
+    }
+
+    #screen-notes .notes-filter-rail::after {
+        content: '' !important;
+        flex: 0 0 10px !important;
+        width: 10px !important;
+        height: 1px !important;
+    }
+</style>
+<script id="notes-filter-rail-scroll-fix-v1">
+    (() => {
+        const hydrateNotesFilterRail = () => {
+            const firstButton = document.querySelector('#screen-notes .notes-filter-btn');
+            const rail = firstButton?.parentElement;
+            if (!rail || rail.dataset.notesFilterRailReady === 'true') return;
+
+            rail.dataset.notesFilterRailReady = 'true';
+            rail.classList.add('notes-filter-rail');
+            rail.setAttribute('role', 'tablist');
+            rail.setAttribute('aria-label', document.documentElement.classList.contains('lang-en') ? 'Note filters' : 'Not filtreleri');
+
+            rail.querySelectorAll('.notes-filter-btn').forEach((button) => {
+                button.setAttribute('role', 'tab');
+                button.setAttribute('aria-selected', button.classList.contains('active') ? 'true' : 'false');
+            });
+
+            let startX = 0;
+            let startY = 0;
+            let isHorizontalIntent = false;
+
+            rail.addEventListener('touchstart', (event) => {
+                const touch = event.touches?.[0];
+                if (!touch) return;
+                startX = touch.clientX;
+                startY = touch.clientY;
+                isHorizontalIntent = false;
+                rail.classList.add('is-dragging');
+            }, { passive: true });
+
+            rail.addEventListener('touchmove', (event) => {
+                const touch = event.touches?.[0];
+                if (!touch || rail.scrollWidth <= rail.clientWidth + 1) return;
+
+                const deltaX = Math.abs(touch.clientX - startX);
+                const deltaY = Math.abs(touch.clientY - startY);
+                if (deltaX > 8 && deltaX > deltaY * 1.15) {
+                    isHorizontalIntent = true;
+                }
+
+                if (isHorizontalIntent) {
+                    event.stopPropagation();
+                }
+            }, { passive: true });
+
+            const clearDrag = () => {
+                rail.classList.remove('is-dragging');
+                isHorizontalIntent = false;
+            };
+
+            rail.addEventListener('touchend', clearDrag, { passive: true });
+            rail.addEventListener('touchcancel', clearDrag, { passive: true });
+        };
+
+        const syncNotesFilterTabs = () => {
+            const currentFilter = window.currentNotesFilter || 'all';
+            document.querySelectorAll('#screen-notes .notes-filter-btn').forEach((button) => {
+                const selected = button.dataset.filter === currentFilter;
+                button.classList.toggle('active', selected);
+                button.setAttribute('aria-selected', selected ? 'true' : 'false');
+            });
+        };
+
+        const originalFilterNotes = window.filterNotes;
+        if (typeof originalFilterNotes === 'function' && !originalFilterNotes.__notesRailWrapped) {
+            const wrappedFilterNotes = function (...args) {
+                const result = originalFilterNotes.apply(this, args);
+                requestAnimationFrame(syncNotesFilterTabs);
+                return result;
+            };
+            wrappedFilterNotes.__notesRailWrapped = true;
+            window.filterNotes = wrappedFilterNotes;
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', hydrateNotesFilterRail, { once: true });
+        } else {
+            hydrateNotesFilterRail();
+        }
+
+        window.addEventListener('languageChanged', hydrateNotesFilterRail);
+        window.addEventListener('notes:change', () => {
+            hydrateNotesFilterRail();
+            syncNotesFilterTabs();
+        });
+    })();
+</script>
 <style id="investment-balance-toggle-polish-v1">
     /* v1 intentionally emptied - all rules consolidated in v2 below */
 </style>
