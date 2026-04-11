@@ -84366,6 +84366,13 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
             0 6px 16px -14px rgba(15, 23, 42, 0.8) !important;
     }
 
+    html.dark #screen-add #input-exclude-balance:checked+div {
+        background: linear-gradient(135deg, #2563eb, #7c3aed) !important;
+        box-shadow:
+            0 10px 22px -15px rgba(99, 102, 241, 0.92),
+            inset 0 1px 0 rgba(255, 255, 255, 0.24) !important;
+    }
+
     #screen-add #input-exclude-balance:checked+div::after {
         transform: translateX(22px) !important;
     }
