@@ -23510,6 +23510,121 @@
                 color: var(--card-muted);
             }
 
+            /* Badge detail: realistic laminated foil polish */
+            .badge-rarity-card.badge-holo-refined {
+                --foil-opacity: 0.11;
+                --glare-opacity: 0.12;
+                background:
+                    radial-gradient(ellipse at var(--mx) var(--my), color-mix(in srgb, var(--rarity-a, #6366f1) 18%, transparent) 0%, transparent 32%),
+                    radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.11), transparent 39%),
+                    linear-gradient(145deg, color-mix(in srgb, var(--card-base) 88%, var(--rarity-a, #6366f1) 12%) 0%, var(--card-base) 52%, color-mix(in srgb, #020617 84%, var(--rarity-b, #8b5cf6) 16%) 100%) !important;
+            }
+
+            html:not(.dark) .badge-rarity-card.badge-holo-refined {
+                background:
+                    radial-gradient(ellipse at var(--mx) var(--my), color-mix(in srgb, var(--rarity-a, #6366f1) 14%, transparent) 0%, transparent 34%),
+                    radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.96), transparent 43%),
+                    linear-gradient(150deg, #ffffff 0%, color-mix(in srgb, #f8fafc 84%, var(--rarity-a, #6366f1) 16%) 55%, color-mix(in srgb, #e8efff 76%, var(--rarity-b, #8b5cf6) 24%) 100%) !important;
+            }
+
+            .badge-rarity-card.badge-holo-refined::after {
+                background:
+                    linear-gradient(108deg, transparent 12%, rgba(255, 255, 255, 0.06) 33%, rgba(255, 255, 255, 0.28) 48%, rgba(255, 255, 255, 0.05) 63%, transparent 86%),
+                    repeating-linear-gradient(118deg, transparent 0 11px, color-mix(in srgb, var(--rarity-a, #6366f1) 16%, transparent) 12px 13px, transparent 14px 30px),
+                    repeating-linear-gradient(31deg, transparent 0 23px, color-mix(in srgb, var(--rarity-c, #22d3ee) 10%, transparent) 24px 25px, transparent 26px 54px);
+                background-size: 230% 230%, 170px 170px, 250px 250px;
+                background-position:
+                    calc(var(--mx, 50%) - 50%) calc(var(--my, 50%) - 50%),
+                    center,
+                    center;
+                mix-blend-mode: screen;
+                opacity: var(--foil-opacity);
+                filter: saturate(1.08) contrast(1.03);
+            }
+
+            html:not(.dark) .badge-rarity-card.badge-holo-refined::after {
+                background:
+                    linear-gradient(110deg, transparent 14%, rgba(37, 99, 235, 0.08) 33%, rgba(255, 255, 255, 0.48) 49%, rgba(168, 85, 247, 0.09) 62%, transparent 84%),
+                    repeating-linear-gradient(118deg, transparent 0 12px, color-mix(in srgb, var(--rarity-a, #6366f1) 18%, transparent) 13px 14px, transparent 15px 31px),
+                    repeating-linear-gradient(31deg, transparent 0 24px, color-mix(in srgb, var(--rarity-c, #22d3ee) 13%, transparent) 25px 26px, transparent 27px 55px);
+                mix-blend-mode: soft-light;
+                opacity: var(--foil-opacity);
+            }
+
+            .badge-rarity-card.badge-holo-refined .holo-foil {
+                background:
+                    conic-gradient(from 135deg at var(--mx, 50%) var(--my, 50%),
+                        transparent 0deg,
+                        color-mix(in srgb, var(--rarity-a, #6366f1) 24%, transparent) 32deg,
+                        rgba(255, 255, 255, 0.34) 54deg,
+                        color-mix(in srgb, var(--rarity-c, #22d3ee) 22%, transparent) 82deg,
+                        color-mix(in srgb, var(--rarity-b, #8b5cf6) 18%, transparent) 118deg,
+                        transparent 166deg),
+                    linear-gradient(116deg, transparent 20%, rgba(255, 255, 255, 0.07) 42%, rgba(255, 255, 255, 0.30) 50%, rgba(255, 255, 255, 0.06) 58%, transparent 80%),
+                    repeating-linear-gradient(125deg, transparent 0 17px, rgba(255, 255, 255, 0.055) 18px 19px, transparent 20px 38px);
+                background-size: 190% 190%, 245% 245%, 130px 130px;
+                background-position:
+                    var(--mx, 50%) var(--my, 50%),
+                    calc(var(--mx, 50%) - 50%) calc(var(--my, 50%) - 50%),
+                    center;
+                background-blend-mode: screen, overlay, normal;
+                mix-blend-mode: screen;
+                filter: saturate(1.16) contrast(1.04) brightness(1.02);
+            }
+
+            html:not(.dark) .badge-rarity-card.badge-holo-refined .holo-foil {
+                background:
+                    conic-gradient(from 132deg at var(--mx, 50%) var(--my, 50%),
+                        transparent 0deg,
+                        color-mix(in srgb, var(--rarity-a, #6366f1) 20%, transparent) 31deg,
+                        rgba(255, 255, 255, 0.40) 55deg,
+                        color-mix(in srgb, var(--rarity-c, #22d3ee) 18%, transparent) 84deg,
+                        color-mix(in srgb, #fbbf24 12%, transparent) 120deg,
+                        transparent 166deg),
+                    linear-gradient(116deg, transparent 22%, rgba(56, 189, 248, 0.08) 42%, rgba(255, 255, 255, 0.42) 50%, rgba(168, 85, 247, 0.08) 59%, transparent 81%),
+                    repeating-linear-gradient(125deg, transparent 0 18px, color-mix(in srgb, var(--rarity-a, #6366f1) 9%, transparent) 19px 20px, transparent 21px 39px);
+                mix-blend-mode: soft-light;
+                filter: saturate(1.08) contrast(1.02);
+            }
+
+            .badge-rarity-card.badge-holo-refined .holo-glare {
+                background:
+                    radial-gradient(ellipse at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.40) 0%, rgba(255, 255, 255, 0.13) 19%, transparent 56%),
+                    linear-gradient(112deg, transparent 18%, rgba(255, 255, 255, 0.26) 48%, transparent 71%);
+                mix-blend-mode: screen;
+                filter: blur(0.25px);
+            }
+
+            html:not(.dark) .badge-rarity-card.badge-holo-refined .holo-glare {
+                background:
+                    radial-gradient(ellipse at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.62) 0%, rgba(96, 165, 250, 0.12) 22%, transparent 58%),
+                    linear-gradient(112deg, transparent 18%, rgba(255, 255, 255, 0.46) 48%, transparent 71%);
+                mix-blend-mode: soft-light;
+                filter: none;
+            }
+
+            .badge-rarity-card.badge-holo-refined .noise-texture {
+                opacity: 0.026;
+                mix-blend-mode: soft-light;
+            }
+
+            .badge-rarity-card.badge-holo-refined .badge-depth-rim {
+                border-radius: inherit;
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+                    inset 0 -1px 0 rgba(255, 255, 255, 0.055),
+                    inset 14px 18px 26px rgba(255, 255, 255, 0.035),
+                    inset -18px -24px 34px rgba(2, 6, 23, 0.12);
+            }
+
+            html:not(.dark) .badge-rarity-card.badge-holo-refined .badge-depth-rim {
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+                    inset 0 -1px 0 rgba(15, 23, 42, 0.035),
+                    inset 16px 20px 30px rgba(255, 255, 255, 0.26),
+                    inset -16px -22px 32px rgba(99, 102, 241, 0.045);
+            }
+
             @media (prefers-reduced-motion: reduce) {
                 .badge-detail-stage::before,
                 .badge-detail-stage::after,
@@ -46585,7 +46700,7 @@ KULLANICI NOTU
 
                 container.innerHTML = `
                 <div id="badge-detail-stage" class="badge-detail-stage nft-modal-perspective flex flex-col items-center justify-center w-full px-4 py-6" style="${cardCssVars}">
-                    <div id="tilt-card" class="premium-3d-card badge-rarity-card ${cardRarityClass} ${lockClass} ${cardShadow} gpu-accelerated flex flex-col items-center p-5 select-none cursor-grab active:cursor-grabbing relative overflow-hidden group transition-all duration-300" style="${cardCssVars};">
+                    <div id="tilt-card" class="premium-3d-card badge-rarity-card badge-holo-refined ${cardRarityClass} ${lockClass} ${cardShadow} gpu-accelerated flex flex-col items-center p-5 select-none cursor-grab active:cursor-grabbing relative overflow-hidden group transition-all duration-300" style="${cardCssVars};">
                         
                         <!-- Texture & Effects -->
                         <div class="noise-texture"></div>
@@ -46753,12 +46868,13 @@ KULLANICI NOTU
                     const glareX = (50 + (state.currentX * 50)).toFixed(2);
                     const glareY = (50 + (state.currentY * 50)).toFixed(2);
                     const depthAmount = Math.min(1, Math.abs(state.currentX) + Math.abs(state.currentY));
+                    const rarityBoost = rarityKey === 'legendary' || rarityKey === 'mythic' ? 0.06 : rarityKey === 'epic' ? 0.035 : 0;
                     const foilOpacity = isLightBadgeSurface
-                        ? Math.min(0.46, depthAmount * 0.24 + 0.18)
-                        : Math.min(rarityKey === 'legendary' || rarityKey === 'mythic' ? 0.64 : 0.54, depthAmount * 0.34 + 0.16);
+                        ? Math.min(0.30 + rarityBoost, depthAmount * 0.12 + 0.11 + rarityBoost)
+                        : Math.min(0.40 + rarityBoost, depthAmount * 0.18 + 0.12 + rarityBoost);
                     const glareOpacity = isLightBadgeSurface
-                        ? Math.min(0.40, depthAmount * 0.18 + 0.16)
-                        : Math.min(0.56, depthAmount * 0.30 + 0.14);
+                        ? Math.min(0.26, depthAmount * 0.10 + 0.10)
+                        : Math.min(0.36, depthAmount * 0.16 + 0.10);
 
                     // DOM Güncellemesi (Tek seferde)
                     card.style.setProperty('--mx', `${glareX}%`);
