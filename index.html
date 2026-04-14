@@ -23107,21 +23107,19 @@
             /* === Badge detail: collectible holographic card system === */
             .badge-detail-stage {
                 position: relative;
-                min-height: min(760px, 100dvh);
-                width: 100%;
-                overflow: hidden;
+                min-height: auto;
+                width: min(100%, 390px);
+                overflow: visible;
                 isolation: isolate;
                 background:
-                    radial-gradient(circle at calc(50% + (var(--tilt-x, 0) * 12%)) 12%, color-mix(in srgb, var(--rarity-a, #6366f1) 22%, transparent) 0%, transparent 34%),
-                    radial-gradient(circle at 82% 82%, color-mix(in srgb, var(--rarity-b, #8b5cf6) 16%, transparent) 0%, transparent 34%),
-                    linear-gradient(180deg, rgba(248, 250, 252, 0.92), rgba(241, 245, 249, 0.96));
+                    radial-gradient(circle at calc(50% + (var(--tilt-x, 0) * 12%)) 8%, color-mix(in srgb, var(--rarity-a, #6366f1) 16%, transparent) 0%, transparent 42%),
+                    radial-gradient(circle at 82% 78%, color-mix(in srgb, var(--rarity-b, #8b5cf6) 12%, transparent) 0%, transparent 44%);
             }
 
             html.dark .badge-detail-stage {
                 background:
-                    radial-gradient(circle at calc(50% + (var(--tilt-x, 0) * 12%)) 8%, color-mix(in srgb, var(--rarity-a, #6366f1) 32%, transparent) 0%, transparent 36%),
-                    radial-gradient(circle at 78% 78%, color-mix(in srgb, var(--rarity-b, #8b5cf6) 26%, transparent) 0%, transparent 36%),
-                    linear-gradient(180deg, #080b14 0%, #030409 100%);
+                    radial-gradient(circle at calc(50% + (var(--tilt-x, 0) * 12%)) 8%, color-mix(in srgb, var(--rarity-a, #6366f1) 24%, transparent) 0%, transparent 40%),
+                    radial-gradient(circle at 78% 78%, color-mix(in srgb, var(--rarity-b, #8b5cf6) 20%, transparent) 0%, transparent 42%);
             }
 
             .badge-detail-stage::before,
@@ -23146,7 +23144,7 @@
             .badge-detail-stage::after {
                 background: conic-gradient(from 180deg at 50% 16%, transparent 0deg, color-mix(in srgb, var(--rarity-a, #6366f1) 18%, transparent) 70deg, rgba(255,255,255,0.22) 90deg, color-mix(in srgb, var(--rarity-b, #8b5cf6) 16%, transparent) 112deg, transparent 150deg);
                 filter: blur(42px);
-                opacity: 0.58;
+                opacity: 0.34;
                 transform: translate3d(calc(var(--tilt-x, 0) * 18px), calc(var(--tilt-y, 0) * 10px), 0);
             }
 
@@ -23160,6 +23158,13 @@
                 --card-base: #0b1020;
                 --card-ink: #f8fafc;
                 --card-muted: rgba(226, 232, 240, 0.72);
+                width: min(88vw, 354px) !important;
+                min-height: clamp(520px, 74vh, 574px) !important;
+                border-radius: 30px !important;
+                overflow: hidden;
+                z-index: 2;
+                clip-path: none !important;
+                -webkit-clip-path: none !important;
                 background:
                     radial-gradient(circle at var(--mx) var(--my), color-mix(in srgb, var(--rarity-a, #6366f1) 18%, transparent) 0%, transparent 38%),
                     linear-gradient(155deg, color-mix(in srgb, var(--card-base) 88%, var(--rarity-a, #6366f1) 12%) 0%, var(--card-base) 48%, color-mix(in srgb, #020617 86%, var(--rarity-b, #8b5cf6) 14%) 100%) !important;
@@ -23284,8 +23289,8 @@
                     inset 0 1px 0 rgba(255,255,255,0.22),
                     0 22px 44px rgba(2, 6, 23, 0.26);
                 background:
-                    radial-gradient(circle at 50% 22%, rgba(255,255,255,0.34), transparent 28%),
-                    linear-gradient(180deg, color-mix(in srgb, var(--rarity-a, #6366f1) 26%, transparent), transparent 54%),
+                    linear-gradient(120deg, color-mix(in srgb, var(--rarity-a, #6366f1) 18%, transparent), transparent 48%),
+                    linear-gradient(220deg, color-mix(in srgb, var(--rarity-c, #22d3ee) 14%, transparent), transparent 54%),
                     linear-gradient(150deg, rgba(15,23,42,0.82), rgba(2,6,23,0.96));
             }
 
@@ -23294,8 +23299,8 @@
                     inset 0 1px 0 rgba(255,255,255,0.76),
                     0 20px 38px rgba(71, 85, 105, 0.16);
                 background:
-                    radial-gradient(circle at 50% 18%, rgba(255,255,255,0.9), transparent 34%),
-                    linear-gradient(180deg, color-mix(in srgb, var(--rarity-a, #6366f1) 20%, rgba(255,255,255,0.72)), rgba(255,255,255,0.42) 58%),
+                    linear-gradient(120deg, color-mix(in srgb, var(--rarity-a, #6366f1) 14%, rgba(255,255,255,0.74)), rgba(255,255,255,0.28) 48%),
+                    linear-gradient(220deg, color-mix(in srgb, var(--rarity-c, #22d3ee) 12%, rgba(255,255,255,0.62)), rgba(255,255,255,0.38) 54%),
                     linear-gradient(150deg, #ffffff, #eef2ff);
             }
 
@@ -23309,9 +23314,9 @@
 
             .badge-card-art-window::before {
                 background:
-                    radial-gradient(ellipse at 50% 92%, color-mix(in srgb, var(--rarity-a, #6366f1) 34%, transparent) 0%, transparent 46%),
-                    linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.16) 48%, transparent 56%);
-                opacity: 0.78;
+                    linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.16) 48%, transparent 56%),
+                    linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--rarity-a, #6366f1) 16%, transparent) 100%);
+                opacity: 0.58;
             }
 
             .badge-card-art-window::after {
@@ -46368,14 +46373,15 @@ KULLANICI NOTU
                 // PATCH: Remove modal container background/shadow to let the card float
                 const modalContent = modal.querySelector('div:not(.absolute):not(.fixed)');
                 if (modalContent) {
-                    modalContent.style.cssText = "background: none !important; box-shadow: none !important; border: none !important;";
+                    modalContent.style.cssText = "background: transparent !important; box-shadow: none !important; border: none !important; border-radius: 0 !important; overflow: visible !important; clip-path: none !important; -webkit-clip-path: none !important; width: min(100vw, 430px) !important; max-width: 100vw !important;";
                 }
+                container.style.cssText = "width: min(100vw, 430px); max-width: 100vw; overflow: visible; display: flex; justify-content: center; align-items: center;";
 
                 container.innerHTML = `
-                <div id="badge-detail-stage" class="badge-detail-stage nft-modal-perspective flex flex-col items-center justify-center h-full w-full px-5 py-8" style="${cardCssVars}">
+                <div id="badge-detail-stage" class="badge-detail-stage nft-modal-perspective flex flex-col items-center justify-center w-full px-4 py-6" style="${cardCssVars}">
                     <div id="tilt-shadow" class="badge-tilt-shadow"></div>
 
-                    <div id="tilt-card" class="premium-3d-card badge-rarity-card ${cardRarityClass} ${lockClass} ${cardShadow} gpu-accelerated flex flex-col items-center p-5 select-none cursor-grab active:cursor-grabbing relative overflow-hidden group transition-all duration-300" style="${cardCssVars}; min-height: 560px; width: 100%; max-width: 354px; border-radius: 30px;">
+                    <div id="tilt-card" class="premium-3d-card badge-rarity-card ${cardRarityClass} ${lockClass} ${cardShadow} gpu-accelerated flex flex-col items-center p-5 select-none cursor-grab active:cursor-grabbing relative overflow-hidden group transition-all duration-300" style="${cardCssVars};">
                         
                         <!-- Texture & Effects -->
                         <div class="noise-texture"></div>
@@ -46435,7 +46441,7 @@ KULLANICI NOTU
                     <!-- Interactive Hint -->
                      <div class="mt-7 flex items-center gap-3 ${helpTextColor} text-[10px] font-black animate-pulse tracking-[0.3em] uppercase opacity-80">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path></svg>
-                        <span>Çevirmek İçin Sürükle</span>
+                        <span id="badge-tilt-hint">Çevirmek İçin Sürükle</span>
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
                     </div>
                 </div>
@@ -46466,7 +46472,7 @@ KULLANICI NOTU
                     const ua = navigator.userAgent || '';
                     return nativePlatform === 'ios' || /iPhone|iPad|iPod/i.test(ua);
                 })();
-                const hintRow = modal.querySelector('.mt-8 span');
+                const hintRow = modal.querySelector('#badge-tilt-hint');
                 let motionListenerActive = false;
                 let orientationBaseline = null;
                 const motionProfile = isNativeIOSBadgeRender
