@@ -84687,9 +84687,10 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         gap: 12px !important;
         width: 100% !important;
         max-width: 100% !important;
+        min-height: 50px !important;
         min-width: 0 !important;
-        padding: 4px 18px 10px 4px !important;
-        margin: 0 !important;
+        padding: 8px 18px 8px 4px !important;
+        margin: 14px 0 16px !important;
         overflow-x: auto !important;
         overflow-y: hidden !important;
         overscroll-behavior-x: contain !important;
@@ -84712,8 +84713,15 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
     }
 
     #screen-notes .notes-filter-rail .notes-filter-btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
         flex: 0 0 auto !important;
+        min-height: 36px !important;
         min-width: max-content !important;
+        padding: 0 15px !important;
+        line-height: 1 !important;
         white-space: nowrap !important;
         scroll-snap-align: start !important;
         touch-action: pan-x pan-y pinch-zoom !important;
