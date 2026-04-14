@@ -23158,35 +23158,39 @@
                 --card-base: #0b1020;
                 --card-ink: #f8fafc;
                 --card-muted: rgba(226, 232, 240, 0.72);
-                width: min(88vw, 354px) !important;
-                min-height: clamp(520px, 74vh, 574px) !important;
-                border-radius: 30px !important;
+                width: min(86vw, 366px) !important;
+                min-height: min(620px, calc(100vh - 118px)) !important;
+                border-radius: 32px !important;
                 overflow: hidden;
                 z-index: 2;
                 clip-path: none !important;
                 -webkit-clip-path: none !important;
                 background:
-                    radial-gradient(circle at var(--mx) var(--my), color-mix(in srgb, var(--rarity-a, #6366f1) 18%, transparent) 0%, transparent 38%),
-                    linear-gradient(155deg, color-mix(in srgb, var(--card-base) 88%, var(--rarity-a, #6366f1) 12%) 0%, var(--card-base) 48%, color-mix(in srgb, #020617 86%, var(--rarity-b, #8b5cf6) 14%) 100%) !important;
-                border: 1px solid color-mix(in srgb, var(--rarity-a, #6366f1) 52%, rgba(255,255,255,0.18));
+                    radial-gradient(circle at var(--mx) var(--my), color-mix(in srgb, var(--rarity-a, #6366f1) 26%, transparent) 0%, transparent 30%),
+                    radial-gradient(circle at 50% 0%, rgba(255,255,255,0.12), transparent 38%),
+                    repeating-linear-gradient(132deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 13px),
+                    linear-gradient(155deg, color-mix(in srgb, var(--card-base) 82%, var(--rarity-a, #6366f1) 18%) 0%, var(--card-base) 48%, color-mix(in srgb, #020617 78%, var(--rarity-b, #8b5cf6) 22%) 100%) !important;
+                border: 1px solid color-mix(in srgb, var(--rarity-a, #6366f1) 58%, rgba(255,255,255,0.22));
                 color: var(--card-ink);
                 box-shadow:
-                    0 34px 86px rgba(2, 6, 23, 0.54),
-                    0 10px 38px color-mix(in srgb, var(--rarity-glow, #6366f1) 28%, transparent),
+                    0 42px 98px rgba(2, 6, 23, 0.62),
+                    0 18px 54px color-mix(in srgb, var(--rarity-glow, #6366f1) 34%, transparent),
                     inset 0 1px 0 rgba(255, 255, 255, 0.16),
                     inset 0 -1px 0 rgba(255, 255, 255, 0.05);
             }
 
             html:not(.dark) .badge-rarity-card {
-                --card-base: #f8fafc;
+                --card-base: #edf2fb;
                 --card-ink: #0f172a;
                 --card-muted: #64748b;
                 background:
-                    radial-gradient(circle at var(--mx) var(--my), color-mix(in srgb, var(--rarity-a, #6366f1) 16%, transparent) 0%, transparent 42%),
-                    linear-gradient(155deg, rgba(255,255,255,0.96) 0%, color-mix(in srgb, #f8fafc 88%, var(--rarity-a, #6366f1) 12%) 52%, color-mix(in srgb, #eef2ff 78%, var(--rarity-b, #8b5cf6) 22%) 100%) !important;
+                    radial-gradient(circle at var(--mx) var(--my), color-mix(in srgb, var(--rarity-a, #6366f1) 20%, transparent) 0%, transparent 34%),
+                    radial-gradient(circle at 50% 0%, rgba(255,255,255,0.92), transparent 42%),
+                    repeating-linear-gradient(132deg, rgba(15,23,42,0.026) 0 1px, transparent 1px 13px),
+                    linear-gradient(155deg, rgba(255,255,255,0.98) 0%, color-mix(in srgb, #f8fafc 78%, var(--rarity-a, #6366f1) 22%) 52%, color-mix(in srgb, #dfe7ff 66%, var(--rarity-b, #8b5cf6) 34%) 100%) !important;
                 box-shadow:
-                    0 34px 78px rgba(71, 85, 105, 0.18),
-                    0 12px 34px color-mix(in srgb, var(--rarity-glow, #6366f1) 18%, transparent),
+                    0 38px 86px rgba(71, 85, 105, 0.22),
+                    0 16px 44px color-mix(in srgb, var(--rarity-glow, #6366f1) 24%, transparent),
                     inset 0 1px 0 rgba(255, 255, 255, 0.9);
             }
 
@@ -23200,8 +23204,8 @@
             }
 
             .badge-rarity-card::before {
-                padding: 1.5px;
-                background: conic-gradient(from calc(180deg + (var(--tilt-x, 0) * 36deg)), var(--rarity-a, #6366f1), rgba(255,255,255,0.88), var(--rarity-b, #8b5cf6), var(--rarity-c, #22d3ee), var(--rarity-a, #6366f1));
+                padding: 1.7px;
+                background: conic-gradient(from calc(180deg + (var(--tilt-x, 0) * 42deg)), var(--rarity-a, #6366f1), rgba(255,255,255,0.95), var(--rarity-b, #8b5cf6), var(--rarity-c, #22d3ee), rgba(255,255,255,0.82), var(--rarity-a, #6366f1));
                 -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
                 mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
                 -webkit-mask-composite: xor;
@@ -23212,10 +23216,11 @@
 
             .badge-rarity-card::after {
                 background:
-                    radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.14) 18%, transparent 46%),
-                    linear-gradient(115deg, transparent 10%, rgba(255,255,255,0.04) 32%, rgba(255,255,255,0.26) 48%, rgba(255,255,255,0.06) 62%, transparent 82%),
-                    repeating-linear-gradient(122deg, transparent 0 8px, color-mix(in srgb, var(--rarity-a, #6366f1) 18%, transparent) 9px 10px, transparent 12px 20px);
-                background-size: 100% 100%, 240% 240%, 160px 160px;
+                    radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,0.52) 0%, rgba(255,255,255,0.14) 16%, transparent 42%),
+                    linear-gradient(115deg, transparent 8%, rgba(255,255,255,0.06) 28%, rgba(255,255,255,0.34) 48%, rgba(255,255,255,0.08) 64%, transparent 84%),
+                    repeating-linear-gradient(122deg, transparent 0 7px, color-mix(in srgb, var(--rarity-a, #6366f1) 22%, transparent) 8px 9px, transparent 11px 19px),
+                    repeating-linear-gradient(34deg, transparent 0 18px, color-mix(in srgb, var(--rarity-c, #22d3ee) 12%, transparent) 19px 20px, transparent 21px 38px);
+                background-size: 100% 100%, 230% 230%, 150px 150px, 210px 210px;
                 background-position: var(--mx) var(--my), calc(var(--mx) - 50%) calc(var(--my) - 50%), center;
                 mix-blend-mode: screen;
                 opacity: var(--foil-opacity);
@@ -23262,12 +23267,13 @@
                 z-index: 44;
                 opacity: var(--foil-opacity) !important;
                 background:
-                    conic-gradient(from calc(120deg + (var(--tilt-x, 0) * 60deg)) at var(--mx) var(--my), transparent 0deg, color-mix(in srgb, var(--rarity-a, #6366f1) 36%, transparent) 42deg, rgba(255,255,255,0.36) 62deg, color-mix(in srgb, var(--rarity-c, #22d3ee) 30%, transparent) 96deg, transparent 150deg),
-                    repeating-linear-gradient(118deg, transparent 0 10px, rgba(255,255,255,0.08) 11px 12px, transparent 14px 24px);
-                background-size: 180% 180%, 120px 120px;
+                    conic-gradient(from calc(120deg + (var(--tilt-x, 0) * 68deg)) at var(--mx) var(--my), transparent 0deg, color-mix(in srgb, var(--rarity-a, #6366f1) 42%, transparent) 40deg, rgba(255,255,255,0.42) 61deg, color-mix(in srgb, var(--rarity-c, #22d3ee) 36%, transparent) 94deg, transparent 150deg),
+                    linear-gradient(115deg, transparent 20%, rgba(255,255,255,0.16) 44%, rgba(255,255,255,0.42) 50%, rgba(255,255,255,0.12) 56%, transparent 80%),
+                    repeating-linear-gradient(118deg, transparent 0 9px, rgba(255,255,255,0.11) 10px 11px, transparent 13px 24px);
+                background-size: 180% 180%, 220% 220%, 110px 110px;
                 background-position: var(--mx) var(--my), center;
                 mix-blend-mode: screen;
-                filter: saturate(1.35) contrast(1.08);
+                filter: saturate(1.5) contrast(1.12);
             }
 
             .badge-rarity-card .holo-glare {
@@ -23281,27 +23287,31 @@
             .badge-card-art-window {
                 position: relative;
                 width: 100%;
-                min-height: 246px;
-                border-radius: 23px;
+                min-height: clamp(262px, 42vh, 318px);
+                border-radius: 25px 25px 20px 20px;
                 overflow: hidden;
-                transform: translateZ(88px);
+                transform: translateZ(92px);
                 box-shadow:
                     inset 0 1px 0 rgba(255,255,255,0.22),
-                    0 22px 44px rgba(2, 6, 23, 0.26);
+                    inset 0 -1px 0 rgba(255,255,255,0.06),
+                    0 28px 52px rgba(2, 6, 23, 0.32);
                 background:
-                    linear-gradient(120deg, color-mix(in srgb, var(--rarity-a, #6366f1) 18%, transparent), transparent 48%),
-                    linear-gradient(220deg, color-mix(in srgb, var(--rarity-c, #22d3ee) 14%, transparent), transparent 54%),
-                    linear-gradient(150deg, rgba(15,23,42,0.82), rgba(2,6,23,0.96));
+                    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--rarity-a, #6366f1) 34%, transparent) 0%, transparent 28%),
+                    linear-gradient(120deg, color-mix(in srgb, var(--rarity-a, #6366f1) 22%, transparent), transparent 48%),
+                    linear-gradient(220deg, color-mix(in srgb, var(--rarity-c, #22d3ee) 18%, transparent), transparent 54%),
+                    linear-gradient(150deg, rgba(11,18,32,0.86), rgba(2,6,23,0.96));
             }
 
             html:not(.dark) .badge-card-art-window {
                 box-shadow:
                     inset 0 1px 0 rgba(255,255,255,0.76),
-                    0 20px 38px rgba(71, 85, 105, 0.16);
+                    inset 0 -1px 0 rgba(255,255,255,0.28),
+                    0 24px 48px rgba(71, 85, 105, 0.18);
                 background:
-                    linear-gradient(120deg, color-mix(in srgb, var(--rarity-a, #6366f1) 14%, rgba(255,255,255,0.74)), rgba(255,255,255,0.28) 48%),
-                    linear-gradient(220deg, color-mix(in srgb, var(--rarity-c, #22d3ee) 12%, rgba(255,255,255,0.62)), rgba(255,255,255,0.38) 54%),
-                    linear-gradient(150deg, #ffffff, #eef2ff);
+                    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--rarity-a, #6366f1) 18%, rgba(255,255,255,0.55)) 0%, transparent 34%),
+                    linear-gradient(120deg, color-mix(in srgb, var(--rarity-a, #6366f1) 16%, rgba(255,255,255,0.78)), rgba(255,255,255,0.28) 48%),
+                    linear-gradient(220deg, color-mix(in srgb, var(--rarity-c, #22d3ee) 16%, rgba(255,255,255,0.62)), rgba(255,255,255,0.38) 54%),
+                    linear-gradient(150deg, #ffffff, #e9efff);
             }
 
             .badge-card-art-window::before,
@@ -23314,17 +23324,19 @@
 
             .badge-card-art-window::before {
                 background:
-                    linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.16) 48%, transparent 56%),
-                    linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--rarity-a, #6366f1) 16%, transparent) 100%);
-                opacity: 0.58;
+                    linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.18) 45%, rgba(255,255,255,0.42) 49%, transparent 58%),
+                    radial-gradient(circle at 50% 52%, transparent 0 28%, color-mix(in srgb, var(--rarity-a, #6366f1) 18%, transparent) 29% 30%, transparent 31%),
+                    linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--rarity-a, #6366f1) 18%, transparent) 100%);
+                opacity: 0.68;
             }
 
             .badge-card-art-window::after {
                 background-image:
-                    linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
-                background-size: 22px 22px;
-                opacity: 0.24;
+                    linear-gradient(rgba(255,255,255,0.055) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px),
+                    repeating-linear-gradient(135deg, transparent 0 14px, rgba(255,255,255,0.06) 15px 16px, transparent 17px 30px);
+                background-size: 24px 24px, 24px 24px, 160px 160px;
+                opacity: 0.3;
                 transform: translate3d(calc(var(--tilt-x, 0) * -7px), calc(var(--tilt-y, 0) * -7px), 0);
             }
 
@@ -23334,17 +23346,36 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                min-height: 230px;
-                transform: translateZ(124px);
+                min-height: clamp(248px, 39vh, 300px);
+                transform: translateZ(132px);
+            }
+
+            .badge-card-art-icon::before {
+                content: '';
+                position: absolute;
+                width: 168px;
+                height: 168px;
+                border-radius: 32px;
+                background:
+                    radial-gradient(circle at 50% 36%, rgba(255,255,255,0.32), transparent 32%),
+                    linear-gradient(145deg, color-mix(in srgb, var(--rarity-a, #6366f1) 22%, transparent), color-mix(in srgb, var(--rarity-b, #8b5cf6) 14%, transparent));
+                border: 1px solid color-mix(in srgb, var(--rarity-a, #6366f1) 26%, rgba(255,255,255,0.22));
+                box-shadow:
+                    inset 0 1px 0 rgba(255,255,255,0.2),
+                    0 24px 60px color-mix(in srgb, var(--rarity-glow, #6366f1) 22%, transparent);
+                transform: translateZ(-18px) rotate(45deg) scale(0.9);
+                opacity: 0.62;
             }
 
             .badge-card-art-icon img,
             .badge-card-art-icon .badge-hero {
-                width: 190px !important;
-                height: 190px !important;
-                max-width: 190px !important;
+                position: relative;
+                z-index: 2;
+                width: 176px !important;
+                height: 176px !important;
+                max-width: 176px !important;
                 object-fit: contain;
-                filter: drop-shadow(0 24px 30px rgba(2,6,23,0.38)) drop-shadow(0 0 28px color-mix(in srgb, var(--rarity-glow, #6366f1) 34%, transparent));
+                filter: drop-shadow(0 28px 34px rgba(2,6,23,0.44)) drop-shadow(0 0 34px color-mix(in srgb, var(--rarity-glow, #6366f1) 42%, transparent));
             }
 
             .badge-rarity-legendary .badge-card-art-icon img,
@@ -23353,9 +23384,11 @@
             }
 
             .badge-card-footer-tile {
-                background: rgba(255,255,255,0.52);
-                border: 1px solid rgba(255,255,255,0.46);
-                box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
+                background: rgba(255,255,255,0.42);
+                border: 1px solid rgba(255,255,255,0.38);
+                box-shadow:
+                    inset 0 1px 0 rgba(255,255,255,0.44),
+                    0 10px 24px rgba(15,23,42,0.08);
             }
 
             html.dark .badge-card-footer-tile {
@@ -46538,11 +46571,11 @@ KULLANICI NOTU
                     const shadowScale = (1 - (Math.abs(state.currentX) + Math.abs(state.currentY)) * 0.05).toFixed(3);
                     const depthAmount = Math.min(1, Math.abs(state.currentX) + Math.abs(state.currentY));
                     const foilOpacity = isLightBadgeSurface
-                        ? Math.min(0.28, depthAmount * 0.18 + 0.09)
-                        : Math.min(rarityKey === 'legendary' || rarityKey === 'mythic' ? 0.72 : 0.56, depthAmount * 0.38 + 0.16);
+                        ? Math.min(0.42, depthAmount * 0.25 + 0.13)
+                        : Math.min(rarityKey === 'legendary' || rarityKey === 'mythic' ? 0.86 : 0.68, depthAmount * 0.46 + 0.2);
                     const glareOpacity = isLightBadgeSurface
-                        ? Math.min(0.28, depthAmount * 0.16 + 0.08)
-                        : Math.min(0.62, depthAmount * 0.34 + 0.14);
+                        ? Math.min(0.36, depthAmount * 0.22 + 0.1)
+                        : Math.min(0.74, depthAmount * 0.42 + 0.18);
 
                     // DOM Güncellemesi (Tek seferde)
                     [card, stage].forEach(surface => {
