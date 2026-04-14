@@ -23164,6 +23164,9 @@
                     linear-gradient(155deg, color-mix(in srgb, var(--card-base) 82%, var(--rarity-a, #6366f1) 18%) 0%, var(--card-base) 48%, color-mix(in srgb, #020617 78%, var(--rarity-b, #8b5cf6) 22%) 100%) !important;
                 border: 1px solid color-mix(in srgb, var(--rarity-a, #6366f1) 58%, rgba(255,255,255,0.22));
                 color: var(--card-ink);
+                contain: layout paint style;
+                backface-visibility: hidden;
+                -webkit-backface-visibility: hidden;
                 box-shadow:
                     0 24px 58px rgba(2, 6, 23, 0.46),
                     0 8px 22px color-mix(in srgb, var(--rarity-glow, #6366f1) 18%, transparent),
@@ -23299,6 +23302,46 @@
                 background: radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,0.46) 0%, rgba(255,255,255,0.12) 22%, transparent 58%);
                 mix-blend-mode: screen;
                 filter: blur(0.4px);
+            }
+
+            html:not(.dark) .badge-rarity-card::after {
+                background:
+                    radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,0.42) 0%, rgba(56,189,248,0.16) 16%, transparent 44%),
+                    linear-gradient(112deg, transparent 8%, rgba(34,211,238,0.10) 28%, rgba(168,85,247,0.20) 46%, rgba(251,191,36,0.14) 59%, transparent 84%),
+                    repeating-linear-gradient(122deg, transparent 0 8px, color-mix(in srgb, var(--rarity-a, #6366f1) 34%, transparent) 9px 10px, transparent 12px 21px),
+                    repeating-linear-gradient(34deg, transparent 0 18px, color-mix(in srgb, var(--rarity-c, #22d3ee) 20%, transparent) 19px 20px, transparent 21px 38px);
+                mix-blend-mode: multiply;
+                opacity: var(--foil-opacity);
+            }
+
+            html:not(.dark) .badge-rarity-card .holo-foil {
+                background:
+                    conic-gradient(from calc(120deg + (var(--tilt-x, 0) * 58deg)) at var(--mx) var(--my), transparent 0deg, color-mix(in srgb, var(--rarity-a, #6366f1) 48%, transparent) 36deg, rgba(255,255,255,0.34) 58deg, color-mix(in srgb, var(--rarity-c, #22d3ee) 42%, transparent) 92deg, color-mix(in srgb, #fbbf24 26%, transparent) 126deg, transparent 166deg),
+                    linear-gradient(115deg, transparent 18%, rgba(56,189,248,0.16) 38%, rgba(255,255,255,0.38) 50%, rgba(168,85,247,0.16) 62%, transparent 82%),
+                    repeating-linear-gradient(118deg, transparent 0 9px, color-mix(in srgb, var(--rarity-a, #6366f1) 20%, transparent) 10px 11px, transparent 13px 24px);
+                mix-blend-mode: multiply;
+                filter: saturate(1.28) contrast(1.06);
+            }
+
+            html:not(.dark) .badge-rarity-card .holo-glare {
+                background:
+                    radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,0.54) 0%, rgba(56,189,248,0.14) 24%, transparent 60%),
+                    linear-gradient(108deg, transparent 14%, rgba(255,255,255,0.42) 47%, transparent 70%);
+                mix-blend-mode: soft-light;
+                filter: none;
+            }
+
+            .premium-3d-card.badge-rarity-card.ios-badge-render-fix .holo-foil,
+            .premium-3d-card.badge-rarity-card.ios-badge-render-fix .holo-glare,
+            .premium-3d-card.badge-rarity-card.ios-badge-render-fix::after {
+                transform: translateZ(1px);
+                will-change: opacity, background-position;
+            }
+
+            .premium-3d-card.badge-rarity-card.ios-badge-render-fix .badge-card-footer-tile,
+            .premium-3d-card.badge-rarity-card.ios-badge-render-fix .backdrop-blur-md {
+                -webkit-backdrop-filter: blur(8px);
+                backdrop-filter: blur(8px);
             }
 
             .badge-card-art-window {
@@ -46579,7 +46622,6 @@ KULLANICI NOTU
                 // --- OPTİMİZE EDİLMİŞ ANİMASYON MOTORU (rAF Loop) ---
                 const card = document.getElementById('tilt-card');
                 const stage = document.getElementById('badge-detail-stage');
-                const shadow = null;
                 const glare = document.getElementById('holo-glare');
                 const foil = document.getElementById('holo-foil');
                 const badgeImg = card.querySelector('.badge-card-art-icon img, .badge-3d-img, .badge-hero');
@@ -46604,20 +46646,20 @@ KULLANICI NOTU
                 let orientationBaseline = null;
                 const motionProfile = isNativeIOSBadgeRender
                     ? {
-                        idleLimit: prefersReducedMotion ? 6 : 11.5,
-                        pointerLimit: prefersReducedMotion ? 6 : 14.8,
-                        gyroLimit: prefersReducedMotion ? 6 : 12.4,
-                        response: 0.128,
-                        layerDepth: 1.38,
-                        iconDrift: 1.42
+                        idleLimit: prefersReducedMotion ? 5 : 8.5,
+                        pointerLimit: prefersReducedMotion ? 6 : 13.2,
+                        gyroLimit: prefersReducedMotion ? 6 : 11.6,
+                        response: 0.18,
+                        layerDepth: 1.04,
+                        iconDrift: 1.12
                     }
                     : {
-                        idleLimit: prefersReducedMotion ? 6 : 11,
-                        pointerLimit: prefersReducedMotion ? 6 : 14,
+                        idleLimit: prefersReducedMotion ? 5 : 8,
+                        pointerLimit: prefersReducedMotion ? 6 : 13,
                         gyroLimit: prefersReducedMotion ? 6 : 10.5,
-                        response: 0.095,
-                        layerDepth: 1.18,
-                        iconDrift: 1.18
+                        response: 0.14,
+                        layerDepth: 1.08,
+                        iconDrift: 1.12
                     };
 
                 if (isNativeIOSBadgeRender) {
@@ -46645,73 +46687,71 @@ KULLANICI NOTU
                     limits: 25,                // Max dönüş açısı
                     isRunning: true            // Animasyon döngüsü kontrolü
                 };
+                let animationFrameId = null;
+                let lastOrientationFrame = 0;
+                const settleThreshold = isNativeIOSBadgeRender ? 0.003 : 0.002;
 
-                // 1. Animasyon Döngüsü (Sadece ekran yenilendiğinde çalışır)
+                function requestTiltFrame() {
+                    if (!state.isRunning || animationFrameId) return;
+                    animationFrameId = requestAnimationFrame(animate);
+                }
+
+                function setTiltTarget(x, y, limit) {
+                    state.mouseX = clamp(x, -1, 1);
+                    state.mouseY = clamp(y, -1, 1);
+                    state.limits = limit || motionProfile.pointerLimit;
+                    requestTiltFrame();
+                }
+
+                // 1. Animasyon Döngüsü (input yokken kendini durdurur)
                 function animate() {
+                    animationFrameId = null;
                     if (!state.isRunning || !card) return;
 
                     // Lineer İnterpolasyon (Yumuşatma) - Değeri 0.1 (Yavaş) ile 1 (Anlık) arası değiştirilebilir
                     // 0.1 değeri hareketin "ağırlıklı" ve "akıcı" olmasını sağlar.
-                    state.currentX += (state.mouseX - state.currentX) * motionProfile.response;
-                    state.currentY += (state.mouseY - state.currentY) * motionProfile.response;
+                    const deltaX = state.mouseX - state.currentX;
+                    const deltaY = state.mouseY - state.currentY;
+                    state.currentX += deltaX * motionProfile.response;
+                    state.currentY += deltaY * motionProfile.response;
+                    if (Math.abs(deltaX) < settleThreshold) state.currentX = state.mouseX;
+                    if (Math.abs(deltaY) < settleThreshold) state.currentY = state.mouseY;
 
                     // Hesaplamaları yap (Virgülden sonra 2 basamak yeterli)
                     const rotateX = (state.currentY * -state.limits).toFixed(2);
                     const rotateY = (state.currentX * state.limits).toFixed(2);
                     const glareX = (50 + (state.currentX * 50)).toFixed(2);
                     const glareY = (50 + (state.currentY * 50)).toFixed(2);
-                    const shadowX = (state.currentX * 18).toFixed(2);
-                    const shadowY = (Math.abs(state.currentY) * 9).toFixed(2);
-                    const shadowScale = (1 - (Math.abs(state.currentX) + Math.abs(state.currentY)) * 0.05).toFixed(3);
                     const depthAmount = Math.min(1, Math.abs(state.currentX) + Math.abs(state.currentY));
                     const foilOpacity = isLightBadgeSurface
-                        ? Math.min(0.42, depthAmount * 0.25 + 0.13)
-                        : Math.min(rarityKey === 'legendary' || rarityKey === 'mythic' ? 0.86 : 0.68, depthAmount * 0.46 + 0.2);
+                        ? Math.min(0.46, depthAmount * 0.24 + 0.18)
+                        : Math.min(rarityKey === 'legendary' || rarityKey === 'mythic' ? 0.64 : 0.54, depthAmount * 0.34 + 0.16);
                     const glareOpacity = isLightBadgeSurface
-                        ? Math.min(0.36, depthAmount * 0.22 + 0.1)
-                        : Math.min(0.74, depthAmount * 0.42 + 0.18);
+                        ? Math.min(0.40, depthAmount * 0.18 + 0.16)
+                        : Math.min(0.56, depthAmount * 0.30 + 0.14);
 
                     // DOM Güncellemesi (Tek seferde)
-                    [card, stage].forEach(surface => {
-                        if (!surface) return;
-                        surface.style.setProperty('--mx', `${glareX}%`);
-                        surface.style.setProperty('--my', `${glareY}%`);
-                        surface.style.setProperty('--tilt-x', state.currentX.toFixed(3));
-                        surface.style.setProperty('--tilt-y', state.currentY.toFixed(3));
-                        surface.style.setProperty('--foil-opacity', foilOpacity.toFixed(3));
-                        surface.style.setProperty('--glare-opacity', glareOpacity.toFixed(3));
-                    });
+                    card.style.setProperty('--mx', `${glareX}%`);
+                    card.style.setProperty('--my', `${glareY}%`);
+                    card.style.setProperty('--tilt-x', state.currentX.toFixed(3));
+                    card.style.setProperty('--tilt-y', state.currentY.toFixed(3));
+                    card.style.setProperty('--foil-opacity', foilOpacity.toFixed(3));
+                    card.style.setProperty('--glare-opacity', glareOpacity.toFixed(3));
+                    if (stage) {
+                        stage.style.setProperty('--mx', `${glareX}%`);
+                        stage.style.setProperty('--my', `${glareY}%`);
+                        stage.style.setProperty('--tilt-x', state.currentX.toFixed(3));
+                        stage.style.setProperty('--tilt-y', state.currentY.toFixed(3));
+                    }
                     card.style.transform = `perspective(1600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translate3d(0,0,0) scale(${(1 + depthAmount * 0.018).toFixed(3)})`;
 
-                    if (shadow) {
-                        shadow.style.transform = `translateX(calc(-50% + ${shadowX}px)) translateY(${shadowY}px) scale(${shadowScale})`;
-                        shadow.style.opacity = isLightBadgeSurface
-                            ? `${0.26 + Math.min(0.08, Math.abs(state.currentX) * 0.06 + Math.abs(state.currentY) * 0.05)}`
-                            : isNativeIOSBadgeRender
-                            ? `${0.42 + Math.min(0.1, Math.abs(state.currentX) * 0.08 + Math.abs(state.currentY) * 0.06)}`
-                            : `${0.58 + Math.min(0.18, Math.abs(state.currentX) * 0.12 + Math.abs(state.currentY) * 0.08)}`;
-                    }
-
                     if (glare) {
-                        glare.style.background = isLightBadgeSurface
-                            ? `radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255,255,255,0.16) 0%, rgba(199,210,254,0.06) 30%, transparent 66%)`
-                            : isNativeIOSBadgeRender
-                            ? `radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 26%, transparent 64%)`
-                            : `radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255,255,255,0.26) 0%, rgba(255,255,255,0.09) 22%, transparent 62%)`;
-                        glare.style.opacity = isLightBadgeSurface
-                            ? Math.min(0.18, Math.abs(state.currentX) * 0.08 + Math.abs(state.currentY) * 0.07 + 0.05)
-                            : isNativeIOSBadgeRender
-                            ? Math.min(0.34, Math.abs(state.currentX) * 0.16 + Math.abs(state.currentY) * 0.14 + 0.08)
-                            : Math.min(0.9, Math.abs(state.currentX) * 0.5 + Math.abs(state.currentY) * 0.45 + 0.16);
+                        glare.style.opacity = glareOpacity.toFixed(3);
                     }
 
                     if (foil) {
                         foil.style.backgroundPosition = `${glareX}% ${glareY}%`;
-                        foil.style.opacity = isLightBadgeSurface
-                            ? Math.min(0.075, Math.abs(state.currentX) * 0.035 + Math.abs(state.currentY) * 0.035 + 0.025)
-                            : isNativeIOSBadgeRender
-                            ? Math.min(0.18, Math.abs(state.currentX) * 0.08 + Math.abs(state.currentY) * 0.08 + 0.04)
-                            : Math.min(0.58, Math.abs(state.currentX) * 0.34 + Math.abs(state.currentY) * 0.28 + 0.08);
+                        foil.style.opacity = foilOpacity.toFixed(3);
                     }
 
                     if (bgLayer) {
@@ -46743,12 +46783,17 @@ KULLANICI NOTU
                             : `${0.22 + Math.min(0.16, depthAmount * 0.16)}`;
                     }
 
-                    requestAnimationFrame(animate);
+                    if (
+                        Math.abs(state.mouseX - state.currentX) > settleThreshold ||
+                        Math.abs(state.mouseY - state.currentY) > settleThreshold
+                    ) {
+                        requestTiltFrame();
+                    }
                 }
 
                 // Döngüyü başlat
-                    state.limits = motionProfile.idleLimit;
-                requestAnimationFrame(animate);
+                state.limits = motionProfile.idleLimit;
+                requestTiltFrame();
 
                 // 2. Olay Dinleyicileri (Sadece hedef değerleri günceller)
 
@@ -46757,14 +46802,11 @@ KULLANICI NOTU
                     const rect = card.getBoundingClientRect();
                     const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
                     const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
-                    state.mouseX = clamp(x, -1, 1);
-                    state.mouseY = clamp(y, -1, 1);
-                    state.limits = motionProfile.pointerLimit;
+                    setTiltTarget(x, y, motionProfile.pointerLimit);
                 }
 
                 function handleMouseLeave() {
-                    state.mouseX = 0;
-                    state.mouseY = 0;
+                    setTiltTarget(0, 0, motionProfile.idleLimit);
                 }
 
                 function handleTouchMove(e) {
@@ -46772,15 +46814,19 @@ KULLANICI NOTU
                     const rect = card.getBoundingClientRect();
                     const x = (e.touches[0].clientX - rect.left - rect.width / 2) / (rect.width / 2);
                     const y = (e.touches[0].clientY - rect.top - rect.height / 2) / (rect.height / 2);
-                    state.mouseX = Math.max(-1, Math.min(1, x));
-                    state.mouseY = Math.max(-1, Math.min(1, y));
-                    state.limits = motionProfile.pointerLimit;
+                    setTiltTarget(x, y, motionProfile.pointerLimit);
                 }
 
                 // Mobil Jiroskop
                 function handleOrientation(e) {
                     if (prefersReducedMotion) return;
                     if (typeof e.gamma !== 'number' || typeof e.beta !== 'number') return;
+                    const now = window.performance && typeof window.performance.now === 'function'
+                        ? window.performance.now()
+                        : Date.now();
+                    const minFrameGap = isNativeIOSBadgeRender ? 24 : 16;
+                    if (now - lastOrientationFrame < minFrameGap) return;
+                    lastOrientationFrame = now;
 
                     if (!orientationBaseline) {
                         orientationBaseline = {
@@ -46789,26 +46835,19 @@ KULLANICI NOTU
                         };
                     }
 
-                    // Değerleri normalize et ve sınırla (-1 ile 1 arası)
-                    let x = e.gamma / 45; // Sağa sola
-                    let y = e.beta / 45;  // Öne arkaya
-
-                    x = (e.gamma - orientationBaseline.gamma) / 30;
-                    y = (e.beta - orientationBaseline.beta) / 38;
-                    if (x > 1) x = 1; if (x < -1) x = -1;
-                    if (y > 1) y = 1; if (y < -1) y = -1;
-
-                    state.mouseX = normalizeTiltAxis(
-                        e.gamma - orientationBaseline.gamma,
-                        isNativeIOSBadgeRender ? 8.5 : 12,
-                        isNativeIOSBadgeRender ? 0.65 : 1.1
+                    setTiltTarget(
+                        normalizeTiltAxis(
+                            e.gamma - orientationBaseline.gamma,
+                            isNativeIOSBadgeRender ? 8.5 : 12,
+                            isNativeIOSBadgeRender ? 0.65 : 1.1
+                        ),
+                        normalizeTiltAxis(
+                            e.beta - orientationBaseline.beta,
+                            isNativeIOSBadgeRender ? 11 : 15,
+                            isNativeIOSBadgeRender ? 0.75 : 1.35
+                        ),
+                        motionProfile.gyroLimit
                     );
-                    state.mouseY = normalizeTiltAxis(
-                        e.beta - orientationBaseline.beta,
-                        isNativeIOSBadgeRender ? 11 : 15,
-                        isNativeIOSBadgeRender ? 0.75 : 1.35
-                    );
-                    state.limits = motionProfile.gyroLimit;
                 }
 
                 async function enableMotionTilt() {
@@ -46852,6 +46891,10 @@ KULLANICI NOTU
                 // 3. Temizlik Fonksiyonu (Modal kapandığında çalışır)
                 window.cleanupBadgeDetail = function () {
                     state.isRunning = false; // Döngüyü durdur
+                    if (animationFrameId) {
+                        cancelAnimationFrame(animationFrameId);
+                        animationFrameId = null;
+                    }
                     card.removeEventListener('mousemove', handleMouseMove);
                     card.removeEventListener('mouseleave', handleMouseLeave);
                     card.removeEventListener('touchstart', handleTouchMove);
