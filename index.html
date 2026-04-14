@@ -33731,7 +33731,7 @@
                     <h3
                         class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-600 dark:from-indigo-300 dark:to-purple-300">
                         Rozet Koleksiyonum 💎</h3>
-                    <button onclick="document.getElementById('badge-gallery-modal').classList.add('hidden')"
+                    <button onclick="window.closeBadgeGallery ? window.closeBadgeGallery() : document.getElementById('badge-gallery-modal').classList.add('hidden')"
                         class="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center text-gray-500 hover:text-red-500 transition shadow-sm">✕</button>
                 </div>
 
@@ -42846,7 +42846,66 @@
 
 
             // --- NFT GALERİSİ GÜVENLİ AÇILIŞ (FIX) ---
+            window.__badgeGalleryReturnContext = window.__badgeGalleryReturnContext || null;
+            window.__badgeDetailReturnToGallery = false;
+
+            function getActiveProfileTabName() {
+                const activeButton = document.querySelector('#profile-modal .tab-btn.active');
+                return activeButton?.id ? activeButton.id.replace('tab-', '') : 'settings';
+            }
+
+            function getVisibleAppTabName() {
+                const visibleScreen = document.querySelector('[id^="screen-"]:not(.hidden)');
+                if (visibleScreen?.id) return visibleScreen.id.replace('screen-', '');
+                return window.FingendaApp?.state?.currentTab || 'dashboard';
+            }
+
+            window.captureBadgeGalleryReturnContext = function () {
+                const profileModal = document.getElementById('profile-modal');
+                const profileWasOpen = !!profileModal &&
+                    !profileModal.classList.contains('hidden') &&
+                    profileModal.style.display !== 'none';
+
+                return {
+                    appTab: getVisibleAppTabName(),
+                    profileWasOpen,
+                    profileTab: profileWasOpen ? getActiveProfileTabName() : null
+                };
+            };
+
+            window.restoreBadgeGalleryReturnContext = function () {
+                const context = window.__badgeGalleryReturnContext;
+                if (!context) return;
+
+                if (context.appTab && context.appTab !== getVisibleAppTabName() && typeof window.switchTab === 'function') {
+                    window.switchTab(context.appTab);
+                }
+
+                if (context.profileWasOpen && typeof window.toggleProfileModal === 'function') {
+                    window.toggleProfileModal(true);
+                    requestAnimationFrame(() => {
+                        if (typeof window.switchProfileTab === 'function') {
+                            window.switchProfileTab(context.profileTab || 'settings');
+                        }
+                    });
+                }
+            };
+
+            window.closeBadgeGallery = function (restoreSource = true) {
+                const galleryModal = document.getElementById('badge-gallery-modal');
+                if (galleryModal) galleryModal.classList.add('hidden');
+
+                if (restoreSource !== false) {
+                    window.restoreBadgeGalleryReturnContext?.();
+                    window.__badgeGalleryReturnContext = null;
+                }
+            };
+
             window.handleOpenGallery = function () {
+                window.__badgeGalleryReturnContext = window.captureBadgeGalleryReturnContext
+                    ? window.captureBadgeGalleryReturnContext()
+                    : { appTab: getVisibleAppTabName(), profileWasOpen: false, profileTab: null };
+
                 // 1. Profil modalını kapat
                 window.toggleProfileModal(false);
 
@@ -46385,7 +46444,13 @@ KULLANICI NOTU
 
                 // PATCH: Rozet koleksiyonu modalını kapat (z-index çakışmasını önle)
                 const galleryModal = document.getElementById('badge-gallery-modal');
-                if (galleryModal) galleryModal.classList.add('hidden');
+                const galleryWasOpen = !!galleryModal && !galleryModal.classList.contains('hidden');
+                window.__badgeDetailReturnToGallery = galleryWasOpen;
+                if (typeof window.closeBadgeGallery === 'function') {
+                    window.closeBadgeGallery(false);
+                } else if (galleryModal) {
+                    galleryModal.classList.add('hidden');
+                }
 
                 const modal = document.getElementById('nft-detail-modal');
                 const container = document.getElementById('3d-card-container');
@@ -46798,6 +46863,15 @@ KULLANICI NOTU
                     }
                     orientationBaseline = null;
                     modal.classList.add('hidden');
+
+                    if (window.__badgeDetailReturnToGallery) {
+                        window.__badgeDetailReturnToGallery = false;
+                        const galleryModal = document.getElementById('badge-gallery-modal');
+                        if (galleryModal) {
+                            if (typeof window.renderNFTGallery === 'function') window.renderNFTGallery();
+                            galleryModal.classList.remove('hidden');
+                        }
+                    }
                 };
 
                 // Kapatma butonunu güncelle
