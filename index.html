@@ -23104,6 +23104,276 @@
                 will-change: transform;
             }
 
+            /* === Badge detail: collectible holographic card system === */
+            .badge-detail-stage {
+                position: relative;
+                min-height: min(760px, 100dvh);
+                width: 100%;
+                overflow: hidden;
+                isolation: isolate;
+                background:
+                    radial-gradient(circle at calc(50% + (var(--tilt-x, 0) * 12%)) 12%, color-mix(in srgb, var(--rarity-a, #6366f1) 22%, transparent) 0%, transparent 34%),
+                    radial-gradient(circle at 82% 82%, color-mix(in srgb, var(--rarity-b, #8b5cf6) 16%, transparent) 0%, transparent 34%),
+                    linear-gradient(180deg, rgba(248, 250, 252, 0.92), rgba(241, 245, 249, 0.96));
+            }
+
+            html.dark .badge-detail-stage {
+                background:
+                    radial-gradient(circle at calc(50% + (var(--tilt-x, 0) * 12%)) 8%, color-mix(in srgb, var(--rarity-a, #6366f1) 32%, transparent) 0%, transparent 36%),
+                    radial-gradient(circle at 78% 78%, color-mix(in srgb, var(--rarity-b, #8b5cf6) 26%, transparent) 0%, transparent 36%),
+                    linear-gradient(180deg, #080b14 0%, #030409 100%);
+            }
+
+            .badge-detail-stage::before,
+            .badge-detail-stage::after {
+                content: '';
+                position: absolute;
+                inset: -20%;
+                pointer-events: none;
+                z-index: 0;
+            }
+
+            .badge-detail-stage::before {
+                background:
+                    radial-gradient(circle at 18% 32%, rgba(255, 255, 255, 0.35) 0 1px, transparent 2px),
+                    radial-gradient(circle at 72% 22%, rgba(255, 255, 255, 0.32) 0 1px, transparent 2px),
+                    radial-gradient(circle at 58% 74%, color-mix(in srgb, var(--rarity-a, #6366f1) 36%, transparent) 0 1px, transparent 2px);
+                background-size: 180px 180px, 220px 220px, 260px 260px;
+                opacity: 0.22;
+                transform: translate3d(calc(var(--tilt-x, 0) * -10px), calc(var(--tilt-y, 0) * -10px), 0);
+            }
+
+            .badge-detail-stage::after {
+                background: conic-gradient(from 180deg at 50% 16%, transparent 0deg, color-mix(in srgb, var(--rarity-a, #6366f1) 18%, transparent) 70deg, rgba(255,255,255,0.22) 90deg, color-mix(in srgb, var(--rarity-b, #8b5cf6) 16%, transparent) 112deg, transparent 150deg);
+                filter: blur(42px);
+                opacity: 0.58;
+                transform: translate3d(calc(var(--tilt-x, 0) * 18px), calc(var(--tilt-y, 0) * 10px), 0);
+            }
+
+            .badge-rarity-card {
+                --mx: 50%;
+                --my: 50%;
+                --tilt-x: 0;
+                --tilt-y: 0;
+                --foil-opacity: 0.12;
+                --glare-opacity: 0.16;
+                --card-base: #0b1020;
+                --card-ink: #f8fafc;
+                --card-muted: rgba(226, 232, 240, 0.72);
+                background:
+                    radial-gradient(circle at var(--mx) var(--my), color-mix(in srgb, var(--rarity-a, #6366f1) 18%, transparent) 0%, transparent 38%),
+                    linear-gradient(155deg, color-mix(in srgb, var(--card-base) 88%, var(--rarity-a, #6366f1) 12%) 0%, var(--card-base) 48%, color-mix(in srgb, #020617 86%, var(--rarity-b, #8b5cf6) 14%) 100%) !important;
+                border: 1px solid color-mix(in srgb, var(--rarity-a, #6366f1) 52%, rgba(255,255,255,0.18));
+                color: var(--card-ink);
+                box-shadow:
+                    0 34px 86px rgba(2, 6, 23, 0.54),
+                    0 10px 38px color-mix(in srgb, var(--rarity-glow, #6366f1) 28%, transparent),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+                    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+            }
+
+            html:not(.dark) .badge-rarity-card {
+                --card-base: #f8fafc;
+                --card-ink: #0f172a;
+                --card-muted: #64748b;
+                background:
+                    radial-gradient(circle at var(--mx) var(--my), color-mix(in srgb, var(--rarity-a, #6366f1) 16%, transparent) 0%, transparent 42%),
+                    linear-gradient(155deg, rgba(255,255,255,0.96) 0%, color-mix(in srgb, #f8fafc 88%, var(--rarity-a, #6366f1) 12%) 52%, color-mix(in srgb, #eef2ff 78%, var(--rarity-b, #8b5cf6) 22%) 100%) !important;
+                box-shadow:
+                    0 34px 78px rgba(71, 85, 105, 0.18),
+                    0 12px 34px color-mix(in srgb, var(--rarity-glow, #6366f1) 18%, transparent),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            }
+
+            .badge-rarity-card::before,
+            .badge-rarity-card::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                border-radius: inherit;
+                pointer-events: none;
+            }
+
+            .badge-rarity-card::before {
+                padding: 1.5px;
+                background: conic-gradient(from calc(180deg + (var(--tilt-x, 0) * 36deg)), var(--rarity-a, #6366f1), rgba(255,255,255,0.88), var(--rarity-b, #8b5cf6), var(--rarity-c, #22d3ee), var(--rarity-a, #6366f1));
+                -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+                mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+                -webkit-mask-composite: xor;
+                mask-composite: exclude;
+                opacity: 0.92;
+                z-index: 80;
+            }
+
+            .badge-rarity-card::after {
+                background:
+                    radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.14) 18%, transparent 46%),
+                    linear-gradient(115deg, transparent 10%, rgba(255,255,255,0.04) 32%, rgba(255,255,255,0.26) 48%, rgba(255,255,255,0.06) 62%, transparent 82%),
+                    repeating-linear-gradient(122deg, transparent 0 8px, color-mix(in srgb, var(--rarity-a, #6366f1) 18%, transparent) 9px 10px, transparent 12px 20px);
+                background-size: 100% 100%, 240% 240%, 160px 160px;
+                background-position: var(--mx) var(--my), calc(var(--mx) - 50%) calc(var(--my) - 50%), center;
+                mix-blend-mode: screen;
+                opacity: var(--foil-opacity);
+                z-index: 42;
+            }
+
+            .badge-rarity-common {
+                --rarity-a: #94a3b8;
+                --rarity-b: #cbd5e1;
+                --rarity-c: #64748b;
+                --rarity-glow: #94a3b8;
+            }
+
+            .badge-rarity-rare {
+                --rarity-a: #38bdf8;
+                --rarity-b: #2563eb;
+                --rarity-c: #a5f3fc;
+                --rarity-glow: #38bdf8;
+            }
+
+            .badge-rarity-epic {
+                --rarity-a: #c084fc;
+                --rarity-b: #7c3aed;
+                --rarity-c: #f0abfc;
+                --rarity-glow: #a855f7;
+            }
+
+            .badge-rarity-legendary {
+                --rarity-a: #fbbf24;
+                --rarity-b: #f97316;
+                --rarity-c: #fef3c7;
+                --rarity-glow: #f59e0b;
+            }
+
+            .badge-rarity-mythic {
+                --rarity-a: #fb7185;
+                --rarity-b: #22d3ee;
+                --rarity-c: #e879f9;
+                --rarity-glow: #e879f9;
+                --card-base: #05020a;
+            }
+
+            .badge-rarity-card .holo-foil {
+                z-index: 44;
+                opacity: var(--foil-opacity) !important;
+                background:
+                    conic-gradient(from calc(120deg + (var(--tilt-x, 0) * 60deg)) at var(--mx) var(--my), transparent 0deg, color-mix(in srgb, var(--rarity-a, #6366f1) 36%, transparent) 42deg, rgba(255,255,255,0.36) 62deg, color-mix(in srgb, var(--rarity-c, #22d3ee) 30%, transparent) 96deg, transparent 150deg),
+                    repeating-linear-gradient(118deg, transparent 0 10px, rgba(255,255,255,0.08) 11px 12px, transparent 14px 24px);
+                background-size: 180% 180%, 120px 120px;
+                background-position: var(--mx) var(--my), center;
+                mix-blend-mode: screen;
+                filter: saturate(1.35) contrast(1.08);
+            }
+
+            .badge-rarity-card .holo-glare {
+                z-index: 58;
+                opacity: var(--glare-opacity) !important;
+                background: radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,0.46) 0%, rgba(255,255,255,0.12) 22%, transparent 58%);
+                mix-blend-mode: screen;
+                filter: blur(0.4px);
+            }
+
+            .badge-card-art-window {
+                position: relative;
+                width: 100%;
+                min-height: 246px;
+                border-radius: 23px;
+                overflow: hidden;
+                transform: translateZ(88px);
+                box-shadow:
+                    inset 0 1px 0 rgba(255,255,255,0.22),
+                    0 22px 44px rgba(2, 6, 23, 0.26);
+                background:
+                    radial-gradient(circle at 50% 22%, rgba(255,255,255,0.34), transparent 28%),
+                    linear-gradient(180deg, color-mix(in srgb, var(--rarity-a, #6366f1) 26%, transparent), transparent 54%),
+                    linear-gradient(150deg, rgba(15,23,42,0.82), rgba(2,6,23,0.96));
+            }
+
+            html:not(.dark) .badge-card-art-window {
+                box-shadow:
+                    inset 0 1px 0 rgba(255,255,255,0.76),
+                    0 20px 38px rgba(71, 85, 105, 0.16);
+                background:
+                    radial-gradient(circle at 50% 18%, rgba(255,255,255,0.9), transparent 34%),
+                    linear-gradient(180deg, color-mix(in srgb, var(--rarity-a, #6366f1) 20%, rgba(255,255,255,0.72)), rgba(255,255,255,0.42) 58%),
+                    linear-gradient(150deg, #ffffff, #eef2ff);
+            }
+
+            .badge-card-art-window::before,
+            .badge-card-art-window::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+            }
+
+            .badge-card-art-window::before {
+                background:
+                    radial-gradient(ellipse at 50% 92%, color-mix(in srgb, var(--rarity-a, #6366f1) 34%, transparent) 0%, transparent 46%),
+                    linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.16) 48%, transparent 56%);
+                opacity: 0.78;
+            }
+
+            .badge-card-art-window::after {
+                background-image:
+                    linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+                background-size: 22px 22px;
+                opacity: 0.24;
+                transform: translate3d(calc(var(--tilt-x, 0) * -7px), calc(var(--tilt-y, 0) * -7px), 0);
+            }
+
+            .badge-card-art-icon {
+                position: relative;
+                z-index: 3;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 230px;
+                transform: translateZ(124px);
+            }
+
+            .badge-card-art-icon img,
+            .badge-card-art-icon .badge-hero {
+                width: 190px !important;
+                height: 190px !important;
+                max-width: 190px !important;
+                object-fit: contain;
+                filter: drop-shadow(0 24px 30px rgba(2,6,23,0.38)) drop-shadow(0 0 28px color-mix(in srgb, var(--rarity-glow, #6366f1) 34%, transparent));
+            }
+
+            .badge-rarity-legendary .badge-card-art-icon img,
+            .badge-rarity-mythic .badge-card-art-icon img {
+                filter: drop-shadow(0 26px 34px rgba(2,6,23,0.42)) drop-shadow(0 0 42px color-mix(in srgb, var(--rarity-glow) 48%, transparent));
+            }
+
+            .badge-card-footer-tile {
+                background: rgba(255,255,255,0.52);
+                border: 1px solid rgba(255,255,255,0.46);
+                box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
+            }
+
+            html.dark .badge-card-footer-tile {
+                background: rgba(255,255,255,0.055);
+                border-color: rgba(255,255,255,0.08);
+                box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+            }
+
+            .badge-detail-copy {
+                color: var(--card-muted);
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                .badge-detail-stage::before,
+                .badge-detail-stage::after,
+                .badge-rarity-card::after,
+                .badge-rarity-card .holo-foil,
+                .badge-rarity-card .holo-glare {
+                    transition: none !important;
+                    animation: none !important;
+                }
+            }
+
             /* ═══════════════════════════════════════════════════════════════ */
             /* FINGO BRAIN REDESIGN - APPLE DESIGN SYSTEM                     */
             /* ═══════════════════════════════════════════════════════════════ */
@@ -46058,31 +46328,25 @@ KULLANICI NOTU
                 const statusText = isUnlocked ? 'KAZANILDI' : 'KİLİTLİ';
 
                 // Stil Sınıfları
-                let glowClass = '';
-                if (badge.rarity === 'rare') glowClass = 'glow-rare';
-                if (badge.rarity === 'epic') glowClass = 'glow-epic';
-                if (badge.rarity === 'legendary') glowClass = 'glow-legendary';
-                if (badge.rarity === 'mythic') glowClass = 'glow-mythic';
-
-                const borderClass = isUnlocked ? `border-${badge.rarity} ${glowClass}` : 'border-common badge-card-locked';
+                const rarityKey = (badge.rarity || 'common').toLowerCase();
+                const rarityThemes = {
+                    common: { label: 'COMMON', rank: '01', a: '#94a3b8', b: '#cbd5e1', c: '#64748b', glow: '#94a3b8', name: 'Steel Foil' },
+                    rare: { label: 'RARE', rank: '02', a: '#38bdf8', b: '#2563eb', c: '#a5f3fc', glow: '#38bdf8', name: 'Blue Prism' },
+                    epic: { label: 'EPIC', rank: '03', a: '#c084fc', b: '#7c3aed', c: '#f0abfc', glow: '#a855f7', name: 'Violet Aurora' },
+                    legendary: { label: 'LEGENDARY', rank: '04', a: '#fbbf24', b: '#f97316', c: '#fef3c7', glow: '#f59e0b', name: 'Golden Halo' },
+                    mythic: { label: 'MYTHIC', rank: '05', a: '#fb7185', b: '#22d3ee', c: '#e879f9', glow: '#e879f9', name: 'Obsidian Rainbow' }
+                };
+                const rarityTheme = rarityThemes[rarityKey] || rarityThemes.common;
+                const cardRarityClass = `badge-rarity-${rarityThemes[rarityKey] ? rarityKey : 'common'}`;
+                const lockClass = isUnlocked ? '' : 'badge-card-locked grayscale opacity-75';
+                const cardCssVars = `--rarity-a:${rarityTheme.a};--rarity-b:${rarityTheme.b};--rarity-c:${rarityTheme.c};--rarity-glow:${rarityTheme.glow};`;
 
                 // Light/Dark mode detection
                 const isDarkMode = document.documentElement.classList.contains('dark');
                 const isLightBadgeSurface = !isDarkMode;
 
-                // Dynamic colors based on theme - UPDATED FOR PREMIUM LOOK
-                const statusBg = isUnlocked
-                    ? (isDarkMode ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-emerald-100 text-emerald-700 border-emerald-200')
-                    : (isDarkMode ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' : 'bg-rose-100 text-rose-600 border-rose-200');
-
-                // Card Backgrounds - More depth
-                const cardBg = isDarkMode ? '#0f172a' : 'linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%)';
-                const cardBgStyle = isDarkMode ? `background-color: ${cardBg};` : `background: ${cardBg};`;
-
                 // Typography Colors
                 const brandTextColor = isDarkMode ? 'text-slate-400' : 'text-slate-500';
-                const titleTextColor = isDarkMode ? 'text-white' : 'text-slate-800';
-                const descTextColor = isDarkMode ? 'text-slate-400' : 'text-slate-600';
 
                 // Footer & Accents
                 const footerLabelColor = isDarkMode ? 'text-slate-500' : 'text-slate-400';
@@ -46090,13 +46354,15 @@ KULLANICI NOTU
                 const helpTextColor = isDarkMode ? 'text-white/40' : 'text-slate-400';
 
                 // Shadows & Glows
-                const dropShadow = isDarkMode ? 'drop-shadow-[0_25px_50px_rgba(0,0,0,0.7)]' : 'drop-shadow-[0_20px_40px_rgba(0,0,0,0.2)]';
-                const ambientGlow = isDarkMode
-                    ? `<div class="absolute top-0 left-1/4 w-full h-full bg-gradient-to-br from-${isUnlocked ? 'indigo' : 'gray'}-500/10 to-transparent blur-[80px] -translate-y-1/2"></div>`
-                    : `<div class="absolute top-0 left-1/4 w-full h-full bg-gradient-to-br from-${isUnlocked ? 'indigo' : 'gray'}-200/40 to-transparent blur-[80px] -translate-y-1/2"></div>`;
                 const cardShadow = isDarkMode
                     ? 'shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_20px_60px_rgba(0,0,0,0.6)]'
                     : 'shadow-[0_0_0_1px_rgba(0,0,0,0.05),0_25px_50px_rgba(20,20,40,0.1),0_10px_20px_rgba(0,0,0,0.05)]';
+                const iconHeroHTML = window.getBadgeIconHTML
+                    ? window.getBadgeIconHTML(badge, true)
+                    : `<img src="${badge.icon}" alt="${badge.title}" class="badge-hero" decoding="async" draggable="false">`;
+                const statusToneClass = isUnlocked
+                    ? 'text-emerald-600 dark:text-emerald-300'
+                    : 'text-rose-500 dark:text-rose-300';
 
                 // HTML Yapısı - PREMIUM DESIGN
                 // PATCH: Remove modal container background/shadow to let the card float
@@ -46106,62 +46372,68 @@ KULLANICI NOTU
                 }
 
                 container.innerHTML = `
-                <div class="nft-modal-perspective flex flex-col items-center justify-center h-full w-full py-8">
+                <div id="badge-detail-stage" class="badge-detail-stage nft-modal-perspective flex flex-col items-center justify-center h-full w-full px-5 py-8" style="${cardCssVars}">
                     <div id="tilt-shadow" class="badge-tilt-shadow"></div>
 
-                    <div id="tilt-card" class="premium-3d-card ${borderClass} ${cardShadow} gpu-accelerated flex flex-col items-center p-8 select-none cursor-grab active:cursor-grabbing relative overflow-hidden group transition-all duration-300" style="${cardBgStyle}; min-height: 520px; width: 100%; max-width: 340px; border-radius: 28px;">
+                    <div id="tilt-card" class="premium-3d-card badge-rarity-card ${cardRarityClass} ${lockClass} ${cardShadow} gpu-accelerated flex flex-col items-center p-5 select-none cursor-grab active:cursor-grabbing relative overflow-hidden group transition-all duration-300" style="${cardCssVars}; min-height: 560px; width: 100%; max-width: 354px; border-radius: 30px;">
                         
                         <!-- Texture & Effects -->
-                        <div class="noise-texture opacity-[0.04]"></div>
-                        <div class="holo-foil opacity-20 mixed-blend-overlay" id="holo-foil"></div>
-                        <div class="holo-sheen opacity-40 mix-blend-soft-light" id="holo-glare"></div>
+                        <div class="noise-texture"></div>
+                        <div class="holo-foil" id="holo-foil"></div>
+                        <div class="holo-glare" id="holo-glare"></div>
                         <div class="badge-depth-rim"></div>
                         <div id="badge-specular-orb" class="badge-specular-orb"></div>
-                        <div class="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none opacity-50"></div>
+                        <div class="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none opacity-40"></div>
 
                         <!-- Ambient Glow Layer -->
-                        <div class="absolute inset-0 overflow-hidden pointer-events-none layer-bg">
-                            ${ambientGlow}
-                        </div>
+                        <div class="absolute inset-0 overflow-hidden pointer-events-none layer-bg"></div>
 
                         <!-- Header Pill -->
-                        <div class="w-full flex justify-between items-center z-10 layer-mid mb-8">
-                            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/40 dark:bg-white/5 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-sm">
-                                <div class="w-2 h-2 rounded-full ${isUnlocked ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]' : 'bg-rose-500'} animate-pulse"></div>
+                        <div class="w-full flex justify-between items-center z-20 layer-mid mb-4">
+                            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/50 dark:bg-white/5 backdrop-blur-md border border-white/30 dark:border-white/10 shadow-sm">
+                                <div class="w-2 h-2 rounded-full ${isUnlocked ? 'bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.75)]' : 'bg-rose-500'}"></div>
                                 <span class="text-[10px] ${brandTextColor} font-black tracking-[0.2em] uppercase">FINGENDA</span>
                             </div>
-                            <span class="${statusBg} text-[10px] font-bold px-3 py-1 rounded-full border backdrop-blur-md uppercase tracking-widest shadow-sm">
-                                ${badge.rarity}
+                            <span class="text-[10px] font-black px-3.5 py-1.5 rounded-full border backdrop-blur-md uppercase tracking-[0.18em] shadow-sm" style="color:${rarityTheme.a}; border-color: color-mix(in srgb, ${rarityTheme.a} 54%, transparent); background: color-mix(in srgb, ${rarityTheme.a} 13%, transparent);">
+                                ${rarityTheme.label}
                             </span>
                         </div>
 
                         <!-- Floating 3D Icon Container -->
-                        <div class="layer-floating my-auto relative z-20 filter ${dropShadow} transition-transform duration-500 group-hover:scale-105 group-hover:-translate-y-2">
-                            <img src="${badge.icon}" alt="Icon" class="badge-3d-img w-52 h-52 object-contain opacity-[0.98]">
+                        <div class="badge-card-art-window layer-mid mb-5">
+                            <div class="badge-card-art-icon layer-floating">
+                                ${iconHeroHTML}
+                            </div>
                         </div>
 
                         <!-- Content Section -->
                         <div class="layer-top flex flex-col items-center mt-auto w-full z-20">
-                            <h2 class="text-3xl font-black ${titleTextColor} uppercase tracking-tight text-center mb-3 drop-shadow-sm leading-none">${badge.title}</h2>
-                            <p class="text-[13px] ${descTextColor} text-center font-medium leading-relaxed max-w-[95%] opacity-90 mb-6">${badge.desc}</p>
+                            <p class="text-[10px] font-black uppercase tracking-[0.34em] mb-2" style="color:${rarityTheme.a};">${rarityTheme.name}</p>
+                            <h2 class="text-[2rem] font-black uppercase tracking-[-0.035em] text-center mb-3 leading-none" style="color: var(--card-ink); text-shadow: 0 12px 28px rgba(2,6,23,0.16);">${badge.title}</h2>
+                            <p class="badge-detail-copy text-[13px] text-center font-semibold leading-relaxed max-w-[95%] opacity-90 mb-5">${badge.desc}</p>
                             
                             <!-- Stats Footer -->
                             <div class="w-full grid grid-cols-2 gap-3">
-                                <div class="bg-white/50 dark:bg-white/5 rounded-2xl p-3 border border-white/40 dark:border-white/5 text-center backdrop-blur-md shadow-sm">
+                                <div class="badge-card-footer-tile rounded-2xl p-3 text-center backdrop-blur-md">
                                     <span class="block text-[9px] ${footerLabelColor} font-bold uppercase tracking-widest mb-1">DURUM</span>
-                                    <span class="text-xs font-bold ${statusText === 'KAZANILDI' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}">${statusText}</span>
+                                    <span class="text-xs font-bold ${statusToneClass}">${statusText}</span>
                                 </div>
-                                <div class="bg-white/50 dark:bg-white/5 rounded-2xl p-3 border border-white/40 dark:border-white/5 text-center backdrop-blur-md shadow-sm">
+                                <div class="badge-card-footer-tile rounded-2xl p-3 text-center backdrop-blur-md">
                                     <span class="block text-[9px] ${footerLabelColor} font-bold uppercase tracking-widest mb-1">KAZANILDI</span>
                                     <span class="text-xs font-bold ${footerValueColor} font-mono">${badgeDate}</span>
                                 </div>
+                            </div>
+
+                            <div class="w-full mt-3 rounded-2xl px-4 py-2 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.24em] badge-card-footer-tile">
+                                <span style="color:${rarityTheme.a};">SERIES</span>
+                                <span style="color: var(--card-muted);">FNG-${rarityTheme.rank}</span>
                             </div>
                         </div>
 
                     </div>
                     
                     <!-- Interactive Hint -->
-                     <div class="mt-8 flex items-center gap-3 ${helpTextColor} text-[10px] font-bold animate-pulse tracking-[0.3em] uppercase opacity-70">
+                     <div class="mt-7 flex items-center gap-3 ${helpTextColor} text-[10px] font-black animate-pulse tracking-[0.3em] uppercase opacity-80">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path></svg>
                         <span>Çevirmek İçin Sürükle</span>
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
@@ -46173,10 +46445,11 @@ KULLANICI NOTU
 
                 // --- OPTİMİZE EDİLMİŞ ANİMASYON MOTORU (rAF Loop) ---
                 const card = document.getElementById('tilt-card');
+                const stage = document.getElementById('badge-detail-stage');
                 const shadow = document.getElementById('tilt-shadow');
                 const glare = document.getElementById('holo-glare');
                 const foil = document.getElementById('holo-foil');
-                const badgeImg = card.querySelector('.badge-3d-img');
+                const badgeImg = card.querySelector('.badge-card-art-icon img, .badge-3d-img, .badge-hero');
                 const floatingLayer = card.querySelector('.layer-floating');
                 const topLayer = card.querySelector('.layer-top');
                 const midLayer = card.querySelector('.layer-mid');
@@ -46198,20 +46471,20 @@ KULLANICI NOTU
                 let orientationBaseline = null;
                 const motionProfile = isNativeIOSBadgeRender
                     ? {
-                        idleLimit: prefersReducedMotion ? 6 : 9.25,
-                        pointerLimit: prefersReducedMotion ? 6 : 11.4,
-                        gyroLimit: prefersReducedMotion ? 6 : 9.6,
-                        response: 0.112,
-                        layerDepth: 1.22,
-                        iconDrift: 1.24
+                        idleLimit: prefersReducedMotion ? 6 : 11.5,
+                        pointerLimit: prefersReducedMotion ? 6 : 14.8,
+                        gyroLimit: prefersReducedMotion ? 6 : 12.4,
+                        response: 0.128,
+                        layerDepth: 1.38,
+                        iconDrift: 1.42
                     }
                     : {
-                        idleLimit: prefersReducedMotion ? 6 : 10,
-                        pointerLimit: prefersReducedMotion ? 6 : 11,
-                        gyroLimit: prefersReducedMotion ? 6 : 8,
-                        response: 0.085,
-                        layerDepth: 1,
-                        iconDrift: 1
+                        idleLimit: prefersReducedMotion ? 6 : 11,
+                        pointerLimit: prefersReducedMotion ? 6 : 14,
+                        gyroLimit: prefersReducedMotion ? 6 : 10.5,
+                        response: 0.095,
+                        layerDepth: 1.18,
+                        iconDrift: 1.18
                     };
 
                 if (isNativeIOSBadgeRender) {
@@ -46258,8 +46531,23 @@ KULLANICI NOTU
                     const shadowY = (Math.abs(state.currentY) * 9).toFixed(2);
                     const shadowScale = (1 - (Math.abs(state.currentX) + Math.abs(state.currentY)) * 0.05).toFixed(3);
                     const depthAmount = Math.min(1, Math.abs(state.currentX) + Math.abs(state.currentY));
+                    const foilOpacity = isLightBadgeSurface
+                        ? Math.min(0.28, depthAmount * 0.18 + 0.09)
+                        : Math.min(rarityKey === 'legendary' || rarityKey === 'mythic' ? 0.72 : 0.56, depthAmount * 0.38 + 0.16);
+                    const glareOpacity = isLightBadgeSurface
+                        ? Math.min(0.28, depthAmount * 0.16 + 0.08)
+                        : Math.min(0.62, depthAmount * 0.34 + 0.14);
 
                     // DOM Güncellemesi (Tek seferde)
+                    [card, stage].forEach(surface => {
+                        if (!surface) return;
+                        surface.style.setProperty('--mx', `${glareX}%`);
+                        surface.style.setProperty('--my', `${glareY}%`);
+                        surface.style.setProperty('--tilt-x', state.currentX.toFixed(3));
+                        surface.style.setProperty('--tilt-y', state.currentY.toFixed(3));
+                        surface.style.setProperty('--foil-opacity', foilOpacity.toFixed(3));
+                        surface.style.setProperty('--glare-opacity', glareOpacity.toFixed(3));
+                    });
                     card.style.transform = `perspective(1600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translate3d(0,0,0) scale(${(1 + depthAmount * 0.018).toFixed(3)})`;
 
                     if (shadow) {
@@ -46379,13 +46667,13 @@ KULLANICI NOTU
 
                     state.mouseX = normalizeTiltAxis(
                         e.gamma - orientationBaseline.gamma,
-                        isNativeIOSBadgeRender ? 11 : 14,
-                        isNativeIOSBadgeRender ? 0.9 : 1.4
+                        isNativeIOSBadgeRender ? 8.5 : 12,
+                        isNativeIOSBadgeRender ? 0.65 : 1.1
                     );
                     state.mouseY = normalizeTiltAxis(
                         e.beta - orientationBaseline.beta,
-                        isNativeIOSBadgeRender ? 15 : 18,
-                        isNativeIOSBadgeRender ? 1.1 : 1.8
+                        isNativeIOSBadgeRender ? 11 : 15,
+                        isNativeIOSBadgeRender ? 0.75 : 1.35
                     );
                     state.limits = motionProfile.gyroLimit;
                 }
