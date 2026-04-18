@@ -28731,6 +28731,306 @@
                 color: var(--fb-text-primary);
             }
 
+            /* Pulse range control polish */
+            .fingo-range-switch {
+                margin-bottom: 6px;
+                padding: 4px;
+                border-radius: 14px;
+                background: rgba(99, 102, 241, 0.08);
+                border: 1px solid rgba(99, 102, 241, 0.14);
+            }
+
+            html.dark .fingo-range-switch {
+                background: rgba(99, 102, 241, 0.16);
+                border-color: rgba(167, 139, 250, 0.2);
+            }
+
+            .fingo-range-pill {
+                min-height: 34px;
+                font-size: 12px;
+                letter-spacing: 0.01em;
+                color: #475569;
+            }
+
+            html.dark .fingo-range-pill {
+                color: rgba(226, 232, 240, 0.82);
+            }
+
+            .fingo-range-pill.active {
+                background: linear-gradient(135deg, #4f46e5, #7c3aed);
+                color: #fff;
+                box-shadow: 0 6px 14px rgba(79, 70, 229, 0.28);
+            }
+
+            .fingo-pulse-caption {
+                color: #6b7280;
+                font-weight: 500;
+            }
+
+            html.dark .fingo-pulse-caption {
+                color: rgba(229, 231, 235, 0.78);
+            }
+
+            .fingo-pulse-detail {
+                min-height: 1.75rem;
+                line-height: 1.2rem;
+                color: #64748b;
+                font-size: 11px;
+                font-weight: 600;
+            }
+
+            html.dark .fingo-pulse-detail {
+                color: rgba(203, 213, 225, 0.72);
+            }
+
+            .fingo-ekg-hero {
+                position: relative;
+                overflow: hidden;
+                border-radius: 32px;
+                padding: 20px 18px 22px;
+                background:
+                    radial-gradient(circle at 22% -10%, rgba(129, 140, 248, 0.22), transparent 46%),
+                    radial-gradient(circle at 90% 120%, rgba(99, 102, 241, 0.16), transparent 42%),
+                    linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(242, 247, 255, 0.92));
+                border: 1px solid rgba(148, 163, 184, 0.26);
+                box-shadow:
+                    0 24px 40px -24px rgba(30, 41, 59, 0.26),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+                    inset 0 -20px 40px -34px rgba(79, 70, 229, 0.24);
+                transform: translateZ(0);
+            }
+
+            html.dark .fingo-ekg-hero {
+                background:
+                    radial-gradient(circle at 15% -10%, rgba(139, 92, 246, 0.26), transparent 44%),
+                    radial-gradient(circle at 88% 112%, rgba(59, 130, 246, 0.18), transparent 40%),
+                    linear-gradient(145deg, rgba(15, 23, 42, 0.94), rgba(11, 18, 35, 0.96));
+                border-color: rgba(148, 163, 184, 0.2);
+                box-shadow:
+                    0 28px 44px -24px rgba(2, 6, 23, 0.75),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+                    inset 0 -20px 40px -36px rgba(129, 140, 248, 0.2);
+            }
+
+            .fingo-ekg-aura {
+                position: absolute;
+                inset: auto auto -24% -14%;
+                width: 68%;
+                height: 62%;
+                background: radial-gradient(circle, rgba(99, 102, 241, 0.26), rgba(99, 102, 241, 0));
+                filter: blur(26px);
+                pointer-events: none;
+            }
+
+            .fingo-ekg-monitor {
+                --ekg-accent: #6366f1;
+                --ekg-glow: rgba(99, 102, 241, 0.42);
+                --ekg-speed: 1.25s;
+                position: relative;
+                height: 148px;
+                width: 100%;
+                margin-bottom: 14px;
+                border-radius: 22px;
+                overflow: hidden;
+                background:
+                    linear-gradient(170deg, rgba(255, 255, 255, 0.95), rgba(238, 244, 255, 0.7)),
+                    linear-gradient(110deg, rgba(99, 102, 241, 0.08), transparent 58%);
+                border: 1px solid rgba(148, 163, 184, 0.26);
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+                    inset 0 -14px 26px -22px rgba(79, 70, 229, 0.2),
+                    0 14px 24px -20px rgba(15, 23, 42, 0.36);
+                transform: perspective(1100px) rotateX(4.5deg) translateZ(0);
+            }
+
+            html.dark .fingo-ekg-monitor {
+                background:
+                    linear-gradient(175deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.9)),
+                    linear-gradient(110deg, rgba(129, 140, 248, 0.14), transparent 58%);
+                border-color: rgba(148, 163, 184, 0.22);
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+                    inset 0 -16px 26px -22px rgba(15, 23, 42, 0.65),
+                    0 18px 30px -22px rgba(2, 6, 23, 0.85);
+            }
+
+            .fingo-ekg-grid {
+                position: absolute;
+                inset: 0;
+                background-image:
+                    linear-gradient(to right, rgba(99, 102, 241, 0.08) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(99, 102, 241, 0.08) 1px, transparent 1px);
+                background-size: 22px 22px;
+                opacity: 0.6;
+                pointer-events: none;
+            }
+
+            html.dark .fingo-ekg-grid {
+                opacity: 0.38;
+            }
+
+            .fingo-ekg-svg {
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 2;
+            }
+
+            .fingo-ekg-track {
+                fill: none;
+                stroke: rgba(100, 116, 139, 0.28);
+                stroke-width: 1.6;
+            }
+
+            html.dark .fingo-ekg-track {
+                stroke: rgba(148, 163, 184, 0.25);
+            }
+
+            .fingo-ekg-wave {
+                fill: none;
+                stroke: var(--ekg-accent);
+                stroke-width: 4;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+                stroke-dasharray: 18 12;
+                animation: fingo-ekg-flow var(--ekg-speed) linear infinite;
+                filter: drop-shadow(0 0 8px var(--ekg-glow));
+            }
+
+            .fingo-ekg-scan {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                width: 20%;
+                left: -22%;
+                z-index: 3;
+                pointer-events: none;
+                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.44), transparent);
+                mix-blend-mode: screen;
+                animation: fingo-ekg-scan calc(var(--ekg-speed) * 2.8) linear infinite;
+            }
+
+            html.dark .fingo-ekg-scan {
+                background: linear-gradient(90deg, transparent, rgba(165, 180, 252, 0.28), transparent);
+            }
+
+            .fingo-ekg-specular {
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+                border-radius: 22px;
+                background: linear-gradient(120deg, rgba(255, 255, 255, 0.3), transparent 38%, transparent 62%, rgba(255, 255, 255, 0.16));
+            }
+
+            .fingo-ekg-monitor[data-level="excellent"] {
+                --ekg-accent: #10b981;
+                --ekg-glow: rgba(16, 185, 129, 0.5);
+                --ekg-speed: 0.96s;
+            }
+
+            .fingo-ekg-monitor[data-level="good"] {
+                --ekg-accent: #6366f1;
+                --ekg-glow: rgba(99, 102, 241, 0.5);
+                --ekg-speed: 1.18s;
+            }
+
+            .fingo-ekg-monitor[data-level="medium"] {
+                --ekg-accent: #f59e0b;
+                --ekg-glow: rgba(245, 158, 11, 0.48);
+                --ekg-speed: 1.38s;
+            }
+
+            .fingo-ekg-monitor[data-level="warning"] {
+                --ekg-accent: #f97316;
+                --ekg-glow: rgba(249, 115, 22, 0.46);
+                --ekg-speed: 1.66s;
+            }
+
+            .fingo-ekg-monitor[data-level="risk"] {
+                --ekg-accent: #ef4444;
+                --ekg-glow: rgba(239, 68, 68, 0.5);
+                --ekg-speed: 1.94s;
+            }
+
+            .fingo-score-display {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 8px;
+                text-align: center;
+            }
+
+            .fingo-score-kicker {
+                font-size: 11px;
+                font-weight: 800;
+                letter-spacing: 0.2em;
+                color: #64748b;
+                margin-bottom: 2px;
+            }
+
+            html.dark .fingo-score-kicker {
+                color: rgba(203, 213, 225, 0.82);
+            }
+
+            .fingo-score-value {
+                font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                font-size: clamp(46px, 8.8vw, 62px);
+                line-height: 0.95;
+                font-weight: 900;
+                letter-spacing: -0.045em;
+                color: #0f172a;
+                text-shadow: 0 10px 24px rgba(99, 102, 241, 0.16);
+            }
+
+            html.dark .fingo-score-value {
+                color: #f8fafc;
+                text-shadow: 0 10px 26px rgba(129, 140, 248, 0.26);
+            }
+
+            .fingo-score-status {
+                margin-top: 4px;
+                font-size: 15px;
+                font-weight: 700;
+                color: #475569;
+            }
+
+            html.dark .fingo-score-status {
+                color: #cbd5e1;
+            }
+
+            @keyframes fingo-ekg-flow {
+                from {
+                    stroke-dashoffset: 0;
+                }
+
+                to {
+                    stroke-dashoffset: -120;
+                }
+            }
+
+            @keyframes fingo-ekg-scan {
+                from {
+                    left: -22%;
+                }
+
+                to {
+                    left: 122%;
+                }
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                .fingo-ekg-wave,
+                .fingo-ekg-scan {
+                    animation: none !important;
+                }
+
+                .fingo-ekg-monitor {
+                    transform: none;
+                }
+            }
+
             /* Animations */
             @keyframes fb-fade-in {
                 from {
@@ -31090,60 +31390,41 @@
                         <div id="autopilot-tab-pulse" class="space-y-5 animate-fb-entry">
 
                             <!-- RANGE SELECTOR: Bugün / Hafta / Ay -->
-                            <div class="fb-segmented-control" role="tablist" aria-label="Zaman aralığı">
-                                <button onclick="window.setFingoBrainRange('day')" class="fb-segment-btn" role="tab"
+                            <div class="fb-segmented-control fingo-range-switch" role="tablist" aria-label="Zaman aralığı">
+                                <button onclick="window.setFingoBrainRange('day')" class="fb-segment-btn fingo-range-pill" role="tab"
                                     aria-selected="false" id="range-day">Bugün</button>
-                                <button onclick="window.setFingoBrainRange('week')" class="fb-segment-btn" role="tab"
+                                <button onclick="window.setFingoBrainRange('week')" class="fb-segment-btn fingo-range-pill" role="tab"
                                     aria-selected="false" id="range-week">Bu Hafta</button>
-                                <button onclick="window.setFingoBrainRange('month')" class="fb-segment-btn active"
+                                <button onclick="window.setFingoBrainRange('month')" class="fb-segment-btn fingo-range-pill active"
                                     role="tab" aria-selected="true" id="range-month">Bu Ay</button>
                             </div>
 
-                            <!-- Apple Health Style Hero Ring -->
-                            <div
-                                class="relative overflow-hidden rounded-[32px] p-6 text-center transform transition-transform active:scale-95 duration-200 cursor-default group bg-gradient-to-br from-white to-gray-50 dark:from-slate-800 dark:to-[#0f1629] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)]">
-
-                                <!-- Premium Glow behind ring -->
-                                <div
-                                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl animate-pulse-slow">
-                                </div>
+                            <!-- Pulse Hero: 3D EKG Score -->
+                            <div class="fingo-ekg-hero">
+                                <div class="fingo-ekg-aura"></div>
 
                                 <div class="relative z-10 flex flex-col items-center">
-                                    <div class="w-48 h-48 relative mb-4">
-                                        <!-- SVG Ring Container -->
-                                        <svg class="w-full h-full transform -rotate-90">
-                                            <!-- Track -->
-                                            <circle cx="96" cy="96" r="80" stroke="rgba(255,255,255,0.1)"
-                                                stroke-width="16" fill="none" stroke-linecap="round" />
-                                            <!-- Progress (Animated) -->
-                                            <circle id="fingo-score-circle" cx="96" cy="96" r="80"
-                                                stroke="url(#gradient-score)" stroke-width="16" fill="none"
-                                                stroke-linecap="round" stroke-dasharray="502" stroke-dashoffset="100"
-                                                class="transition-all duration-1500 ease-out"
-                                                style="filter: drop-shadow(0 0 8px rgba(94, 92, 230, 0.5));" />
+                                    <div id="fingo-ekg-monitor" class="fingo-ekg-monitor" data-level="good">
+                                        <div class="fingo-ekg-grid"></div>
+                                        <div class="fingo-ekg-scan"></div>
 
-                                            <!-- Gradients Definition -->
-                                            <defs>
-                                                <linearGradient id="gradient-score" x1="0%" y1="0%" x2="100%" y2="0%">
-                                                    <stop offset="0%" stop-color="#5e5ce6" />
-                                                    <stop offset="100%" stop-color="#bf5af2" />
-                                                </linearGradient>
-                                            </defs>
+                                        <svg class="fingo-ekg-svg" viewBox="0 0 640 180" preserveAspectRatio="none" aria-hidden="true">
+                                            <path class="fingo-ekg-track" d="M0 90 L640 90"></path>
+                                            <path id="fingo-ekg-wave" class="fingo-ekg-wave"
+                                                d="M0 90 L30 90 L50 90 L64 86 L76 96 L90 62 L102 125 L116 84 L138 90 L170 90 L188 88 L202 96 L216 70 L229 119 L246 86 L270 90 L306 90 L326 88 L338 96 L352 68 L365 121 L381 84 L406 90 L436 90 L454 88 L467 96 L481 66 L494 123 L509 85 L533 90 L568 90 L586 89 L599 95 L614 74 L626 111 L640 90"></path>
                                         </svg>
 
-                                        <!-- Inner Text -->
-                                        <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                            <span
-                                                class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">SCORE</span>
-                                            <span id="fingo-score-val"
-                                                class="text-6xl font-black text-gray-900 dark:text-white tracking-tighter"
-                                                style="font-family: 'SF Pro Display', sans-serif;">850</span>
-                                            <span class="text-sm font-medium text-indigo-300 mt-1">Mükemmel</span>
-                                        </div>
+                                        <div class="fingo-ekg-specular"></div>
                                     </div>
 
-                                    <p class="text-sm text-gray-400 max-w-[200px] leading-relaxed">
-                                        Finansal sağlığın zirvede. <br>Böyle devam et! 🚀
+                                    <div class="fingo-score-display">
+                                        <span class="fingo-score-kicker">FINGO SCORE</span>
+                                        <span id="fingo-score-val" class="fingo-score-value">850</span>
+                                        <span id="fingo-score-label" class="fingo-score-status">Mükemmel</span>
+                                    </div>
+
+                                    <p id="fingo-score-message" class="text-sm fingo-pulse-caption max-w-[280px] leading-relaxed text-center">
+                                        Finansal sağlığın zirvede. Böyle devam et! 🚀
                                     </p>
                                 </div>
                             </div>
@@ -31164,7 +31445,7 @@
                                             class="text-xl font-black text-gray-900 dark:text-white tracking-tight">-- ₺
                                         </h3>
                                         <p id="prediction-detail"
-                                            class="text-[10px] text-gray-400 mt-1 truncate font-medium">
+                                            class="fingo-pulse-detail mt-1">
                                             Hesaplanıyor...</p>
                                     </div>
                                 </div>
@@ -31182,7 +31463,7 @@
                                             class="text-xl font-black text-gray-900 dark:text-white tracking-tight">--
                                         </h3>
                                         <p id="volatility-detail"
-                                            class="text-[10px] text-gray-400 mt-1 truncate font-medium">
+                                            class="fingo-pulse-detail mt-1">
                                             Analiz ediliyor</p>
                                     </div>
                                 </div>
@@ -31193,7 +31474,7 @@
                                 <div class="flex justify-between items-center mb-4">
                                     <div>
                                         <h3 class="font-bold text-gray-900 dark:text-white">Harcama Trendi</h3>
-                                        <p class="text-[10px] text-gray-500">Son 7 Günlük Analiz</p>
+                                        <p id="burnrate-subtitle" class="text-[10px] text-gray-500">Son 7 Günlük Analiz</p>
                                     </div>
                                     <div
                                         class="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center">
@@ -70700,6 +70981,412 @@ html.perf: blur(8px) fallback
             }
         };
 
+        const RANGE_INFO = {
+            day: {
+                title: 'Bugün',
+                chartSubtitle: 'Bugün saatlik harcama görünümü'
+            },
+            week: {
+                title: 'Bu Hafta',
+                chartSubtitle: 'Son 7 günün harcama trendi'
+            },
+            month: {
+                title: 'Bu Ay',
+                chartSubtitle: 'Bu ayın günlük harcama trendi'
+            }
+        };
+
+        const SCORE_META = {
+            excellent: {
+                key: 'excellent',
+                label: 'Mükemmel',
+                message: 'Finansal düzenin çok güçlü. Bu disiplini koru.',
+                glow: 'rgba(16, 185, 129, 0.45)',
+                accent: '#10b981'
+            },
+            good: {
+                key: 'good',
+                label: 'Güçlü',
+                message: 'Denge iyi görünüyor. Küçük optimizasyonlarla daha da yükselebilirsin.',
+                glow: 'rgba(99, 102, 241, 0.45)',
+                accent: '#6366f1'
+            },
+            medium: {
+                key: 'medium',
+                label: 'Dengeli',
+                message: 'Kontrol sende, ancak harcama ritmini biraz daha sıkı tutmak faydalı olur.',
+                glow: 'rgba(245, 158, 11, 0.42)',
+                accent: '#f59e0b'
+            },
+            warning: {
+                key: 'warning',
+                label: 'Dikkat',
+                message: 'Nakit akışında baskı var. Bu hafta giderleri biraz yavaşlatman iyi olur.',
+                glow: 'rgba(249, 115, 22, 0.42)',
+                accent: '#f97316'
+            },
+            risk: {
+                key: 'risk',
+                label: 'Riskli',
+                message: 'Harcama baskısı yüksek. Öncelikli gider planına dönmeni öneririm.',
+                glow: 'rgba(239, 68, 68, 0.44)',
+                accent: '#ef4444'
+            }
+        };
+
+        const RISK_META = {
+            low: { label: 'Düşük', className: 'text-emerald-600 dark:text-emerald-400', detail: 'Dalgalanma sağlıklı aralıkta.' },
+            medium: { label: 'Orta', className: 'text-amber-600 dark:text-amber-400', detail: 'Harcamalarda orta düzey dalgalanma var.' },
+            high: { label: 'Yüksek', className: 'text-rose-600 dark:text-rose-400', detail: 'Dalgalanma yüksek. Limit yönetimi önerilir.' }
+        };
+
+        function buildEkgPath(levelKey) {
+            const profiles = {
+                excellent: { peak: 40, drop: 35, rebound: 10, spacing: 116 },
+                good: { peak: 34, drop: 31, rebound: 8, spacing: 124 },
+                medium: { peak: 28, drop: 24, rebound: 7, spacing: 132 },
+                warning: { peak: 22, drop: 20, rebound: 6, spacing: 144 },
+                risk: { peak: 16, drop: 14, rebound: 5, spacing: 158 }
+            };
+
+            const profile = profiles[levelKey] || profiles.good;
+            const baseline = 90;
+            const maxX = 640;
+            let x = 0;
+            const seg = [`M0 ${baseline}`];
+
+            while (x < maxX) {
+                const a = x + 28;
+                const b = x + 42;
+                const c = x + 56;
+                const d = x + 72;
+                const e = x + 86;
+                const f = x + 102;
+                const g = x + 116;
+
+                seg.push(`L${Math.min(a, maxX)} ${baseline}`);
+                seg.push(`L${Math.min(b, maxX)} ${baseline - 3}`);
+                seg.push(`L${Math.min(c, maxX)} ${baseline + 6}`);
+                seg.push(`L${Math.min(d, maxX)} ${baseline - profile.peak}`);
+                seg.push(`L${Math.min(e, maxX)} ${baseline + profile.drop}`);
+                seg.push(`L${Math.min(f, maxX)} ${baseline - profile.rebound}`);
+                seg.push(`L${Math.min(g, maxX)} ${baseline}`);
+
+                x += profile.spacing;
+            }
+
+            return seg.join(' ');
+        }
+
+        function buildFlatEkgPath() {
+            return 'M0 90 L80 90 L110 89 L130 92 L160 90 L220 90 L260 89 L290 91 L330 90 L390 90 L430 89 L450 91 L500 90 L560 90 L600 89 L640 90';
+        }
+
+        function clamp(value, min, max) {
+            return Math.min(max, Math.max(min, value));
+        }
+
+        function toValidDate(raw) {
+            if (!raw) return null;
+            const d = new Date(raw);
+            return Number.isNaN(d.getTime()) ? null : d;
+        }
+
+        function startOfDay(date) {
+            const d = new Date(date);
+            d.setHours(0, 0, 0, 0);
+            return d;
+        }
+
+        function endOfDay(date) {
+            const d = new Date(date);
+            d.setHours(23, 59, 59, 999);
+            return d;
+        }
+
+        function isSavingsExpense(tx) {
+            if (!tx || tx.type !== 'expense') return false;
+            if (typeof window.isSavingsTransaction === 'function') {
+                try {
+                    return !!window.isSavingsTransaction(tx);
+                } catch (e) {
+                    // no-op
+                }
+            }
+            const text = `${tx.category || ''} ${tx.description || ''}`.toLocaleLowerCase('tr-TR');
+            return ['birikim', 'tasarruf', 'yatırım', 'dolar', 'euro', 'altın', 'fon', 'hisse'].some(k => text.includes(k));
+        }
+
+        function getAllTransactionsSafe() {
+            if (window.FingoBrain && typeof window.FingoBrain.getTransactions === 'function') {
+                try {
+                    const tx = window.FingoBrain.getTransactions();
+                    if (Array.isArray(tx)) return tx;
+                } catch (e) {
+                    // no-op
+                }
+            }
+            if (Array.isArray(window.transactions)) return window.transactions;
+            try {
+                const year = typeof window.APP_YEAR !== 'undefined' ? window.APP_YEAR : new Date().getFullYear();
+                return JSON.parse(localStorage.getItem(`my_expenses_${year}`) || '[]');
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function getRangeDates(range) {
+            const now = new Date();
+            let start = startOfDay(now);
+            if (range === 'week') {
+                start = startOfDay(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6));
+            } else if (range === 'month') {
+                start = startOfDay(new Date(now.getFullYear(), now.getMonth(), 1));
+            }
+            return {
+                now,
+                start,
+                end: endOfDay(now)
+            };
+        }
+
+        function getRangeTransactions(range) {
+            const all = getAllTransactionsSafe();
+            const { start, end } = getRangeDates(range);
+            return all.filter(tx => {
+                const date = toValidDate(tx.date || tx.timestamp || tx.createdAt);
+                return date && date >= start && date <= end;
+            });
+        }
+
+        function buildExpenseSeries(range) {
+            const rangeTx = getRangeTransactions(range);
+            const expenses = rangeTx.filter(tx => tx.type === 'expense' && !isSavingsExpense(tx));
+            const now = new Date();
+
+            if (range === 'day') {
+                const labels = ['00', '04', '08', '12', '16', '20'];
+                const values = [0, 0, 0, 0, 0, 0];
+                expenses.forEach(tx => {
+                    const date = toValidDate(tx.date || tx.timestamp || tx.createdAt);
+                    if (!date) return;
+                    const bucket = Math.min(5, Math.floor(date.getHours() / 4));
+                    values[bucket] += Number(tx.amount) || 0;
+                });
+                return { labels, values };
+            }
+
+            if (range === 'week') {
+                const labels = [];
+                const values = [];
+                for (let i = 6; i >= 0; i -= 1) {
+                    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+                    const key = d.toISOString().slice(0, 10);
+                    const label = new Intl.DateTimeFormat('tr-TR', { weekday: 'short' }).format(d).replace('.', '');
+                    labels.push(label);
+                    values.push(0);
+                    expenses.forEach(tx => {
+                        const date = toValidDate(tx.date || tx.timestamp || tx.createdAt);
+                        if (date && date.toISOString().slice(0, 10) === key) {
+                            values[values.length - 1] += Number(tx.amount) || 0;
+                        }
+                    });
+                }
+                return { labels, values };
+            }
+
+            const currentDay = now.getDate();
+            const labels = [];
+            const values = [];
+            for (let day = 1; day <= currentDay; day += 1) {
+                labels.push(String(day));
+                values.push(0);
+            }
+            expenses.forEach(tx => {
+                const date = toValidDate(tx.date || tx.timestamp || tx.createdAt);
+                if (!date) return;
+                const day = date.getDate();
+                if (day >= 1 && day <= values.length) values[day - 1] += Number(tx.amount) || 0;
+            });
+            return { labels, values };
+        }
+
+        function calculateVolatility(values) {
+            if (!Array.isArray(values) || values.length === 0) return 0;
+            const active = values.filter(v => v > 0);
+            if (active.length <= 1) return 0;
+            const mean = active.reduce((a, b) => a + b, 0) / active.length;
+            if (mean <= 0) return 0;
+            const variance = active.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / active.length;
+            const stdDev = Math.sqrt(variance);
+            return stdDev / mean;
+        }
+
+        function formatTry(value) {
+            if (window.FingoBrain && typeof window.FingoBrain.formatCurrency === 'function') {
+                try {
+                    return window.FingoBrain.formatCurrency(value);
+                } catch (e) {
+                    // no-op
+                }
+            }
+            return new Intl.NumberFormat('tr-TR', {
+                style: 'currency',
+                currency: 'TRY',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(value || 0);
+        }
+
+        function getScoreMeta(score) {
+            if (score >= 820) return SCORE_META.excellent;
+            if (score >= 680) return SCORE_META.good;
+            if (score >= 540) return SCORE_META.medium;
+            if (score >= 420) return SCORE_META.warning;
+            return SCORE_META.risk;
+        }
+
+        function getRiskMeta(spendRatio, volatility) {
+            if (spendRatio > 0.95 || volatility > 0.95) return RISK_META.high;
+            if (spendRatio > 0.72 || volatility > 0.58) return RISK_META.medium;
+            return RISK_META.low;
+        }
+
+        function getPulseMetrics() {
+            const tx = getRangeTransactions(state.timeRange);
+            const expenses = tx.filter(t => t.type === 'expense' && !isSavingsExpense(t));
+            const incomes = tx.filter(t => t.type === 'income');
+            const savings = tx.filter(t => t.type === 'expense' && isSavingsExpense(t));
+
+            const totalExpense = expenses.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+            const totalIncome = incomes.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+            const totalSavings = savings.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+
+            const { values } = buildExpenseSeries(state.timeRange);
+            const volatility = calculateVolatility(values);
+            const spendRatio = totalIncome > 0 ? totalExpense / totalIncome : (totalExpense > 0 ? 1 : 0);
+            const savingsRatio = totalIncome > 0 ? totalSavings / totalIncome : 0;
+
+            let score = 500;
+            if (state.timeRange === 'month' && window.FingoBrain && typeof window.FingoBrain.calculateAdvancedScore === 'function') {
+                try {
+                    const scoreData = window.FingoBrain.calculateAdvancedScore();
+                    if (scoreData && Number.isFinite(scoreData.score)) score = scoreData.score;
+                } catch (e) {
+                    // no-op
+                }
+            } else if (tx.length > 0) {
+                const draftScore = 700
+                    - Math.min(380, spendRatio * 320)
+                    + Math.min(220, savingsRatio * 580)
+                    - Math.min(160, volatility * 130)
+                    + Math.min(120, tx.length * 8);
+                score = Math.round(clamp(draftScore, 220, 920));
+            }
+
+            const scoreMeta = getScoreMeta(score);
+            const riskMeta = getRiskMeta(spendRatio, volatility);
+
+            const now = new Date();
+            const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            const elapsedDays = state.timeRange === 'day' ? 1 : state.timeRange === 'week' ? 7 : Math.max(1, now.getDate());
+            const projectedIncome = elapsedDays > 0 ? (totalIncome / elapsedDays) * daysInMonth : 0;
+            const projectedExpense = elapsedDays > 0 ? (totalExpense / elapsedDays) * daysInMonth : 0;
+            const projectedBalance = projectedIncome - projectedExpense;
+
+            let predictionDetail = `${RANGE_INFO[state.timeRange].title} verisine göre projeksiyon güncellendi.`;
+            if (tx.length === 0) {
+                predictionDetail = 'Bu aralıkta işlem yok. Tahmin için kayıt ekleyebilirsin.';
+            } else if (projectedBalance >= 0) {
+                predictionDetail = `Ay sonuna kadar yaklaşık +${formatTry(Math.abs(projectedBalance))} net kalabilir.`;
+            } else {
+                predictionDetail = `Ay sonu için yaklaşık -${formatTry(Math.abs(projectedBalance))} açık öngörülüyor.`;
+            }
+
+            return {
+                score,
+                scoreMeta,
+                riskMeta,
+                txCount: tx.length,
+                projectedBalance,
+                predictionDetail,
+                volatilityDetail: riskMeta.detail,
+                chartSubtitle: RANGE_INFO[state.timeRange].chartSubtitle
+            };
+        }
+
+        function animateScoreValue(el, target) {
+            if (!el) return;
+            const from = Number(el.dataset.value || 0);
+            const to = Number(target) || 0;
+            const duration = 460;
+            const start = performance.now();
+            const step = (ts) => {
+                const progress = Math.min(1, (ts - start) / duration);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const value = Math.round(from + ((to - from) * eased));
+                el.textContent = String(value);
+                if (progress < 1) requestAnimationFrame(step);
+            };
+            el.dataset.value = String(to);
+            requestAnimationFrame(step);
+        }
+
+        function refreshPulseSection() {
+            const metrics = getPulseMetrics();
+            const effectiveLevel = metrics.txCount === 0 ? 'medium' : (metrics.scoreMeta.key || 'good');
+
+            const scoreValEl = document.getElementById('fingo-score-val');
+            animateScoreValue(scoreValEl, metrics.score);
+
+            const scoreLabelEl = document.getElementById('fingo-score-label');
+            if (scoreLabelEl) {
+                scoreLabelEl.textContent = metrics.scoreMeta.label;
+                scoreLabelEl.style.color = metrics.scoreMeta.accent || '#6366f1';
+            }
+
+            const scoreMessageEl = document.getElementById('fingo-score-message');
+            if (scoreMessageEl) scoreMessageEl.textContent = metrics.scoreMeta.message;
+
+            const monitorEl = document.getElementById('fingo-ekg-monitor');
+            if (monitorEl) {
+                monitorEl.setAttribute('data-level', effectiveLevel);
+                monitorEl.style.setProperty('--ekg-accent', metrics.scoreMeta.accent || '#6366f1');
+                monitorEl.style.setProperty('--ekg-glow', metrics.scoreMeta.glow || 'rgba(99, 102, 241, 0.45)');
+            }
+
+            const waveEl = document.getElementById('fingo-ekg-wave');
+            if (waveEl) {
+                const pathData = metrics.txCount === 0 ? buildFlatEkgPath() : buildEkgPath(effectiveLevel);
+                waveEl.setAttribute('d', pathData);
+                waveEl.style.opacity = metrics.txCount === 0 ? '0.62' : '1';
+            }
+
+            const predictionEl = document.getElementById('prediction-balance');
+            if (predictionEl) {
+                const sign = metrics.projectedBalance > 0 ? '+' : metrics.projectedBalance < 0 ? '-' : '';
+                predictionEl.textContent = `${sign}${formatTry(Math.abs(metrics.projectedBalance))}`;
+                predictionEl.className = `text-xl font-black tracking-tight ${metrics.projectedBalance >= 0 ? 'text-gray-900 dark:text-white' : 'text-rose-600 dark:text-rose-400'}`;
+            }
+
+            const predictionDetailEl = document.getElementById('prediction-detail');
+            if (predictionDetailEl) predictionDetailEl.textContent = metrics.predictionDetail;
+
+            const riskEl = document.getElementById('prediction-volatility');
+            if (riskEl) {
+                riskEl.textContent = metrics.riskMeta.label;
+                riskEl.className = `text-xl font-black tracking-tight ${metrics.riskMeta.className}`;
+            }
+
+            const riskDetailEl = document.getElementById('volatility-detail');
+            if (riskDetailEl) riskDetailEl.textContent = metrics.volatilityDetail;
+
+            const subtitleEl = document.getElementById('burnrate-subtitle');
+            if (subtitleEl) subtitleEl.textContent = metrics.chartSubtitle;
+        }
+
+        window.refreshPulseUI = refreshPulseSection;
+
         // ═══════════════════════════════════════════════════════════════
         // TAB SWITCHING LOGIC
         // ═══════════════════════════════════════════════════════════════
@@ -70708,8 +71395,8 @@ html.perf: blur(8px) fallback
             // Update State
             state.activeTab = tabId;
 
-            // 1. Update Buttons
-            document.querySelectorAll('.fb-segment-btn').forEach(btn => {
+            // 1. Update main tab buttons only (do not touch Pulse range pills)
+            document.querySelectorAll('[id^="tab-btn-"]').forEach(btn => {
                 const isActive = btn.id === `tab-btn-${tabId}`;
                 btn.setAttribute('aria-selected', isActive);
                 if (isActive) {
@@ -70735,7 +71422,10 @@ html.perf: blur(8px) fallback
                     window.renderRadarChart();
                     window.populateDnaList();
                 }
-                if (tabId === 'pulse') window.renderBurnRateChart();
+                if (tabId === 'pulse') {
+                    window.refreshPulseUI();
+                    window.renderBurnRateChart();
+                }
                 if (tabId === 'detective') window.renderDetective();
                 if (tabId === 'installments' && window.updateInstallmentDashboardWidget) {
                     window.updateInstallmentDashboardWidget();
@@ -70835,48 +71525,102 @@ html.perf: blur(8px) fallback
         // CHART RENDERING (WRAPPER)
         // ═══════════════════════════════════════════════════════════════
         window.renderBurnRateChart = function () {
-            const ctx = document.getElementById('burnRateChart');
-            if (!ctx) return;
+            const canvas = document.getElementById('burnRateChart');
+            if (!canvas || typeof Chart === 'undefined') return;
 
-            // Destroy existing if any
-            if (state.charts.burnRate) {
-                state.charts.burnRate.destroy();
-                state.charts.burnRate = null;
-            }
+            const darkMode = document.documentElement.classList.contains('dark');
+            const { labels, values } = buildExpenseSeries(state.timeRange);
+            const labelsSafe = labels.length > 0 ? labels : ['—'];
+            const valuesSafe = values.length > 0 ? values : [0];
+            const isMonth = state.timeRange === 'month';
+            const labelStep = isMonth ? Math.max(1, Math.ceil(labelsSafe.length / 6)) : 1;
 
-            // Check if Chart.js is loaded
-            if (typeof Chart === 'undefined') {
-                console.warn('[FingoBrain] Chart.js yüklenemedi!');
-                return;
-            }
+            const data = {
+                labels: labelsSafe,
+                datasets: [{
+                    label: 'Harcama Trendi',
+                    data: valuesSafe,
+                    borderColor: darkMode ? '#a78bfa' : '#4f46e5',
+                    backgroundColor: darkMode ? 'rgba(167, 139, 250, 0.18)' : 'rgba(79, 70, 229, 0.14)',
+                    borderWidth: 2.6,
+                    tension: 0.34,
+                    fill: true,
+                    pointRadius: valuesSafe.length > 1 ? 2.5 : 0,
+                    pointHoverRadius: 5,
+                    pointBackgroundColor: darkMode ? '#c4b5fd' : '#6366f1',
+                    pointBorderColor: darkMode ? '#0f172a' : '#ffffff',
+                    pointBorderWidth: 2
+                }]
+            };
 
-            // Create new Chart (Mock Data for Visuals)
-            state.charts.burnRate = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'],
-                    datasets: [{
-                        label: 'Harcama Hızı',
-                        data: [120, 190, 30, 50, 20, 300, 100],
-                        borderColor: '#6366f1', // Indigo 500
-                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                        borderWidth: 3,
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 0,
-                        pointHoverRadius: 6
-                    }]
+            const options = {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: state.charts.burnRate ? 260 : 540,
+                    easing: 'easeOutCubic'
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { display: false },
-                        x: { display: false }
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        displayColors: false,
+                        backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.92)' : 'rgba(255, 255, 255, 0.96)',
+                        titleColor: darkMode ? '#e2e8f0' : '#0f172a',
+                        bodyColor: darkMode ? '#e2e8f0' : '#0f172a',
+                        borderColor: darkMode ? 'rgba(148, 163, 184, 0.28)' : 'rgba(99, 102, 241, 0.24)',
+                        borderWidth: 1,
+                        padding: 10,
+                        callbacks: {
+                            label: (ctx) => ` ${formatTry(ctx.parsed.y || 0)}`
+                        }
                     }
+                },
+                scales: {
+                    y: {
+                        display: false,
+                        beginAtZero: true,
+                        grid: { display: false },
+                        ticks: { display: false }
+                    },
+                    x: {
+                        display: true,
+                        grid: { display: false },
+                        border: { display: false },
+                        ticks: {
+                            color: darkMode ? 'rgba(203, 213, 225, 0.7)' : 'rgba(71, 85, 105, 0.72)',
+                            font: {
+                                size: 10,
+                                weight: '600',
+                                family: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif'
+                            },
+                            maxRotation: 0,
+                            callback: function (value, index) {
+                                if (!isMonth) return this.getLabelForValue(value);
+                                return (index % labelStep === 0 || index === labelsSafe.length - 1)
+                                    ? this.getLabelForValue(value)
+                                    : '';
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
                 }
-            });
+            };
+
+            if (state.charts.burnRate) {
+                state.charts.burnRate.data = data;
+                state.charts.burnRate.options = options;
+                state.charts.burnRate.update();
+            } else {
+                const ctx = canvas.getContext('2d');
+                state.charts.burnRate = new Chart(ctx, {
+                    type: 'line',
+                    data,
+                    options
+                });
+            }
         };
 
         window.renderRadarChart = function () {
@@ -71248,7 +71992,9 @@ html.perf: blur(8px) fallback
         };
 
         window.setFingoBrainRange = function (range) {
+            if (!RANGE_INFO[range]) return;
             state.timeRange = range;
+
             // Visual update
             document.querySelectorAll('.fingo-range-pill').forEach(btn => {
                 btn.classList.remove('active');
@@ -71259,14 +72005,31 @@ html.perf: blur(8px) fallback
                 btn.classList.add('active');
                 btn.setAttribute('aria-selected', true);
             }
+
+            if (state.activeTab === 'pulse') {
+                window.refreshPulseUI();
+                window.renderBurnRateChart();
+            }
         };
 
         // ═══════════════════════════════════════════════════════════════
         // INITIALIZATION
         // ═══════════════════════════════════════════════════════════════
+        ['transaction-added', 'transaction-updated', 'transaction-deleted', 'transactions:updated', 'fingenda_data_updated', 'storage']
+            .forEach(evt => {
+                window.addEventListener(evt, () => {
+                    if (state.activeTab === 'pulse') {
+                        window.refreshPulseUI();
+                        window.renderBurnRateChart();
+                    }
+                });
+            });
+
         setTimeout(() => {
-            // Initialize default tab
+            window.setFingoBrainRange(state.timeRange);
             window.switchAutopilotTab('pulse');
+            window.refreshPulseUI();
+            window.renderBurnRateChart();
             console.log('[FingoBrain] ✅ 2.0 Sistem Yüklendi ve Başlatıldı');
         }, 500);
 
