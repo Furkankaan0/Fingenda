@@ -900,7 +900,7 @@
         .status-indicator,
         [class*="indicator"],
         [class*="dot"]:not([class*="dotted"]),
-        [class*="badge"],
+        [class*="badge"]:not([class*="badge-gallery"]),
         .insight-dot,
         .carousel-dot,
         .slider-dot,
@@ -16690,6 +16690,8 @@
             #badge-gallery-modal .badge-gallery-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
                 gap: 14px;
+                border-radius: 0 !important;
+                overflow: visible !important;
             }
 
             @media (min-width: 640px) {
@@ -16723,6 +16725,11 @@
                 -webkit-appearance: none !important;
                 appearance: none !important;
                 transition: transform 220ms cubic-bezier(.22, .9, .24, 1), box-shadow 220ms ease, border-color 220ms ease;
+            }
+
+            #badge-gallery-modal .badge-gallery-scroll {
+                border-radius: 0 !important;
+                overflow-x: visible !important;
             }
 
             /* Hard reset for iOS/WebKit artifacting in badge gallery */
