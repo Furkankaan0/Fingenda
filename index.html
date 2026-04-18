@@ -16719,7 +16719,21 @@
                     0 4px 12px rgba(2, 6, 23, 0.24),
                     inset 0 1px 0 rgba(255, 255, 255, 0.12);
                 transform: translateZ(0);
+                -webkit-transform: translateZ(0);
+                -webkit-appearance: none !important;
+                appearance: none !important;
                 transition: transform 220ms cubic-bezier(.22, .9, .24, 1), box-shadow 220ms ease, border-color 220ms ease;
+            }
+
+            /* Hard reset for iOS/WebKit artifacting in badge gallery */
+            #badge-gallery-modal .badge-gallery-grid,
+            #badge-gallery-modal .badge-gallery-grid>*,
+            #badge-gallery-modal .badge-gallery-tile,
+            #badge-gallery-modal .badge-gallery-tile>* {
+                clip-path: none !important;
+                -webkit-clip-path: none !important;
+                mask-image: none !important;
+                -webkit-mask-image: none !important;
             }
 
             html:not(.dark) #badge-gallery-modal .badge-gallery-tile {
@@ -16752,6 +16766,11 @@
                 transform: translateX(-44%);
                 transition: opacity 220ms ease, transform 260ms ease;
                 mix-blend-mode: screen;
+            }
+
+            #badge-gallery-modal .badge-gallery-tile::before {
+                content: none !important;
+                display: none !important;
             }
 
             #badge-gallery-modal .badge-gallery-tile:hover::after {
@@ -46212,8 +46231,11 @@ KULLANICI NOTU
                         : '<span class="badge-gallery-lock" title="Kilitli">🔒</span>';
 
                     const html = `
-<button type="button"
+<div role="button"
+    tabindex="0"
+    data-badge-id="${def.id}"
     onclick="window.openBadgeDetail('${def.id}')"
+    onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.openBadgeDetail('${def.id}')}"
     class="badge-gallery-tile ${rarityClass} ${stateClass}"
     style="animation-delay:${index * 45}ms">
     <div class="badge-gallery-icon-wrap">
@@ -46226,7 +46248,7 @@ KULLANICI NOTU
         <span class="badge-gallery-rarity">${rarityLabel}</span>
         ${statusBadge}
     </div>
-</button>`;
+</div>`;
 
                     container.insertAdjacentHTML('beforeend', html);
                 });
