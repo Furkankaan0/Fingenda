@@ -16676,6 +16676,17 @@
                     inset 0 1px 0 rgba(255, 255, 255, 0.92) !important;
             }
 
+            /* Remove any inherited pseudo overlays that can create large oval artifacts */
+            #badge-gallery-modal .badge-gallery-shell::before,
+            #badge-gallery-modal .badge-gallery-shell::after,
+            #badge-gallery-modal .badge-gallery-scroll::before,
+            #badge-gallery-modal .badge-gallery-scroll::after,
+            #badge-gallery-modal .badge-gallery-grid::before,
+            #badge-gallery-modal .badge-gallery-grid::after {
+                content: none !important;
+                display: none !important;
+            }
+
             #badge-gallery-modal .badge-gallery-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
                 gap: 14px;
@@ -16701,9 +16712,7 @@
                 flex-direction: column;
                 align-items: center;
                 justify-content: space-between;
-                background:
-                    radial-gradient(120% 90% at 20% 0%, rgba(255, 255, 255, 0.14) 0%, transparent 56%),
-                    linear-gradient(162deg, rgba(24, 34, 68, 0.9) 0%, rgba(14, 23, 52, 0.94) 100%);
+                background: linear-gradient(162deg, rgba(24, 34, 68, 0.9) 0%, rgba(14, 23, 52, 0.94) 100%);
                 border: 1px solid rgba(255, 255, 255, 0.12);
                 box-shadow:
                     0 12px 24px rgba(2, 6, 23, 0.36),
@@ -16714,9 +16723,7 @@
             }
 
             html:not(.dark) #badge-gallery-modal .badge-gallery-tile {
-                background:
-                    radial-gradient(120% 90% at 20% 0%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.35) 56%, transparent 76%),
-                    linear-gradient(160deg, rgba(255, 255, 255, 0.96) 0%, rgba(242, 246, 255, 0.94) 100%);
+                background: linear-gradient(160deg, rgba(255, 255, 255, 0.96) 0%, rgba(242, 246, 255, 0.94) 100%);
                 border: 1px solid rgba(148, 163, 184, 0.26);
                 box-shadow:
                     0 10px 20px rgba(148, 163, 184, 0.2),
@@ -34648,14 +34655,6 @@
                     <div id="nft-gallery-grid" class="badge-gallery-grid grid grid-cols-2 sm:grid-cols-3 gap-4 pb-4">
                         <!-- Rozetler buraya gelecek -->
                     </div>
-                </div>
-
-                <!-- Background Decoration -->
-                <div
-                    class="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none">
-                </div>
-                <div
-                    class="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -ml-16 -mb-16 pointer-events-none">
                 </div>
             </div>
         </div>
