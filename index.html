@@ -23706,6 +23706,141 @@
                 }
             }
 
+            /* === Badge Detail V3: Reference-quality polish + overflow safety === */
+            #nft-detail-modal #3d-card-container,
+            #nft-detail-modal .badge-detail-stage {
+                width: min(100%, 404px) !important;
+                max-width: 404px !important;
+                margin-inline: auto;
+            }
+
+            #nft-detail-modal .badge-detail-stage {
+                padding: clamp(8px, 2.4vw, 14px) clamp(10px, 2.8vw, 16px) clamp(12px, 3vw, 18px) !important;
+                overflow: visible !important;
+                --stage-halo-opacity: 0.52;
+            }
+
+            #nft-detail-modal .badge-detail-stage::before,
+            #nft-detail-modal .badge-detail-stage::after {
+                inset: -6% !important;
+                opacity: var(--stage-halo-opacity) !important;
+                filter: blur(20px) saturate(1.02) !important;
+            }
+
+            html:not(.dark) #nft-detail-modal .badge-detail-stage::before,
+            html:not(.dark) #nft-detail-modal .badge-detail-stage::after {
+                opacity: 0.44 !important;
+                filter: blur(16px) saturate(0.98) !important;
+            }
+
+            #nft-detail-modal .premium-3d-card.badge-rarity-card,
+            #nft-detail-modal .badge-rarity-card[class*="card"] {
+                width: min(86vw, 370px) !important;
+                min-height: min(624px, calc(100vh - 124px)) !important;
+                border-radius: 30px !important;
+                overflow: hidden !important;
+                clip-path: inset(0 round 30px) !important;
+                -webkit-clip-path: inset(0 round 30px) !important;
+                background-clip: padding-box !important;
+                contain: layout paint !important;
+                box-shadow:
+                    0 26px 58px rgba(2, 6, 23, 0.44),
+                    0 10px 28px color-mix(in srgb, var(--rarity-glow, #6366f1) 12%, transparent),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+                    inset 0 -1px 0 rgba(255, 255, 255, 0.045) !important;
+            }
+
+            html:not(.dark) #nft-detail-modal .premium-3d-card.badge-rarity-card,
+            html:not(.dark) #nft-detail-modal .badge-rarity-card[class*="card"] {
+                box-shadow:
+                    0 22px 50px rgba(71, 85, 105, 0.2),
+                    0 8px 24px color-mix(in srgb, var(--rarity-glow, #6366f1) 10%, transparent),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+                    inset 0 -1px 0 rgba(148, 163, 184, 0.12) !important;
+            }
+
+            #nft-detail-modal .badge-rarity-card::before {
+                padding: 1.35px !important;
+                opacity: 0.84 !important;
+            }
+
+            #nft-detail-modal .badge-rarity-card::after {
+                opacity: calc(var(--foil-opacity, 0.1) * 0.92) !important;
+            }
+
+            #nft-detail-modal .badge-card-art-window {
+                border-radius: 22px !important;
+                overflow: hidden !important;
+                min-height: clamp(232px, 37vh, 292px) !important;
+            }
+
+            #nft-detail-modal .badge-card-art-window::after {
+                opacity: 0.22 !important;
+            }
+
+            #nft-detail-modal .badge-card-art-icon {
+                min-height: clamp(204px, 33vh, 254px) !important;
+                max-height: clamp(214px, 34vh, 268px) !important;
+            }
+
+            #nft-detail-modal .badge-card-art-icon::before {
+                border-radius: 24px !important;
+                transform: translateZ(-10px) rotate(45deg) scale(0.88) !important;
+                opacity: 0.46 !important;
+            }
+
+            #nft-detail-modal .badge-card-art-icon img,
+            #nft-detail-modal .badge-card-art-icon .badge-hero {
+                max-width: min(92%, 212px) !important;
+                max-height: min(92%, 212px) !important;
+            }
+
+            #nft-detail-modal .badge-title-main {
+                max-width: 98%;
+                text-wrap: balance;
+                font-size: clamp(1.82rem, 8.2vw, 2.18rem) !important;
+                line-height: 0.98 !important;
+            }
+
+            #nft-detail-modal .badge-detail-copy {
+                max-width: 92%;
+                line-height: 1.46 !important;
+                font-weight: 600 !important;
+                text-wrap: balance;
+            }
+
+            #nft-detail-modal .badge-card-footer-tile {
+                -webkit-backdrop-filter: blur(10px);
+                backdrop-filter: blur(10px);
+                border-color: rgba(255, 255, 255, 0.2) !important;
+            }
+
+            html.dark #nft-detail-modal .badge-card-footer-tile {
+                border-color: rgba(255, 255, 255, 0.09) !important;
+            }
+
+            #nft-detail-modal .badge-card-stat-tile {
+                min-height: 74px !important;
+            }
+
+            #nft-detail-modal .badge-card-series-strip {
+                min-height: 32px !important;
+            }
+
+            #nft-detail-modal .badge-specular-orb {
+                width: 44% !important;
+                top: -10% !important;
+                right: -8% !important;
+                filter: blur(10px) !important;
+            }
+
+            @media (max-width: 768px) {
+                #nft-detail-modal .premium-3d-card.badge-rarity-card {
+                    transform-style: preserve-3d !important;
+                    perspective: 1400px !important;
+                }
+            }
+
             /* ═══════════════════════════════════════════════════════════════ */
             /* FINGO BRAIN REDESIGN - APPLE DESIGN SYSTEM                     */
             /* ═══════════════════════════════════════════════════════════════ */
@@ -47050,8 +47185,8 @@ KULLANICI NOTU
                 container.style.cssText = "width: min(100vw, 430px); max-width: 100vw; overflow: visible; display: flex; justify-content: center; align-items: center;";
 
                 container.innerHTML = `
-                <div id="badge-detail-stage" class="badge-detail-stage badge-holo-ultra-stage nft-modal-perspective flex flex-col items-center justify-center w-full px-4 py-6" style="${cardCssVars}">
-                    <div id="tilt-card" class="premium-3d-card badge-rarity-card badge-holo-refined badge-holo-ultra ${cardRarityClass} ${lockClass} ${cardShadow} gpu-accelerated flex flex-col items-center p-5 select-none cursor-grab active:cursor-grabbing relative overflow-hidden group transition-all duration-300" style="${cardCssVars};">
+                <div id="badge-detail-stage" class="badge-detail-stage badge-reference-stage badge-holo-ultra-stage nft-modal-perspective flex flex-col items-center justify-center w-full px-4 py-6" style="${cardCssVars}">
+                    <div id="tilt-card" class="premium-3d-card badge-rarity-card badge-reference-card badge-holo-refined badge-holo-ultra ${cardRarityClass} ${lockClass} ${cardShadow} gpu-accelerated flex flex-col items-center p-5 select-none cursor-grab active:cursor-grabbing relative overflow-hidden group transition-transform duration-150" style="${cardCssVars};">
                         
                         <!-- Texture & Effects -->
                         <div class="noise-texture"></div>
@@ -47085,7 +47220,7 @@ KULLANICI NOTU
                         <!-- Content Section -->
                         <div class="layer-top flex flex-col items-center mt-auto w-full z-20">
                             <p class="text-[10px] font-black uppercase tracking-[0.34em] mb-2" style="color:${rarityTheme.a};">${rarityTheme.name}</p>
-                            <h2 class="text-[2rem] font-black uppercase tracking-[-0.035em] text-center mb-3 leading-none" style="color: var(--card-ink); text-shadow: 0 12px 28px rgba(2,6,23,0.16);">${badge.title}</h2>
+                            <h2 class="badge-title-main text-[2rem] font-black uppercase tracking-[-0.035em] text-center mb-3 leading-none" style="color: var(--card-ink); text-shadow: 0 12px 28px rgba(2,6,23,0.16);">${badge.title}</h2>
                             <p class="badge-detail-copy text-[13px] text-center font-semibold leading-relaxed max-w-[95%] opacity-90 mb-5">${badge.desc}</p>
                             
                             <!-- Stats Footer -->
@@ -47142,21 +47277,22 @@ KULLANICI NOTU
                 let orientationBaseline = null;
                 const motionProfile = isNativeIOSBadgeRender
                     ? {
-                        idleLimit: prefersReducedMotion ? 5 : 8.5,
-                        pointerLimit: prefersReducedMotion ? 6 : 13.2,
-                        gyroLimit: prefersReducedMotion ? 6 : 11.6,
-                        response: 0.18,
-                        layerDepth: 1.04,
-                        iconDrift: 1.12
+                        idleLimit: prefersReducedMotion ? 5 : 8.2,
+                        pointerLimit: prefersReducedMotion ? 6 : 12.6,
+                        gyroLimit: prefersReducedMotion ? 6 : 10.9,
+                        response: 0.17,
+                        layerDepth: 0.96,
+                        iconDrift: 1.04
                     }
                     : {
                         idleLimit: prefersReducedMotion ? 5 : 8,
-                        pointerLimit: prefersReducedMotion ? 6 : 13,
-                        gyroLimit: prefersReducedMotion ? 6 : 10.5,
-                        response: 0.14,
-                        layerDepth: 1.08,
-                        iconDrift: 1.12
+                        pointerLimit: prefersReducedMotion ? 6 : 12.8,
+                        gyroLimit: prefersReducedMotion ? 6 : 10.2,
+                        response: 0.15,
+                        layerDepth: 1,
+                        iconDrift: 1.06
                     };
+                const layerUpdateStride = isNativeIOSBadgeRender ? 2 : 1;
 
                 if (isNativeIOSBadgeRender) {
                     card.classList.add('ios-badge-render-fix');
@@ -47185,6 +47321,7 @@ KULLANICI NOTU
                 };
                 let animationFrameId = null;
                 let lastOrientationFrame = 0;
+                let frameCounter = 0;
                 const settleThreshold = isNativeIOSBadgeRender ? 0.003 : 0.002;
 
                 function requestTiltFrame() {
@@ -47219,6 +47356,8 @@ KULLANICI NOTU
                     const glareX = (50 + (state.currentX * 50)).toFixed(2);
                     const glareY = (50 + (state.currentY * 50)).toFixed(2);
                     const depthAmount = Math.min(1, Math.abs(state.currentX) + Math.abs(state.currentY));
+                    frameCounter += 1;
+                    const runLayerPass = (frameCounter % layerUpdateStride) === 0 || depthAmount < 0.08;
                     const rarityBoost = rarityKey === 'legendary' || rarityKey === 'mythic' ? 0.06 : rarityKey === 'epic' ? 0.035 : 0;
                     const holoPanX = (50 + state.currentX * 36).toFixed(2);
                     const holoPanY = (50 + state.currentY * 24).toFixed(2);
@@ -47246,44 +47385,43 @@ KULLANICI NOTU
                         stage.style.setProperty('--tilt-x', state.currentX.toFixed(3));
                         stage.style.setProperty('--tilt-y', state.currentY.toFixed(3));
                     }
-                    card.style.transform = `perspective(1600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translate3d(0,0,0) scale(${(1 + depthAmount * 0.018).toFixed(3)})`;
+                    card.style.transform = `perspective(1600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translate3d(0,0,0) scale(${(1 + depthAmount * 0.012).toFixed(3)})`;
 
                     if (glare) {
                         glare.style.opacity = glareOpacity.toFixed(3);
                     }
 
                     if (foil) {
-                        foil.style.backgroundPosition = `${glareX}% ${glareY}%`;
                         foil.style.opacity = foilOpacity.toFixed(3);
                     }
 
-                    if (bgLayer) {
-                        bgLayer.style.transform = `translate3d(${(-state.currentX * 4 * motionProfile.layerDepth).toFixed(2)}px, ${(-state.currentY * 4 * motionProfile.layerDepth).toFixed(2)}px, 12px) scale(${(1.03 + depthAmount * 0.02).toFixed(3)})`;
+                    if (runLayerPass && bgLayer) {
+                        bgLayer.style.transform = `translate3d(${(-state.currentX * 3.4 * motionProfile.layerDepth).toFixed(2)}px, ${(-state.currentY * 3.4 * motionProfile.layerDepth).toFixed(2)}px, 10px) scale(${(1.025 + depthAmount * 0.015).toFixed(3)})`;
                     }
 
-                    if (midLayer) {
-                        midLayer.style.transform = `translate3d(${(state.currentX * 5 * motionProfile.layerDepth).toFixed(2)}px, ${(state.currentY * 5 * motionProfile.layerDepth).toFixed(2)}px, 42px)`;
+                    if (runLayerPass && midLayer) {
+                        midLayer.style.transform = `translate3d(${(state.currentX * 4.2 * motionProfile.layerDepth).toFixed(2)}px, ${(state.currentY * 4.2 * motionProfile.layerDepth).toFixed(2)}px, 38px)`;
                     }
 
-                    if (topLayer) {
-                        topLayer.style.transform = `translate3d(${(state.currentX * 7 * motionProfile.layerDepth).toFixed(2)}px, ${(state.currentY * 7 * motionProfile.layerDepth).toFixed(2)}px, 88px)`;
+                    if (runLayerPass && topLayer) {
+                        topLayer.style.transform = `translate3d(${(state.currentX * 5.8 * motionProfile.layerDepth).toFixed(2)}px, ${(state.currentY * 5.8 * motionProfile.layerDepth).toFixed(2)}px, 82px)`;
                     }
 
-                    if (floatingLayer) {
-                        floatingLayer.style.transform = `translate3d(${(state.currentX * 10 * motionProfile.iconDrift).toFixed(2)}px, ${(state.currentY * 10 * motionProfile.iconDrift).toFixed(2)}px, 118px) scale(${(1.01 + depthAmount * 0.02).toFixed(3)})`;
+                    if (runLayerPass && floatingLayer) {
+                        floatingLayer.style.transform = `translate3d(${(state.currentX * 8.4 * motionProfile.iconDrift).toFixed(2)}px, ${(state.currentY * 8.4 * motionProfile.iconDrift).toFixed(2)}px, 110px) scale(${(1.01 + depthAmount * 0.016).toFixed(3)})`;
                     }
 
-                    if (badgeImg && floatingLayer) {
-                        badgeImg.style.transform = `translate3d(${(state.currentX * 9 * motionProfile.iconDrift).toFixed(2)}px, ${(state.currentY * 9 * motionProfile.iconDrift).toFixed(2)}px, 0) scale(${(1.055 + depthAmount * 0.025).toFixed(3)}) rotateZ(${(state.currentX * 2.1).toFixed(2)}deg)`;
+                    if (runLayerPass && badgeImg && floatingLayer) {
+                        badgeImg.style.transform = `translate3d(${(state.currentX * 7.8 * motionProfile.iconDrift).toFixed(2)}px, ${(state.currentY * 7.8 * motionProfile.iconDrift).toFixed(2)}px, 0) scale(${(1.045 + depthAmount * 0.018).toFixed(3)}) rotateZ(${(state.currentX * 1.35).toFixed(2)}deg)`;
                     }
 
-                    if (specularOrb) {
-                        specularOrb.style.transform = `translate3d(${(-state.currentX * 14 * motionProfile.layerDepth).toFixed(2)}px, ${(-state.currentY * 14 * motionProfile.layerDepth).toFixed(2)}px, 64px) scale(${(1.02 + depthAmount * 0.05).toFixed(3)})`;
+                    if (runLayerPass && specularOrb) {
+                        specularOrb.style.transform = `translate3d(${(-state.currentX * 12 * motionProfile.layerDepth).toFixed(2)}px, ${(-state.currentY * 12 * motionProfile.layerDepth).toFixed(2)}px, 56px) scale(${(1.01 + depthAmount * 0.04).toFixed(3)})`;
                         specularOrb.style.opacity = isLightBadgeSurface
-                            ? `${0.16 + Math.min(0.08, depthAmount * 0.08)}`
+                            ? `${0.14 + Math.min(0.07, depthAmount * 0.07)}`
                             : isNativeIOSBadgeRender
-                            ? `${0.26 + Math.min(0.12, depthAmount * 0.12)}`
-                            : `${0.22 + Math.min(0.16, depthAmount * 0.16)}`;
+                            ? `${0.24 + Math.min(0.1, depthAmount * 0.1)}`
+                            : `${0.2 + Math.min(0.14, depthAmount * 0.14)}`;
                     }
 
                     if (
