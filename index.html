@@ -23706,58 +23706,6 @@
                 }
             }
 
-            /* Badge detail adaptive perf tiers (quality-preserving) */
-            .badge-detail-stage.badge-perf-balanced::before,
-            .badge-detail-stage.badge-perf-balanced::after {
-                filter: blur(18px) saturate(1.01);
-            }
-
-            .badge-detail-stage.badge-perf-balanced .badge-rarity-card {
-                box-shadow:
-                    0 20px 42px rgba(2, 6, 23, 0.32),
-                    0 8px 18px color-mix(in srgb, var(--rarity-glow, #6366f1) 12%, transparent),
-                    inset 0 1px 0 rgba(255, 255, 255, 0.12);
-            }
-
-            .badge-detail-stage.badge-perf-balanced .badge-rarity-card .holo-foil {
-                filter: saturate(1.06) contrast(1.02);
-            }
-
-            .badge-detail-stage.badge-perf-lite::before,
-            .badge-detail-stage.badge-perf-lite::after {
-                opacity: 0.48;
-                filter: blur(13px) saturate(1);
-            }
-
-            .badge-detail-stage.badge-perf-lite .noise-texture {
-                opacity: 0 !important;
-            }
-
-            .badge-detail-stage.badge-perf-lite .badge-rarity-card {
-                box-shadow:
-                    0 16px 32px rgba(2, 6, 23, 0.24),
-                    0 6px 14px color-mix(in srgb, var(--rarity-glow, #6366f1) 8%, transparent),
-                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            }
-
-            .badge-detail-stage.badge-perf-lite .badge-rarity-card::after {
-                background-size: 145% 145%, 128px 128px, 190px 190px;
-            }
-
-            .badge-detail-stage.badge-perf-lite .badge-rarity-card .holo-foil {
-                mix-blend-mode: soft-light;
-                filter: saturate(1.02) contrast(1.01);
-            }
-
-            .badge-detail-stage.badge-perf-lite .badge-rarity-card .holo-glare {
-                filter: none;
-            }
-
-            .badge-detail-stage.badge-perf-lite .badge-specular-orb {
-                opacity: 0.18 !important;
-                filter: blur(8px);
-            }
-
             /* ═══════════════════════════════════════════════════════════════ */
             /* FINGO BRAIN REDESIGN - APPLE DESIGN SYSTEM                     */
             /* ═══════════════════════════════════════════════════════════════ */
@@ -47074,28 +47022,6 @@ KULLANICI NOTU
                 // Light/Dark mode detection
                 const isDarkMode = document.documentElement.classList.contains('dark');
                 const isLightBadgeSurface = !isDarkMode;
-                const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-                const htmlRoot = document.documentElement;
-                const hardwareConcurrency = Number(navigator.hardwareConcurrency || 6);
-                const deviceMemory = Number(navigator.deviceMemory || 4);
-                const isNativeIOSBadgeRender = (() => {
-                    const nativePlatform = window.Capacitor?.getPlatform?.() || '';
-                    const ua = navigator.userAgent || '';
-                    return nativePlatform === 'ios' || /iPhone|iPad|iPod/i.test(ua);
-                })();
-                const lowEffectsHint = htmlRoot.classList.contains('perf2')
-                    ? 'lite'
-                    : htmlRoot.classList.contains('perf')
-                        ? 'balanced'
-                        : 'full';
-                const isLowEndHardware = hardwareConcurrency <= 4 || deviceMemory <= 3;
-                const isMidHardware = hardwareConcurrency <= 6 || deviceMemory <= 4;
-                const badgePerformanceTier = prefersReducedMotion || lowEffectsHint === 'lite' || isLowEndHardware
-                    ? 'lite'
-                    : (lowEffectsHint === 'balanced' || isNativeIOSBadgeRender || isMidHardware)
-                        ? 'balanced'
-                        : 'full';
-                const badgePerformanceClass = `badge-perf-${badgePerformanceTier}`;
 
                 // Typography Colors
                 const brandTextColor = isDarkMode ? 'text-slate-400' : 'text-slate-500';
@@ -47124,7 +47050,7 @@ KULLANICI NOTU
                 container.style.cssText = "width: min(100vw, 430px); max-width: 100vw; overflow: visible; display: flex; justify-content: center; align-items: center;";
 
                 container.innerHTML = `
-                <div id="badge-detail-stage" class="badge-detail-stage badge-holo-ultra-stage ${badgePerformanceClass} nft-modal-perspective flex flex-col items-center justify-center w-full px-4 py-6" style="${cardCssVars}">
+                <div id="badge-detail-stage" class="badge-detail-stage badge-holo-ultra-stage nft-modal-perspective flex flex-col items-center justify-center w-full px-4 py-6" style="${cardCssVars}">
                     <div id="tilt-card" class="premium-3d-card badge-rarity-card badge-holo-refined badge-holo-ultra ${cardRarityClass} ${lockClass} ${cardShadow} gpu-accelerated flex flex-col items-center p-5 select-none cursor-grab active:cursor-grabbing relative overflow-hidden group transition-all duration-300" style="${cardCssVars};">
                         
                         <!-- Texture & Effects -->
@@ -47192,6 +47118,8 @@ KULLANICI NOTU
                 // --- OPTİMİZE EDİLMİŞ ANİMASYON MOTORU (rAF Loop) ---
                 const card = document.getElementById('tilt-card');
                 const stage = document.getElementById('badge-detail-stage');
+                const glare = document.getElementById('holo-glare');
+                const foil = document.getElementById('holo-foil');
                 const badgeImg = card.querySelector('.badge-card-art-icon img, .badge-3d-img, .badge-hero');
                 const floatingLayer = card.querySelector('.layer-floating');
                 const topLayer = card.querySelector('.layer-top');
@@ -47200,56 +47128,35 @@ KULLANICI NOTU
                 const specularOrb = card.querySelector('#badge-specular-orb');
 
                 // Durum Değişkenleri
+                const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
                 const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
                 const supportsOrientation = typeof window.DeviceOrientationEvent !== 'undefined';
                 const requiresMotionPermission = supportsOrientation && typeof window.DeviceOrientationEvent.requestPermission === 'function';
+                const isNativeIOSBadgeRender = (() => {
+                    const nativePlatform = window.Capacitor?.getPlatform?.() || '';
+                    const ua = navigator.userAgent || '';
+                    return nativePlatform === 'ios' || /iPhone|iPad|iPod/i.test(ua);
+                })();
                 const hintRow = modal.querySelector('#badge-tilt-hint');
                 let motionListenerActive = false;
                 let orientationBaseline = null;
-                const motionProfile = badgePerformanceTier === 'lite'
+                const motionProfile = isNativeIOSBadgeRender
                     ? {
-                        idleLimit: 4.8,
-                        pointerLimit: 8.6,
-                        gyroLimit: 8,
-                        response: 0.26,
-                        layerDepth: 0.72,
-                        iconDrift: 0.78
+                        idleLimit: prefersReducedMotion ? 5 : 8.5,
+                        pointerLimit: prefersReducedMotion ? 6 : 13.2,
+                        gyroLimit: prefersReducedMotion ? 6 : 11.6,
+                        response: 0.18,
+                        layerDepth: 1.04,
+                        iconDrift: 1.12
                     }
-                    : badgePerformanceTier === 'balanced'
-                        ? (isNativeIOSBadgeRender
-                            ? {
-                                idleLimit: 6.4,
-                                pointerLimit: 10.8,
-                                gyroLimit: 9.2,
-                                response: 0.2,
-                                layerDepth: 0.88,
-                                iconDrift: 0.94
-                            }
-                            : {
-                                idleLimit: 6.6,
-                                pointerLimit: 11.4,
-                                gyroLimit: 9.6,
-                                response: 0.18,
-                                layerDepth: 0.92,
-                                iconDrift: 1
-                            })
-                        : (isNativeIOSBadgeRender
-                            ? {
-                                idleLimit: prefersReducedMotion ? 5.2 : 8.2,
-                                pointerLimit: prefersReducedMotion ? 6.6 : 12.6,
-                                gyroLimit: prefersReducedMotion ? 6.2 : 11.2,
-                                response: 0.18,
-                                layerDepth: 1,
-                                iconDrift: 1.08
-                            }
-                            : {
-                                idleLimit: prefersReducedMotion ? 5.2 : 8,
-                                pointerLimit: prefersReducedMotion ? 6.4 : 13,
-                                gyroLimit: prefersReducedMotion ? 6 : 10.5,
-                                response: 0.15,
-                                layerDepth: 1.04,
-                                iconDrift: 1.1
-                            });
+                    : {
+                        idleLimit: prefersReducedMotion ? 5 : 8,
+                        pointerLimit: prefersReducedMotion ? 6 : 13,
+                        gyroLimit: prefersReducedMotion ? 6 : 10.5,
+                        response: 0.14,
+                        layerDepth: 1.08,
+                        iconDrift: 1.12
+                    };
 
                 if (isNativeIOSBadgeRender) {
                     card.classList.add('ios-badge-render-fix');
@@ -47269,39 +47176,6 @@ KULLANICI NOTU
                     const adjusted = value > 0 ? value - deadZone : value + deadZone;
                     return clamp(adjusted / range, -1, 1);
                 };
-                const setCardVar = (name, value) => {
-                    if (cardVarsCache[name] === value) return;
-                    cardVarsCache[name] = value;
-                    card.style.setProperty(name, value);
-                };
-                const setStageVar = (name, value) => {
-                    if (!stage || stageVarsCache[name] === value) return;
-                    stageVarsCache[name] = value;
-                    stage.style.setProperty(name, value);
-                };
-                const updateBoundsNow = () => {
-                    if (!card) return;
-                    cachedBounds = card.getBoundingClientRect();
-                };
-                const queueBoundsUpdate = () => {
-                    if (resizeRaf) return;
-                    resizeRaf = requestAnimationFrame(() => {
-                        resizeRaf = null;
-                        updateBoundsNow();
-                    });
-                };
-                const getBounds = () => {
-                    if (!cachedBounds || !cachedBounds.width || !cachedBounds.height) updateBoundsNow();
-                    return cachedBounds;
-                };
-                const shouldProcessPointer = () => {
-                    const now = window.performance && typeof window.performance.now === 'function'
-                        ? window.performance.now()
-                        : Date.now();
-                    if (now - lastPointerFrame < pointerMinGap) return false;
-                    lastPointerFrame = now;
-                    return true;
-                };
 
                 let state = {
                     mouseX: 0, mouseY: 0,      // Hedef (Mouse/Gyro)
@@ -47311,25 +47185,7 @@ KULLANICI NOTU
                 };
                 let animationFrameId = null;
                 let lastOrientationFrame = 0;
-                const settleThreshold = badgePerformanceTier === 'lite'
-                    ? 0.01
-                    : badgePerformanceTier === 'balanced'
-                        ? 0.006
-                        : (isNativeIOSBadgeRender ? 0.004 : 0.003);
-                const pointerMinGap = badgePerformanceTier === 'lite' ? 18 : (badgePerformanceTier === 'balanced' ? 12 : 8);
-                const orientationMinGap = badgePerformanceTier === 'lite'
-                    ? 38
-                    : badgePerformanceTier === 'balanced'
-                        ? (isNativeIOSBadgeRender ? 30 : 24)
-                        : (isNativeIOSBadgeRender ? 22 : 16);
-                const heavyPassInterval = badgePerformanceTier === 'lite' ? 3 : (badgePerformanceTier === 'balanced' ? 2 : 1);
-                let lastPointerFrame = 0;
-                let frameCounter = 0;
-                let isPageHidden = document.hidden;
-                let cachedBounds = null;
-                let resizeRaf = null;
-                const cardVarsCache = Object.create(null);
-                const stageVarsCache = Object.create(null);
+                const settleThreshold = isNativeIOSBadgeRender ? 0.003 : 0.002;
 
                 function requestTiltFrame() {
                     if (!state.isRunning || animationFrameId) return;
@@ -47346,7 +47202,7 @@ KULLANICI NOTU
                 // 1. Animasyon Döngüsü (input yokken kendini durdurur)
                 function animate() {
                     animationFrameId = null;
-                    if (!state.isRunning || !card || isPageHidden) return;
+                    if (!state.isRunning || !card) return;
 
                     // Lineer İnterpolasyon (Yumuşatma) - Değeri 0.1 (Yavaş) ile 1 (Anlık) arası değiştirilebilir
                     // 0.1 değeri hareketin "ağırlıklı" ve "akıcı" olmasını sağlar.
@@ -47372,57 +47228,62 @@ KULLANICI NOTU
                     const glareOpacity = isLightBadgeSurface
                         ? Math.min(0.2, depthAmount * 0.08 + 0.08)
                         : Math.min(0.28, depthAmount * 0.11 + 0.08);
-                    frameCounter += 1;
-                    const shouldRunHeavyPass = (frameCounter % heavyPassInterval) === 0 || depthAmount < 0.04;
 
                     // DOM Güncellemesi (Tek seferde)
-                    if (shouldRunHeavyPass) {
-                        setCardVar('--mx', `${glareX}%`);
-                        setCardVar('--my', `${glareY}%`);
-                        setCardVar('--holo-pan-x', `${holoPanX}%`);
-                        setCardVar('--holo-pan-y', `${holoPanY}%`);
-                        setCardVar('--tilt-x', state.currentX.toFixed(3));
-                        setCardVar('--tilt-y', state.currentY.toFixed(3));
-                        setCardVar('--foil-opacity', foilOpacity.toFixed(3));
-                        setCardVar('--glare-opacity', glareOpacity.toFixed(3));
-                        setStageVar('--mx', `${glareX}%`);
-                        setStageVar('--my', `${glareY}%`);
-                        setStageVar('--holo-pan-x', `${holoPanX}%`);
-                        setStageVar('--holo-pan-y', `${holoPanY}%`);
-                        setStageVar('--tilt-x', state.currentX.toFixed(3));
-                        setStageVar('--tilt-y', state.currentY.toFixed(3));
+                    card.style.setProperty('--mx', `${glareX}%`);
+                    card.style.setProperty('--my', `${glareY}%`);
+                    card.style.setProperty('--holo-pan-x', `${holoPanX}%`);
+                    card.style.setProperty('--holo-pan-y', `${holoPanY}%`);
+                    card.style.setProperty('--tilt-x', state.currentX.toFixed(3));
+                    card.style.setProperty('--tilt-y', state.currentY.toFixed(3));
+                    card.style.setProperty('--foil-opacity', foilOpacity.toFixed(3));
+                    card.style.setProperty('--glare-opacity', glareOpacity.toFixed(3));
+                    if (stage) {
+                        stage.style.setProperty('--mx', `${glareX}%`);
+                        stage.style.setProperty('--my', `${glareY}%`);
+                        stage.style.setProperty('--holo-pan-x', `${holoPanX}%`);
+                        stage.style.setProperty('--holo-pan-y', `${holoPanY}%`);
+                        stage.style.setProperty('--tilt-x', state.currentX.toFixed(3));
+                        stage.style.setProperty('--tilt-y', state.currentY.toFixed(3));
                     }
                     card.style.transform = `perspective(1600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translate3d(0,0,0) scale(${(1 + depthAmount * 0.018).toFixed(3)})`;
 
-                    if (shouldRunHeavyPass) {
-                        if (bgLayer) {
-                            bgLayer.style.transform = `translate3d(${(-state.currentX * 4 * motionProfile.layerDepth).toFixed(2)}px, ${(-state.currentY * 4 * motionProfile.layerDepth).toFixed(2)}px, 12px) scale(${(1.03 + depthAmount * 0.02).toFixed(3)})`;
-                        }
+                    if (glare) {
+                        glare.style.opacity = glareOpacity.toFixed(3);
+                    }
 
-                        if (midLayer) {
-                            midLayer.style.transform = `translate3d(${(state.currentX * 5 * motionProfile.layerDepth).toFixed(2)}px, ${(state.currentY * 5 * motionProfile.layerDepth).toFixed(2)}px, 42px)`;
-                        }
+                    if (foil) {
+                        foil.style.backgroundPosition = `${glareX}% ${glareY}%`;
+                        foil.style.opacity = foilOpacity.toFixed(3);
+                    }
 
-                        if (topLayer) {
-                            topLayer.style.transform = `translate3d(${(state.currentX * 7 * motionProfile.layerDepth).toFixed(2)}px, ${(state.currentY * 7 * motionProfile.layerDepth).toFixed(2)}px, 88px)`;
-                        }
+                    if (bgLayer) {
+                        bgLayer.style.transform = `translate3d(${(-state.currentX * 4 * motionProfile.layerDepth).toFixed(2)}px, ${(-state.currentY * 4 * motionProfile.layerDepth).toFixed(2)}px, 12px) scale(${(1.03 + depthAmount * 0.02).toFixed(3)})`;
+                    }
 
-                        if (floatingLayer) {
-                            floatingLayer.style.transform = `translate3d(${(state.currentX * 10 * motionProfile.iconDrift).toFixed(2)}px, ${(state.currentY * 10 * motionProfile.iconDrift).toFixed(2)}px, 118px) scale(${(1.01 + depthAmount * 0.02).toFixed(3)})`;
-                        }
+                    if (midLayer) {
+                        midLayer.style.transform = `translate3d(${(state.currentX * 5 * motionProfile.layerDepth).toFixed(2)}px, ${(state.currentY * 5 * motionProfile.layerDepth).toFixed(2)}px, 42px)`;
+                    }
 
-                        if (badgeImg && floatingLayer) {
-                            badgeImg.style.transform = `translate3d(${(state.currentX * 9 * motionProfile.iconDrift).toFixed(2)}px, ${(state.currentY * 9 * motionProfile.iconDrift).toFixed(2)}px, 0) scale(${(1.055 + depthAmount * 0.025).toFixed(3)}) rotateZ(${(state.currentX * 2.1).toFixed(2)}deg)`;
-                        }
+                    if (topLayer) {
+                        topLayer.style.transform = `translate3d(${(state.currentX * 7 * motionProfile.layerDepth).toFixed(2)}px, ${(state.currentY * 7 * motionProfile.layerDepth).toFixed(2)}px, 88px)`;
+                    }
 
-                        if (specularOrb) {
-                            specularOrb.style.transform = `translate3d(${(-state.currentX * 14 * motionProfile.layerDepth).toFixed(2)}px, ${(-state.currentY * 14 * motionProfile.layerDepth).toFixed(2)}px, 64px) scale(${(1.02 + depthAmount * 0.05).toFixed(3)})`;
-                            specularOrb.style.opacity = isLightBadgeSurface
-                                ? `${0.16 + Math.min(0.08, depthAmount * 0.08)}`
-                                : isNativeIOSBadgeRender
-                                    ? `${0.26 + Math.min(0.12, depthAmount * 0.12)}`
-                                    : `${0.22 + Math.min(0.16, depthAmount * 0.16)}`;
-                        }
+                    if (floatingLayer) {
+                        floatingLayer.style.transform = `translate3d(${(state.currentX * 10 * motionProfile.iconDrift).toFixed(2)}px, ${(state.currentY * 10 * motionProfile.iconDrift).toFixed(2)}px, 118px) scale(${(1.01 + depthAmount * 0.02).toFixed(3)})`;
+                    }
+
+                    if (badgeImg && floatingLayer) {
+                        badgeImg.style.transform = `translate3d(${(state.currentX * 9 * motionProfile.iconDrift).toFixed(2)}px, ${(state.currentY * 9 * motionProfile.iconDrift).toFixed(2)}px, 0) scale(${(1.055 + depthAmount * 0.025).toFixed(3)}) rotateZ(${(state.currentX * 2.1).toFixed(2)}deg)`;
+                    }
+
+                    if (specularOrb) {
+                        specularOrb.style.transform = `translate3d(${(-state.currentX * 14 * motionProfile.layerDepth).toFixed(2)}px, ${(-state.currentY * 14 * motionProfile.layerDepth).toFixed(2)}px, 64px) scale(${(1.02 + depthAmount * 0.05).toFixed(3)})`;
+                        specularOrb.style.opacity = isLightBadgeSurface
+                            ? `${0.16 + Math.min(0.08, depthAmount * 0.08)}`
+                            : isNativeIOSBadgeRender
+                            ? `${0.26 + Math.min(0.12, depthAmount * 0.12)}`
+                            : `${0.22 + Math.min(0.16, depthAmount * 0.16)}`;
                     }
 
                     if (
@@ -47435,26 +47296,13 @@ KULLANICI NOTU
 
                 // Döngüyü başlat
                 state.limits = motionProfile.idleLimit;
-                updateBoundsNow();
                 requestTiltFrame();
-
-                function handleVisibilityChange() {
-                    isPageHidden = document.hidden;
-                    if (isPageHidden && animationFrameId) {
-                        cancelAnimationFrame(animationFrameId);
-                        animationFrameId = null;
-                    } else if (!isPageHidden) {
-                        requestTiltFrame();
-                    }
-                }
 
                 // 2. Olay Dinleyicileri (Sadece hedef değerleri günceller)
 
                 // Masaüstü Mouse
                 function handleMouseMove(e) {
-                    if (!shouldProcessPointer()) return;
-                    const rect = getBounds();
-                    if (!rect || !rect.width || !rect.height) return;
+                    const rect = card.getBoundingClientRect();
                     const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
                     const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
                     setTiltTarget(x, y, motionProfile.pointerLimit);
@@ -47466,20 +47314,10 @@ KULLANICI NOTU
 
                 function handleTouchMove(e) {
                     if (!card || !e.touches || !e.touches[0]) return;
-                    if (!shouldProcessPointer()) return;
-                    const rect = getBounds();
-                    if (!rect || !rect.width || !rect.height) return;
+                    const rect = card.getBoundingClientRect();
                     const x = (e.touches[0].clientX - rect.left - rect.width / 2) / (rect.width / 2);
                     const y = (e.touches[0].clientY - rect.top - rect.height / 2) / (rect.height / 2);
                     setTiltTarget(x, y, motionProfile.pointerLimit);
-                }
-
-                function handleTouchStart() {
-                    queueBoundsUpdate();
-                }
-
-                function handleWindowResize() {
-                    queueBoundsUpdate();
                 }
 
                 // Mobil Jiroskop
@@ -47489,7 +47327,7 @@ KULLANICI NOTU
                     const now = window.performance && typeof window.performance.now === 'function'
                         ? window.performance.now()
                         : Date.now();
-                    const minFrameGap = orientationMinGap;
+                    const minFrameGap = isNativeIOSBadgeRender ? 24 : 16;
                     if (now - lastOrientationFrame < minFrameGap) return;
                     lastOrientationFrame = now;
 
@@ -47545,14 +47383,10 @@ KULLANICI NOTU
                 // Eventleri Ekle
                 card.addEventListener('mousemove', handleMouseMove);
                 card.addEventListener('mouseleave', handleMouseLeave);
-                card.addEventListener('mouseenter', queueBoundsUpdate, { passive: true });
-                card.addEventListener('touchstart', handleTouchStart, { passive: true });
+                card.addEventListener('touchstart', handleTouchMove, { passive: true });
                 card.addEventListener('touchmove', handleTouchMove, { passive: true });
                 card.addEventListener('touchend', handleMouseLeave, { passive: true });
                 card.addEventListener('touchcancel', handleMouseLeave, { passive: true });
-                window.addEventListener('resize', handleWindowResize, { passive: true });
-                window.addEventListener('orientationchange', handleWindowResize, { passive: true });
-                document.addEventListener('visibilitychange', handleVisibilityChange, { passive: true });
 
                 // Mobil destek kontrolü
                 enableMotionTilt();
@@ -47566,23 +47400,14 @@ KULLANICI NOTU
                     }
                     card.removeEventListener('mousemove', handleMouseMove);
                     card.removeEventListener('mouseleave', handleMouseLeave);
-                    card.removeEventListener('mouseenter', queueBoundsUpdate);
-                    card.removeEventListener('touchstart', handleTouchStart);
+                    card.removeEventListener('touchstart', handleTouchMove);
                     card.removeEventListener('touchmove', handleTouchMove);
                     card.removeEventListener('touchend', handleMouseLeave);
                     card.removeEventListener('touchcancel', handleMouseLeave);
-                    window.removeEventListener('resize', handleWindowResize);
-                    window.removeEventListener('orientationchange', handleWindowResize);
-                    document.removeEventListener('visibilitychange', handleVisibilityChange);
                     if (motionListenerActive) {
                         window.removeEventListener('deviceorientation', handleOrientation);
                     }
-                    if (resizeRaf) {
-                        cancelAnimationFrame(resizeRaf);
-                        resizeRaf = null;
-                    }
                     orientationBaseline = null;
-                    cachedBounds = null;
                     modal.classList.add('hidden');
 
                     if (window.__badgeDetailReturnToGallery) {
