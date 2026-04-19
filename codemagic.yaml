@@ -21,6 +21,8 @@ workflows:
         APP_DISPLAY_NAME: "Fingenda"
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
+        FINGENDA_BUILD_CHANNEL: "release"
+        FINGENDA_TEST_PREMIUM_BYPASS: "false"
 
     cache:
       cache_paths:
@@ -145,6 +147,8 @@ workflows:
         APP_DISPLAY_NAME: "Fingenda"
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
+        FINGENDA_BUILD_CHANNEL: "testflight"
+        FINGENDA_TEST_PREMIUM_BYPASS: "true"
 
     triggering:
       events:

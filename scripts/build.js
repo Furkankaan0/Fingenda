@@ -1,10 +1,10 @@
 /**
- * Fingenda Build Script
+ * Fingenda build script
  *
- * Web dosyalarini www/ klasorune kopyalar.
- * Capacitor, www/ klasorunu iOS projesine sync eder.
+ * Copies web assets to www/ and generates runtime build flags
+ * consumed by the app at startup.
  *
- * Kullanim: node scripts/build.js
+ * Usage: node scripts/build.js
  */
 
 const fs = require('fs');
@@ -13,7 +13,7 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const WWW = path.join(ROOT, 'www');
 
-// Kopyalanacak dosya ve klasorler
+// Files and directories copied into www/
 const COPY_LIST = [
     'index.html',
     'dna-performance-runtime.js',
@@ -30,25 +30,9 @@ const COPY_LIST = [
     'icons'
 ];
 
-// Haric tutulanlar (www'ye kopyalanmayacak)
-const EXCLUDE = [
-    'node_modules',
-    'ios',
-    'android',
-    'www',
-    '.git',
-    '.codex-taxhacker',
-    'scripts',
-    'package.json',
-    'package-lock.json',
-    'capacitor.config.json',
-    'codemagic.yaml',
-    'FINGENDA_ANALIZ_RAPORU.md'
-];
-
 function cleanDir(dir) {
     if (fs.existsSync(dir)) {
-        fs.rmSync(dir, { recursive: true });
+        fs.rmSync(dir, { recursive: true, force: true });
     }
     fs.mkdirSync(dir, { recursive: true });
 }
@@ -65,13 +49,50 @@ function copyRecursive(src, dest) {
     }
 }
 
-console.log('🔨 Fingenda Build basliyor...\n');
+function parseBooleanEnv(value, fallback = false) {
+    if (value == null) return fallback;
+    const normalized = String(value).trim().toLowerCase();
+    if (['1', 'true', 'yes', 'on'].includes(normalized)) return true;
+    if (['0', 'false', 'no', 'off'].includes(normalized)) return false;
+    return fallback;
+}
 
-// 1. www klasorunu temizle
-console.log('📁 www/ klasoru hazirlaniyor...');
+function getBuildChannel() {
+    const raw = process.env.FINGENDA_BUILD_CHANNEL || process.env.BUILD_CHANNEL || 'development';
+    const normalized = String(raw).trim().toLowerCase();
+    if (['development', 'testflight', 'release'].includes(normalized)) return normalized;
+    return 'development';
+}
+
+function writeBuildConfig(outDir) {
+    const buildChannel = getBuildChannel();
+    const testPremiumBypass = parseBooleanEnv(
+        process.env.FINGENDA_TEST_PREMIUM_BYPASS,
+        buildChannel === 'testflight'
+    );
+
+    const config = {
+        buildChannel,
+        testPremiumBypass,
+        buildTimestamp: new Date().toISOString(),
+        commitSha: process.env.CM_COMMIT || process.env.GIT_COMMIT || null
+    };
+
+    const payload = [
+        ';(function(){',
+        '  "use strict";',
+        `  window.__FINGENDA_BUILD__ = ${JSON.stringify(config, null, 2)};`,
+        '})();',
+        ''
+    ].join('\n');
+
+    fs.writeFileSync(path.join(outDir, 'build-config.js'), payload, 'utf8');
+}
+
+console.log('[BUILD] Fingenda build started');
+console.log('[BUILD] Preparing www/');
 cleanDir(WWW);
 
-// 2. Dosyalari kopyala
 let fileCount = 0;
 for (const item of COPY_LIST) {
     const src = path.join(ROOT, item);
@@ -82,17 +103,19 @@ for (const item of COPY_LIST) {
         const stat = fs.statSync(src);
         if (stat.isDirectory()) {
             const count = fs.readdirSync(src).length;
-            console.log(`  ✅ ${item}/ (${count} dosya)`);
+            console.log(`  [OK] ${item}/ (${count} files)`);
             fileCount += count;
         } else {
             const sizeKB = (stat.size / 1024).toFixed(1);
-            console.log(`  ✅ ${item} (${sizeKB} KB)`);
+            console.log(`  [OK] ${item} (${sizeKB} KB)`);
             fileCount++;
         }
     } else {
-        console.log(`  ⚠️  ${item} bulunamadi, atlaniyor`);
+        console.log(`  [WARN] ${item} not found, skipped`);
     }
 }
 
-console.log(`\n✨ Build tamamlandi! ${fileCount} dosya www/ klasorune kopyalandi.`);
-console.log('📱 Simdi "npx cap sync" calistirarak iOS projesini guncelleyebilirsiniz.\n');
+writeBuildConfig(WWW);
+
+console.log(`[BUILD] Completed. ${fileCount} assets copied to www/`);
+console.log('[BUILD] Build flags written to www/build-config.js');

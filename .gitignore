@@ -33,4 +33,8 @@ build/
 
 # Misc
 .codex-taxhacker/
+.codex-*/
+.codex-*.js
+.codex-*.ps1
+tmp-*.js
 FINGENDA_ANALIZ_RAPORU.md
