@@ -84888,6 +84888,17 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         var englishCoverage = {
             'transaction.amount': 'Amount',
             'transaction.date': 'Date',
+            'transaction.category': 'Category',
+            'transaction.description': 'Description',
+            'transaction.descPlaceholder': '/ Description',
+            'transaction.save': 'Save',
+            'transaction.success': 'Transaction Successful!',
+            'transaction.saved': 'Transaction saved successfully!',
+            'transaction.search': 'Search transaction (e.g., Grocery, Salary)...',
+            'transaction.recent': 'Recent Transactions',
+            'transaction.history': 'Transaction History',
+            'transaction.noTransactions': 'No transactions',
+            'transaction.type': 'Transaction Type',
             'lang.turkish': 'Turkish',
             'ach.beginning': 'BEGINNING',
             'ach.beginningDesc': 'You recorded your first transaction. Your financial journey has started! 🚀',
@@ -85080,7 +85091,48 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
             'Ani sıçramalar ve plansız büyük giderler ay sonunu zorlayabilir.': 'Sudden spikes and unplanned major expenses can put pressure on the end of the month.',
             'Ne için kullanılır?': 'What is it used for?',
             'Bu metrik alarm vermek için değil, daha erken önlem alabilmeniz için harcama oynaklığını görünür kılmak için kullanılır.': 'This metric is meant to make spending volatility visible so you can take action earlier, not to alarm you.',
-            'Tamam': 'OK'
+            'Tamam': 'OK',
+            'Rozet Koleksiyonum': 'My Badge Collection',
+            'KAZANILDI': 'UNLOCKED',
+            'KazanÄ±ldÄ±': 'Unlocked',
+            'Kazanıldı': 'Unlocked',
+            'KÄ°LÄ°TLÄ°': 'LOCKED',
+            'KİLİTLİ': 'LOCKED',
+            'Kilitli': 'Locked',
+            'Durum': 'Status',
+            'DURUM': 'STATUS',
+            'KazanÄ±ldÄ± Tarihi': 'Date Earned',
+            'Kazanıldı Tarihi': 'Date Earned',
+            'KAZANILDI TARÄ°HÄ°': 'DATE EARNED',
+            'KAZANILDI TARİHİ': 'DATE EARNED',
+            'Ã‡evirmek Ä°Ã§in SÃ¼rÃ¼kle': 'Swipe to inspect',
+            'Çevirmek İçin Sürükle': 'Swipe to inspect',
+            'Rozeti Ä°ncelemek Ä°Ã§in SÃ¼rÃ¼kle': 'Swipe to inspect badge',
+            'Rozeti İncelemek İçin Sürükle': 'Swipe to inspect badge',
+            'Telefonu EÄŸ veya SÃ¼rÃ¼kle': 'Tilt your phone or drag',
+            'Telefonu Eğ veya Sürükle': 'Tilt your phone or drag',
+            'Hedef KumbarasÄ±': 'Goal Jar',
+            'Hedef Kumbarası': 'Goal Jar',
+            'Yeni Hedef Ekle': 'Add New Goal',
+            'HenÃ¼z bir hedefin yok.': 'You do not have a goal yet.',
+            'Henüz bir hedefin yok.': 'You do not have a goal yet.',
+            'Mevcut hÄ±zla giderse...': 'At this pace...',
+            'Mevcut hızla giderse...': 'At this pace...',
+            'Tahmini Kalan Bakiye': 'Estimated Remaining Balance',
+            'Tahmini Toplam': 'Estimated Total',
+            'Bakiyeden DÃ¼ÅŸme': 'Exclude from Balance',
+            'Bakiyeden Düşme': 'Exclude from Balance',
+            'Her AyÄ±n': 'Every Month',
+            'Her Ayın': 'Every Month',
+            'TÃ¼mÃ¼': 'All',
+            'Tümü': 'All',
+            'Ã–nemli': 'Important',
+            'Önemli': 'Important',
+            'YapÄ±lacak': 'To-Do',
+            'Yapılacak': 'To-Do',
+            'Fikir': 'Idea',
+            'Finansal': 'Financial',
+            'YÃ¼kleniyor...': 'Loading...'
         };
 
         var termGlossary = {
@@ -85169,6 +85221,36 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
             'Yükler': 'Commitments',
             'Girişler': 'Income'
         };
+
+        Object.assign(termGlossary, {
+            'Kilitli': 'Locked',
+            'KazanÄ±ldÄ±': 'Unlocked',
+            'Kazanıldı': 'Unlocked',
+            'Durum': 'Status',
+            'AÃ§Ä±klama': 'Description',
+            'Açıklama': 'Description',
+            'BaÅŸarÄ±m': 'Achievement',
+            'Başarım': 'Achievement',
+            'Koleksiyon': 'Collection',
+            'Rozet': 'Badge',
+            'KumbarasÄ±': 'Jar',
+            'Kumbarası': 'Jar',
+            'Birikim': 'Savings',
+            'Mevcut': 'Current',
+            'HenÃ¼z': 'Not yet',
+            'Henüz': 'Not yet',
+            'Yok': 'None',
+            'DÃ¶viz': 'Currency',
+            'Döviz': 'Currency',
+            'Ã‡evirici': 'Converter',
+            'Çevirici': 'Converter',
+            'Kredi': 'Loan',
+            'Hesaplama': 'Calculator',
+            'Taksit': 'Installment',
+            'Bakiyeden': 'From Balance',
+            'DÃ¼ÅŸme': 'Exclude',
+            'Düşme': 'Exclude'
+        });
 
         function escapeRegExp(text) {
             return String(text).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -85317,17 +85399,31 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
             return cleanupTranslationArtifacts(replaceGlossaryTerms(text, currentLang), currentLang);
         }
 
+        function looksLikelyTurkish(text) {
+            if (!text || typeof text !== 'string') return false;
+            var value = text.trim();
+            if (!value) return false;
+
+            if (/[çğıöşüÇĞİÖŞÜ]/.test(value)) return true;
+            if (/(Ã§|Ä±|ÅŸ|Ã¼|Ã¶|ÄŸ|Ã‡|Ä°|Åž|Ãœ|Ã–|Äž)/.test(value)) return true;
+            if (/\b(kaydet|işlem|islem|gider|gelir|kategori|açıklama|aciklama|bütçe|butce|hedef|not|yükleniyor|yukleniyor|tarih|başlangıç|baslangic|bitiş|bitis|profil|ayarlar)\b/i.test(value)) return true;
+            return false;
+        }
+
         function backfillEnglishCoverage() {
             Object.keys(englishCoverage).forEach(function (key) {
                 window.i18n.en[key] = englishCoverage[key];
             });
 
             Object.keys(window.i18n.tr).forEach(function (key) {
-                if (!window.i18n.en[key] || window.i18n.en[key] === window.i18n.tr[key]) {
-                    var translated = englishCoverage[key] || smartTranslate(window.i18n.tr[key], 'en');
-                    if (translated && translated !== window.i18n.tr[key]) {
-                        window.i18n.en[key] = translated;
-                    }
+                var trText = window.i18n.tr[key];
+                var enText = window.i18n.en[key];
+                var mustRepair = !enText || enText === trText || looksLikelyTurkish(enText);
+                if (!mustRepair) return;
+
+                var translated = englishCoverage[key] || smartTranslate(trText, 'en') || smartTranslate(enText, 'en');
+                if (translated && translated !== trText) {
+                    window.i18n.en[key] = translated;
                 }
             });
         }
@@ -85436,9 +85532,16 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         
         translationObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
 
-        document.addEventListener('FingendaLangChanged', function () {
+        function applyEnglishCoverageAfterLanguageChange() {
+            backfillEnglishCoverage();
+            rebuildPhraseMaps();
             window.applyPhraseTranslations();
-        });
+        }
+
+        document.addEventListener('FingendaLangChanged', applyEnglishCoverageAfterLanguageChange);
+        document.addEventListener('languageChanged', applyEnglishCoverageAfterLanguageChange);
+        window.addEventListener('languageChanged', applyEnglishCoverageAfterLanguageChange);
+        window.addEventListener('FingendaLangChanged', applyEnglishCoverageAfterLanguageChange);
 
         window.applyPhraseTranslations();
 
