@@ -47671,7 +47671,7 @@ KULLANICI NOTU
                 container.style.cssText = "width: min(100vw, 430px); max-width: 100vw; overflow: visible; display: flex; justify-content: center; align-items: center;";
 
                 container.innerHTML = `
-                <div id="badge-detail-stage" class="badge-detail-stage badge-reference-stage badge-holo-ultra-stage nft-modal-perspective flex flex-col items-center justify-center w-full px-4 py-6" style="${cardCssVars}">
+                <div id="badge-detail-stage" class="badge-detail-stage nft-modal-perspective flex flex-col items-center justify-center w-full px-4 py-6" style="${cardCssVars}">
                     <div id="tilt-card" class="premium-3d-card badge-rarity-card badge-reference-card badge-holo-refined badge-holo-ultra ${cardRarityClass} ${lockClass} ${cardShadow} gpu-accelerated flex flex-col items-center p-5 select-none cursor-grab active:cursor-grabbing relative overflow-hidden group transition-transform duration-150" style="${cardCssVars};">
                         
                         <!-- Texture & Effects -->
@@ -47792,7 +47792,7 @@ KULLANICI NOTU
                 if (isNativeIOSBadgeRender) {
                     card.classList.add('ios-badge-render-fix');
                     card.classList.add('badge-gyro-rasterized');
-                    if (stage) stage.classList.add('ios-badge-stage', 'badge-gyro-rasterized');
+                    if (stage) stage.classList.add('badge-gyro-rasterized');
                 }
 
                 function updateTiltHint(text) {
@@ -88340,6 +88340,33 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         };
     })();
 </script>
+<style id="badge-detail-oval-ghost-fix-v2">
+    /* iOS TestFlight hotfix:
+       Rozet detay ekranında kartın üstüne binen oval "hayalet pencere" katmanını kapatır. */
+    #nft-detail-modal .badge-detail-stage::before,
+    #nft-detail-modal .badge-detail-stage::after {
+        content: none !important;
+        display: none !important;
+        opacity: 0 !important;
+        background: none !important;
+        filter: none !important;
+    }
+
+    #nft-detail-modal #3d-card-container,
+    #nft-detail-modal .badge-detail-stage {
+        clip-path: none !important;
+        -webkit-clip-path: none !important;
+        mask-image: none !important;
+        -webkit-mask-image: none !important;
+        overflow: visible !important;
+    }
+
+    #nft-detail-modal #tilt-card,
+    #nft-detail-modal .premium-3d-card.badge-rarity-card {
+        position: relative !important;
+        z-index: 3 !important;
+    }
+</style>
 <style id="badge-tilt-performance-guard-v1">
     #nft-detail-modal .badge-gyro-rasterized {
         contain: layout paint style !important;
