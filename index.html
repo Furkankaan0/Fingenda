@@ -29355,6 +29355,7 @@
                 overflow: hidden;
                 border-radius: 32px;
                 padding: 20px 18px 22px;
+                isolation: isolate;
                 background:
                     radial-gradient(circle at 22% -10%, rgba(129, 140, 248, 0.22), transparent 46%),
                     radial-gradient(circle at 90% 120%, rgba(99, 102, 241, 0.16), transparent 42%),
@@ -29365,6 +29366,8 @@
                     inset 0 1px 0 rgba(255, 255, 255, 0.9),
                     inset 0 -20px 40px -34px rgba(79, 70, 229, 0.24);
                 transform: translateZ(0);
+                -webkit-mask-image: -webkit-radial-gradient(white, black);
+                mask-image: radial-gradient(white, black);
             }
 
             html.dark .fingo-ekg-hero {
@@ -29384,9 +29387,24 @@
                 inset: auto auto -24% -14%;
                 width: 68%;
                 height: 62%;
-                background: radial-gradient(circle, rgba(99, 102, 241, 0.26), rgba(99, 102, 241, 0));
-                filter: blur(26px);
+                border-radius: 999px;
+                background: radial-gradient(ellipse at 50% 50%,
+                        rgba(99, 102, 241, 0.24) 0%,
+                        rgba(99, 102, 241, 0.16) 28%,
+                        rgba(99, 102, 241, 0.08) 48%,
+                        rgba(99, 102, 241, 0) 76%);
+                filter: none;
+                transform: translateZ(0);
                 pointer-events: none;
+                z-index: 0;
+            }
+
+            html.dark .fingo-ekg-aura {
+                background: radial-gradient(ellipse at 50% 50%,
+                        rgba(129, 140, 248, 0.22) 0%,
+                        rgba(129, 140, 248, 0.14) 30%,
+                        rgba(129, 140, 248, 0.08) 52%,
+                        rgba(129, 140, 248, 0) 78%);
             }
 
             .fingo-ekg-monitor {
