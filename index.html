@@ -13,6 +13,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=no">
     <meta name="apple-mobile-web-app-title" content="Fingenda">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="apple-touch-icon" sizes="180x180" href="logo-180.png">
     <link rel="apple-touch-icon" sizes="152x152" href="logo-152.png">
     <link rel="apple-touch-icon" sizes="120x120" href="logo-120.png">
@@ -16811,6 +16812,19 @@
                 justify-content: center;
             }
 
+            #badge-gallery-modal .badge-gallery-icon-wrap .badge-gallery-icon .badge-icon-frame--tile {
+                width: 52px;
+                height: 52px;
+                border-radius: 15px;
+                background: transparent;
+                box-shadow: none;
+            }
+
+            #badge-gallery-modal .badge-gallery-icon-wrap .badge-gallery-icon .badge-3d-img--tile {
+                max-width: 48px;
+                max-height: 48px;
+            }
+
             #badge-gallery-modal .badge-gallery-icon-wrap .badge-gallery-icon img,
             #badge-gallery-modal .badge-gallery-icon-wrap .badge-gallery-icon .badge-3d-img {
                 max-width: 100%;
@@ -21193,6 +21207,141 @@
                 pointer-events: none;
                 will-change: transform, filter;
                 image-rendering: -webkit-optimize-contrast;
+                display: block;
+            }
+
+            .badge-icon-frame {
+                position: relative;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                isolation: isolate;
+                transform: translateZ(0);
+                will-change: transform;
+            }
+
+            .badge-icon-frame::before {
+                content: '';
+                position: absolute;
+                inset: 6%;
+                border-radius: inherit;
+                background: radial-gradient(circle at 35% 26%, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.02) 58%, transparent 72%);
+                opacity: 0.5;
+                z-index: 0;
+                pointer-events: none;
+            }
+
+            .badge-icon-frame--tile {
+                width: 60px;
+                height: 60px;
+                border-radius: 18px;
+            }
+
+            .badge-icon-frame--hero {
+                width: min(72vw, 228px);
+                height: min(72vw, 228px);
+                border-radius: 32px;
+            }
+
+            .badge-icon-frame--broken::after {
+                content: '🏅';
+                font-size: 2rem;
+                line-height: 1;
+                z-index: 2;
+            }
+
+            .badge-3d-img--tile {
+                width: 100%;
+                height: 100%;
+                max-width: 58px;
+                max-height: 58px;
+                object-fit: contain;
+                z-index: 1;
+            }
+
+            .badge-3d-img--hero {
+                width: auto !important;
+                height: auto !important;
+                max-width: min(88%, 198px) !important;
+                max-height: min(88%, 198px) !important;
+                object-fit: contain;
+                z-index: 2;
+            }
+
+            .badge-icon-motion {
+                animation: badgeIconSoftFloat 6.3s ease-in-out infinite;
+                transform-origin: 50% 62%;
+            }
+
+            .badge-icon-motion--tile {
+                animation-duration: 7.4s;
+            }
+
+            .badge-icon-motion--hero {
+                animation-duration: 5.4s;
+            }
+
+            .badge-rarity-legendary .badge-icon-motion--hero,
+            .badge-rarity-mythic .badge-icon-motion--hero {
+                animation-name: badgeIconSoftFloat, badgeIconHeroGlowPulse;
+                animation-duration: 5.4s, 3.2s;
+                animation-timing-function: ease-in-out, ease-in-out;
+                animation-iteration-count: infinite, infinite;
+            }
+
+            @keyframes badgeIconSoftFloat {
+                0% {
+                    transform: translate3d(0, 0, 0) scale(1) rotate(-1.2deg);
+                }
+
+                25% {
+                    transform: translate3d(0, -3px, 0) scale(1.015) rotate(0.5deg);
+                }
+
+                55% {
+                    transform: translate3d(0, -5px, 0) scale(1.02) rotate(1.1deg);
+                }
+
+                100% {
+                    transform: translate3d(0, 0, 0) scale(1) rotate(-1.2deg);
+                }
+            }
+
+            @keyframes badgeIconHeroGlowPulse {
+                0% {
+                    filter: drop-shadow(0 16px 24px rgba(2, 6, 23, 0.42)) drop-shadow(0 0 12px color-mix(in srgb, var(--rarity-glow, #6366f1) 20%, transparent));
+                }
+
+                50% {
+                    filter: drop-shadow(0 20px 28px rgba(2, 6, 23, 0.48)) drop-shadow(0 0 24px color-mix(in srgb, var(--rarity-glow, #6366f1) 32%, transparent));
+                }
+
+                100% {
+                    filter: drop-shadow(0 16px 24px rgba(2, 6, 23, 0.42)) drop-shadow(0 0 12px color-mix(in srgb, var(--rarity-glow, #6366f1) 20%, transparent));
+                }
+            }
+
+            html.dark .badge-icon-frame::before {
+                opacity: 0.34;
+                background: radial-gradient(circle at 35% 26%, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.02) 58%, transparent 72%);
+            }
+
+            html:not(.dark) .badge-icon-frame--tile {
+                background: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(241, 245, 249, 0.62));
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86), 0 10px 24px rgba(15, 23, 42, 0.08);
+            }
+
+            html.dark .badge-icon-frame--tile {
+                background: linear-gradient(150deg, rgba(30, 41, 59, 0.86), rgba(15, 23, 42, 0.66));
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 12px 26px rgba(2, 6, 23, 0.34);
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                .badge-icon-motion,
+                .badge-icon-motion--tile,
+                .badge-icon-motion--hero {
+                    animation: none !important;
+                }
             }
 
             /* --- ULTRA-REALISTIC HOLOGRAPHIC SHADERS --- */
@@ -23750,6 +23899,14 @@
                     0 18px 38px color-mix(in srgb, var(--rarity-glow, #6366f1) 14%, transparent);
                 transform: translateZ(-18px) rotate(45deg) scale(0.9);
                 opacity: 0.62;
+            }
+
+            .badge-card-art-icon .badge-icon-frame--hero {
+                width: min(84%, 206px);
+                height: min(84%, 206px);
+                border-radius: 28px;
+                background: transparent;
+                box-shadow: none;
             }
 
             .badge-card-art-icon img,
@@ -41781,25 +41938,38 @@
 
             // --- BADGE ICON HELPER (High Quality) ---
             window.getBadgeIconHTML = function (badge, isHero = false) {
-                const sizeClass = isHero ? 'badge-hero animate-float' : 'w-10 h-10'; // Gallery vs Hero size
-
-                // Check if URL (simple check for extensions or protocol)
-                const isUrl = /^(http|https|\.png|\.webp|\.svg)/i.test(badge.icon);
+                const rarity = (badge?.rarity || 'common').toLowerCase();
+                const iconValue = String(badge?.icon || '').trim();
+                const isUrl = /^(https?:\/\/|\.\/|\/|data:image|blob:|[^<>]+\.(png|webp|svg|gif|apng)(\?|#|$))/i.test(iconValue);
+                const frameClass = isHero ? 'badge-icon-frame badge-icon-frame--hero' : 'badge-icon-frame badge-icon-frame--tile';
+                const motionClass = isHero ? 'badge-icon-motion badge-icon-motion--hero' : 'badge-icon-motion badge-icon-motion--tile';
+                const imageClass = isHero ? 'badge-hero badge-3d-img badge-3d-img--hero' : 'badge-3d-img badge-3d-img--tile';
+                const width = isHero ? '256' : '72';
+                const height = isHero ? '256' : '72';
+                const loading = isHero ? 'eager' : 'lazy';
+                const decoding = isHero ? 'sync' : 'async';
+                const fetchPriority = isHero ? 'high' : 'low';
 
                 if (isUrl) {
-                    return `<img 
-                    src="${badge.icon}" 
-                    class="${isHero ? 'badge-hero' : 'w-8 h-8 object-contain'} pointer-events-none select-none" 
-                    width="${isHero ? '256' : '64'}" 
-                    height="${isHero ? '256' : '64'}" 
-                    alt="${badge.title}" 
-                    decoding="async" 
-                    loading="eager" 
-                    draggable="false">`;
-                } else {
-                    // Emoji or Text
-                    return `<div class="${isHero ? 'text-7xl filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]' : 'text-2xl'} cursor-default select-none">${badge.icon}</div>`;
+                    return `<span class="${frameClass} rarity-${rarity} ${motionClass}" aria-hidden="true">
+                    <img
+                        src="${iconValue}"
+                        class="${imageClass} pointer-events-none select-none"
+                        width="${width}"
+                        height="${height}"
+                        alt="${badge.title || 'Rozet'}"
+                        decoding="${decoding}"
+                        loading="${loading}"
+                        fetchpriority="${fetchPriority}"
+                        draggable="false"
+                        onerror="this.style.display='none';this.parentElement&&this.parentElement.classList.add('badge-icon-frame--broken');">
+                    </span>`;
                 }
+
+                const fallback = iconValue || '🏅';
+                return `<span class="${frameClass} rarity-${rarity} ${motionClass}" aria-hidden="true">
+                    <span class="${isHero ? 'text-7xl leading-none' : 'text-2xl leading-none'} cursor-default select-none">${fallback}</span>
+                </span>`;
             };
 
             // --- GÜNCELLENMİŞ 3D ROZET İNCELEME (PREMIUM EFFECT) ---
@@ -47058,7 +47228,7 @@ KULLANICI NOTU
                 },
                 {
                     id: 'b_com_7',
-                    icon: 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Symbols/Counterclockwise%20Arrows%20Button.png',
+                    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Counterclockwise%20arrows%20button/3D/counterclockwise_arrows_button_3d.png',
                     title: 'OTOMATİK',
                     rarity: 'common',
                     desc: 'Bir otomatik talimat (abonelik) ekledin. 🔄',
@@ -47084,7 +47254,7 @@ KULLANICI NOTU
                 },
                 {
                     id: 'b_rare_3',
-                    icon: 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Dress.png',
+                    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Dress/3D/dress_3d.png',
                     title: 'STİL İKONU',
                     rarity: 'rare',
                     desc: 'Giyim harcamaların 10 adedi geçti. Şıksın! 👕',
@@ -47134,7 +47304,7 @@ KULLANICI NOTU
                 },
                 {
                     id: 'b_epic_2',
-                    icon: 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Bullseye.png',
+                    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Bullseye/3D/bullseye_3d.png',
                     title: 'HEDEF AVCISI',
                     rarity: 'epic',
                     desc: 'Bir hedefini %100 tamamladın. Tam isabet! 🎯',
