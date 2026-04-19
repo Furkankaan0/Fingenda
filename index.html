@@ -47601,10 +47601,14 @@ KULLANICI NOTU
                         layerDepth: 1,
                         iconDrift: 1.06
                     };
-                const layerUpdateStride = isNativeIOSBadgeRender ? 2 : 1;
+                const layerUpdateStride = isNativeIOSBadgeRender ? 3 : 1;
+                const stageUpdateStride = isNativeIOSBadgeRender ? 2 : 1;
+                const iconUpdateStride = isNativeIOSBadgeRender ? 4 : 1;
+                const minRenderGap = isNativeIOSBadgeRender ? 20 : 0;
 
                 if (isNativeIOSBadgeRender) {
                     card.classList.add('ios-badge-render-fix');
+                    if (stage) stage.classList.add('ios-badge-stage');
                 }
 
                 function updateTiltHint(text) {
@@ -47630,8 +47634,24 @@ KULLANICI NOTU
                 };
                 let animationFrameId = null;
                 let lastOrientationFrame = 0;
+                let lastRenderFrame = 0;
                 let frameCounter = 0;
-                const settleThreshold = isNativeIOSBadgeRender ? 0.003 : 0.002;
+                let cardRect = null;
+                let lastRectMeasure = 0;
+                const settleThreshold = isNativeIOSBadgeRender ? 0.0035 : 0.002;
+
+                function measureCardRect(force = false) {
+                    const now = window.performance && typeof window.performance.now === 'function'
+                        ? window.performance.now()
+                        : Date.now();
+                    if (!force && cardRect && now - lastRectMeasure < 140) return cardRect;
+                    cardRect = card.getBoundingClientRect();
+                    lastRectMeasure = now;
+                    return cardRect;
+                }
+
+                const scheduleRectRefresh = () => requestAnimationFrame(() => measureCardRect(true));
+                measureCardRect(true);
 
                 function requestTiltFrame() {
                     if (!state.isRunning || animationFrameId) return;
@@ -47646,9 +47666,19 @@ KULLANICI NOTU
                 }
 
                 // 1. Animasyon Döngüsü (input yokken kendini durdurur)
-                function animate() {
+                function animate(timestamp) {
                     animationFrameId = null;
                     if (!state.isRunning || !card) return;
+                    if (typeof timestamp !== 'number') {
+                        timestamp = window.performance && typeof window.performance.now === 'function'
+                            ? window.performance.now()
+                            : Date.now();
+                    }
+                    if (minRenderGap > 0 && (timestamp - lastRenderFrame) < minRenderGap) {
+                        requestTiltFrame();
+                        return;
+                    }
+                    lastRenderFrame = timestamp;
 
                     // Lineer İnterpolasyon (Yumuşatma) - Değeri 0.1 (Yavaş) ile 1 (Anlık) arası değiştirilebilir
                     // 0.1 değeri hareketin "ağırlıklı" ve "akıcı" olmasını sağlar.
@@ -47667,6 +47697,8 @@ KULLANICI NOTU
                     const depthAmount = Math.min(1, Math.abs(state.currentX) + Math.abs(state.currentY));
                     frameCounter += 1;
                     const runLayerPass = (frameCounter % layerUpdateStride) === 0 || depthAmount < 0.08;
+                    const runStagePass = (frameCounter % stageUpdateStride) === 0 || depthAmount < 0.06;
+                    const runIconPass = runLayerPass && ((frameCounter % iconUpdateStride) === 0 || depthAmount < 0.05);
                     const rarityBoost = rarityKey === 'legendary' || rarityKey === 'mythic' ? 0.06 : rarityKey === 'epic' ? 0.035 : 0;
                     const holoPanX = (50 + state.currentX * 36).toFixed(2);
                     const holoPanY = (50 + state.currentY * 24).toFixed(2);
@@ -47686,7 +47718,7 @@ KULLANICI NOTU
                     card.style.setProperty('--tilt-y', state.currentY.toFixed(3));
                     card.style.setProperty('--foil-opacity', foilOpacity.toFixed(3));
                     card.style.setProperty('--glare-opacity', glareOpacity.toFixed(3));
-                    if (stage) {
+                    if (stage && runStagePass) {
                         stage.style.setProperty('--mx', `${glareX}%`);
                         stage.style.setProperty('--my', `${glareY}%`);
                         stage.style.setProperty('--holo-pan-x', `${holoPanX}%`);
@@ -47720,11 +47752,11 @@ KULLANICI NOTU
                         floatingLayer.style.transform = `translate3d(${(state.currentX * 8.4 * motionProfile.iconDrift).toFixed(2)}px, ${(state.currentY * 8.4 * motionProfile.iconDrift).toFixed(2)}px, 110px) scale(${(1.01 + depthAmount * 0.016).toFixed(3)})`;
                     }
 
-                    if (runLayerPass && badgeImg && floatingLayer) {
+                    if (runIconPass && badgeImg && floatingLayer) {
                         badgeImg.style.transform = `translate3d(${(state.currentX * 7.8 * motionProfile.iconDrift).toFixed(2)}px, ${(state.currentY * 7.8 * motionProfile.iconDrift).toFixed(2)}px, 0) scale(${(1.045 + depthAmount * 0.018).toFixed(3)}) rotateZ(${(state.currentX * 1.35).toFixed(2)}deg)`;
                     }
 
-                    if (runLayerPass && specularOrb) {
+                    if (runStagePass && specularOrb) {
                         specularOrb.style.transform = `translate3d(${(-state.currentX * 12 * motionProfile.layerDepth).toFixed(2)}px, ${(-state.currentY * 12 * motionProfile.layerDepth).toFixed(2)}px, 56px) scale(${(1.01 + depthAmount * 0.04).toFixed(3)})`;
                         specularOrb.style.opacity = isLightBadgeSurface
                             ? `${0.14 + Math.min(0.07, depthAmount * 0.07)}`
@@ -47748,10 +47780,18 @@ KULLANICI NOTU
                 // 2. Olay Dinleyicileri (Sadece hedef değerleri günceller)
 
                 // Masaüstü Mouse
+                function mapPointToTilt(clientX, clientY) {
+                    const rect = measureCardRect();
+                    const x = (clientX - rect.left - rect.width / 2) / (rect.width / 2);
+                    const y = (clientY - rect.top - rect.height / 2) / (rect.height / 2);
+                    return { x, y };
+                }
+
                 function handleMouseMove(e) {
-                    const rect = card.getBoundingClientRect();
-                    const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
-                    const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
+                    const point = mapPointToTilt(e.clientX, e.clientY);
+                    if (!point) return;
+                    const x = point.x;
+                    const y = point.y;
                     setTiltTarget(x, y, motionProfile.pointerLimit);
                 }
 
@@ -47761,10 +47801,16 @@ KULLANICI NOTU
 
                 function handleTouchMove(e) {
                     if (!card || !e.touches || !e.touches[0]) return;
-                    const rect = card.getBoundingClientRect();
-                    const x = (e.touches[0].clientX - rect.left - rect.width / 2) / (rect.width / 2);
-                    const y = (e.touches[0].clientY - rect.top - rect.height / 2) / (rect.height / 2);
+                    const point = mapPointToTilt(e.touches[0].clientX, e.touches[0].clientY);
+                    if (!point) return;
+                    const x = point.x;
+                    const y = point.y;
                     setTiltTarget(x, y, motionProfile.pointerLimit);
+                }
+
+                function handleTouchStart(e) {
+                    measureCardRect(true);
+                    handleTouchMove(e);
                 }
 
                 // Mobil Jiroskop
@@ -47774,7 +47820,7 @@ KULLANICI NOTU
                     const now = window.performance && typeof window.performance.now === 'function'
                         ? window.performance.now()
                         : Date.now();
-                    const minFrameGap = isNativeIOSBadgeRender ? 24 : 16;
+                    const minFrameGap = isNativeIOSBadgeRender ? 30 : 16;
                     if (now - lastOrientationFrame < minFrameGap) return;
                     lastOrientationFrame = now;
 
@@ -47830,10 +47876,12 @@ KULLANICI NOTU
                 // Eventleri Ekle
                 card.addEventListener('mousemove', handleMouseMove);
                 card.addEventListener('mouseleave', handleMouseLeave);
-                card.addEventListener('touchstart', handleTouchMove, { passive: true });
+                card.addEventListener('touchstart', handleTouchStart, { passive: true });
                 card.addEventListener('touchmove', handleTouchMove, { passive: true });
                 card.addEventListener('touchend', handleMouseLeave, { passive: true });
                 card.addEventListener('touchcancel', handleMouseLeave, { passive: true });
+                window.addEventListener('resize', scheduleRectRefresh, { passive: true });
+                window.addEventListener('orientationchange', scheduleRectRefresh, { passive: true });
 
                 // Mobil destek kontrolü
                 enableMotionTilt();
@@ -47847,10 +47895,12 @@ KULLANICI NOTU
                     }
                     card.removeEventListener('mousemove', handleMouseMove);
                     card.removeEventListener('mouseleave', handleMouseLeave);
-                    card.removeEventListener('touchstart', handleTouchMove);
+                    card.removeEventListener('touchstart', handleTouchStart);
                     card.removeEventListener('touchmove', handleTouchMove);
                     card.removeEventListener('touchend', handleMouseLeave);
                     card.removeEventListener('touchcancel', handleMouseLeave);
+                    window.removeEventListener('resize', scheduleRectRefresh);
+                    window.removeEventListener('orientationchange', scheduleRectRefresh);
                     if (motionListenerActive) {
                         window.removeEventListener('deviceorientation', handleOrientation);
                     }
@@ -87066,6 +87116,81 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
             min-height: 40px !important;
             padding: 8px 8px !important;
         }
+    }
+</style>
+<style id="badge-detail-ios-smoothness-v1">
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.ios-badge-render-fix {
+        contain: layout paint style !important;
+        will-change: transform !important;
+        transform: translateZ(0);
+    }
+
+    #nft-detail-modal .badge-detail-stage.ios-badge-stage::before {
+        filter: blur(18px) saturate(1.01) !important;
+        opacity: calc(var(--stage-halo-opacity, 0.52) * 0.82) !important;
+    }
+
+    #nft-detail-modal .badge-detail-stage.ios-badge-stage::after {
+        filter: blur(24px) !important;
+        opacity: 0.44 !important;
+    }
+
+    html:not(.dark) #nft-detail-modal .badge-detail-stage.ios-badge-stage::before {
+        filter: blur(14px) saturate(0.98) !important;
+        opacity: 0.34 !important;
+    }
+
+    html:not(.dark) #nft-detail-modal .badge-detail-stage.ios-badge-stage::after {
+        filter: blur(18px) !important;
+        opacity: 0.3 !important;
+    }
+
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.ios-badge-render-fix .layer-floating,
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.ios-badge-render-fix .badge-card-art-icon img,
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.ios-badge-render-fix .badge-card-art-icon .badge-hero {
+        filter: none !important;
+        will-change: transform !important;
+    }
+
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.ios-badge-render-fix .badge-card-art-icon {
+        box-shadow: 0 18px 30px -24px rgba(15, 23, 42, 0.46), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+    }
+
+    html.dark #nft-detail-modal .premium-3d-card.badge-rarity-card.ios-badge-render-fix .badge-card-art-icon {
+        box-shadow: 0 20px 34px -24px rgba(2, 6, 23, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    }
+
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.ios-badge-render-fix .holo-foil {
+        filter: saturate(1.06) contrast(1.01) !important;
+    }
+
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.ios-badge-render-fix .holo-glare {
+        filter: none !important;
+    }
+
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.ios-badge-render-fix .badge-specular-orb {
+        filter: blur(7px) !important;
+        opacity: 0.26 !important;
+    }
+
+    html.dark #nft-detail-modal .premium-3d-card.badge-rarity-card.ios-badge-render-fix .badge-specular-orb {
+        opacity: 0.32 !important;
+    }
+
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.ios-badge-render-fix .bdetail-footer-tile,
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.ios-badge-render-fix .backdrop-blur-md {
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.ios-badge-render-fix .bdetail-footer-tile {
+        background: rgba(255, 255, 255, 0.52) !important;
+        border-color: rgba(148, 163, 184, 0.26) !important;
+    }
+
+    html.dark #nft-detail-modal .premium-3d-card.badge-rarity-card.ios-badge-render-fix .bdetail-footer-tile {
+        background: rgba(15, 23, 42, 0.46) !important;
+        border-color: rgba(148, 163, 184, 0.22) !important;
     }
 </style>
 <script id="tool-calculator-award-redesign">
