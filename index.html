@@ -47754,12 +47754,13 @@ KULLANICI NOTU
                 const hintRow = modal.querySelector('#badge-tilt-hint');
                 let motionListenerActive = false;
                 let orientationBaseline = null;
+                let shaderMode = isNativeIOSBadgeRender ? 'static' : 'dynamic';
                 const motionProfile = isNativeIOSBadgeRender
                     ? {
                         idleLimit: prefersReducedMotion ? 5 : 8.2,
                         pointerLimit: prefersReducedMotion ? 6 : 12.6,
                         gyroLimit: prefersReducedMotion ? 6 : 10.9,
-                        response: 0.17,
+                        response: 0.18,
                         layerDepth: 0.96,
                         iconDrift: 1.04
                     }
@@ -47767,18 +47768,24 @@ KULLANICI NOTU
                         idleLimit: prefersReducedMotion ? 5 : 8,
                         pointerLimit: prefersReducedMotion ? 6 : 12.8,
                         gyroLimit: prefersReducedMotion ? 6 : 10.2,
-                        response: 0.15,
+                        response: 0.16,
                         layerDepth: 1,
                         iconDrift: 1.06
                     };
-                const layerUpdateStride = isNativeIOSBadgeRender ? 3 : 1;
-                const stageUpdateStride = isNativeIOSBadgeRender ? 2 : 1;
-                const iconUpdateStride = isNativeIOSBadgeRender ? 4 : 1;
-                const minRenderGap = isNativeIOSBadgeRender ? 20 : 0;
+                const springProfile = isNativeIOSBadgeRender
+                    ? { stiffness: 196, damping: 25, inputAlpha: 0.18 }
+                    : { stiffness: 176, damping: 22, inputAlpha: 0.2 };
+                const layerUpdateStride = isNativeIOSBadgeRender ? 2 : 1;
+                const stageUpdateStride = isNativeIOSBadgeRender ? 3 : 1;
+                const iconUpdateStride = isNativeIOSBadgeRender ? 2 : 1;
+                const shaderUpdateStride = isNativeIOSBadgeRender ? 5 : 2;
+                const stageShaderUpdateStride = isNativeIOSBadgeRender ? 8 : 3;
+                const minRenderGap = prefersReducedMotion ? 1000 / 30 : 0;
 
                 if (isNativeIOSBadgeRender) {
                     card.classList.add('ios-badge-render-fix');
-                    if (stage) stage.classList.add('ios-badge-stage');
+                    card.classList.add('badge-gyro-rasterized');
+                    if (stage) stage.classList.add('ios-badge-stage', 'badge-gyro-rasterized');
                 }
 
                 function updateTiltHint(text) {
@@ -47809,6 +47816,39 @@ KULLANICI NOTU
                 let cardRect = null;
                 let lastRectMeasure = 0;
                 const settleThreshold = isNativeIOSBadgeRender ? 0.0035 : 0.002;
+                const velocitySettleThreshold = isNativeIOSBadgeRender ? 0.0035 : 0.0025;
+                state.velocityX = 0;
+                state.velocityY = 0;
+                state.gyroX = 0;
+                state.gyroY = 0;
+                state.lastTs = 0;
+                const styleCache = new WeakMap();
+
+                function setCachedVar(el, varName, value) {
+                    if (!el) return;
+                    let cache = styleCache.get(el);
+                    if (!cache) {
+                        cache = Object.create(null);
+                        styleCache.set(el, cache);
+                    }
+                    const key = `v:${varName}`;
+                    if (cache[key] === value) return;
+                    cache[key] = value;
+                    el.style.setProperty(varName, value);
+                }
+
+                function setCachedStyle(el, propName, value) {
+                    if (!el) return;
+                    let cache = styleCache.get(el);
+                    if (!cache) {
+                        cache = Object.create(null);
+                        styleCache.set(el, cache);
+                    }
+                    const key = `p:${propName}`;
+                    if (cache[key] === value) return;
+                    cache[key] = value;
+                    el.style[propName] = value;
+                }
 
                 function measureCardRect(force = false) {
                     const now = window.performance && typeof window.performance.now === 'function'
@@ -47825,7 +47865,7 @@ KULLANICI NOTU
 
                 function requestTiltFrame() {
                     if (!state.isRunning || animationFrameId) return;
-                    animationFrameId = requestAnimationFrame(animate);
+                    animationFrameId = requestAnimationFrame(runTiltFrame);
                 }
 
                 function setTiltTarget(x, y, limit) {
@@ -47834,6 +47874,13 @@ KULLANICI NOTU
                     state.limits = limit || motionProfile.pointerLimit;
                     requestTiltFrame();
                 }
+
+                function setShaderMode(mode) {
+                    shaderMode = mode === 'static' ? 'static' : 'dynamic';
+                    card.classList.toggle('badge-gyro-static-shader', shaderMode === 'static');
+                    if (stage) stage.classList.toggle('badge-gyro-static-shader', shaderMode === 'static');
+                }
+                setShaderMode(shaderMode);
 
                 // 1. Animasyon Döngüsü (input yokken kendini durdurur)
                 function animate(timestamp) {
@@ -47944,6 +47991,126 @@ KULLANICI NOTU
                 }
 
                 // Döngüyü başlat
+                function runTiltFrame(timestamp) {
+                    animationFrameId = null;
+                    if (!state.isRunning || !card) return;
+
+                    if (typeof timestamp !== 'number') {
+                        timestamp = window.performance && typeof window.performance.now === 'function'
+                            ? window.performance.now()
+                            : Date.now();
+                    }
+                    if (minRenderGap > 0 && (timestamp - lastRenderFrame) < minRenderGap) {
+                        requestTiltFrame();
+                        return;
+                    }
+                    lastRenderFrame = timestamp;
+
+                    const dt = Math.min(0.04, Math.max(0.008, state.lastTs ? (timestamp - state.lastTs) / 1000 : 1 / 60));
+                    state.lastTs = timestamp;
+
+                    const deltaX = state.mouseX - state.currentX;
+                    const deltaY = state.mouseY - state.currentY;
+
+                    const springX = (deltaX * springProfile.stiffness) - (state.velocityX * springProfile.damping);
+                    const springY = (deltaY * springProfile.stiffness) - (state.velocityY * springProfile.damping);
+                    state.velocityX += springX * dt;
+                    state.velocityY += springY * dt;
+
+                    state.currentX += state.velocityX * dt;
+                    state.currentY += state.velocityY * dt;
+
+                    if (Math.abs(deltaX) < settleThreshold && Math.abs(state.velocityX) < velocitySettleThreshold) {
+                        state.currentX = state.mouseX;
+                        state.velocityX = 0;
+                    }
+                    if (Math.abs(deltaY) < settleThreshold && Math.abs(state.velocityY) < velocitySettleThreshold) {
+                        state.currentY = state.mouseY;
+                        state.velocityY = 0;
+                    }
+
+                    const rotateX = (state.currentY * -state.limits).toFixed(2);
+                    const rotateY = (state.currentX * state.limits).toFixed(2);
+                    const glareX = (50 + (state.currentX * 50)).toFixed(2);
+                    const glareY = (50 + (state.currentY * 50)).toFixed(2);
+                    const depthAmount = Math.min(1, Math.abs(state.currentX) + Math.abs(state.currentY));
+                    frameCounter += 1;
+
+                    const runLayerPass = (frameCounter % layerUpdateStride) === 0 || depthAmount < 0.08;
+                    const runStagePass = (frameCounter % stageUpdateStride) === 0 || depthAmount < 0.06;
+                    const runIconPass = runLayerPass && ((frameCounter % iconUpdateStride) === 0 || depthAmount < 0.05);
+                    const runShaderPass = shaderMode !== 'static' && ((frameCounter % shaderUpdateStride) === 0 || depthAmount < 0.04);
+                    const runStageShaderPass = runShaderPass && ((frameCounter % stageShaderUpdateStride) === 0 || depthAmount < 0.03);
+                    const rarityBoost = rarityKey === 'legendary' || rarityKey === 'mythic' ? 0.06 : rarityKey === 'epic' ? 0.035 : 0;
+
+                    const holoPanX = (50 + state.currentX * 36).toFixed(2);
+                    const holoPanY = (50 + state.currentY * 24).toFixed(2);
+                    const foilOpacity = isLightBadgeSurface
+                        ? Math.min(0.24 + rarityBoost, depthAmount * 0.1 + 0.09 + rarityBoost)
+                        : Math.min(0.32 + rarityBoost, depthAmount * 0.14 + 0.1 + rarityBoost);
+                    const glareOpacity = isLightBadgeSurface
+                        ? Math.min(0.2, depthAmount * 0.08 + 0.08)
+                        : Math.min(0.28, depthAmount * 0.11 + 0.08);
+
+                    if (runShaderPass) {
+                        setCachedVar(card, '--mx', `${glareX}%`);
+                        setCachedVar(card, '--my', `${glareY}%`);
+                        setCachedVar(card, '--holo-pan-x', `${holoPanX}%`);
+                        setCachedVar(card, '--holo-pan-y', `${holoPanY}%`);
+                        setCachedVar(card, '--tilt-x', state.currentX.toFixed(3));
+                        setCachedVar(card, '--tilt-y', state.currentY.toFixed(3));
+                        setCachedVar(card, '--foil-opacity', foilOpacity.toFixed(3));
+                        setCachedVar(card, '--glare-opacity', glareOpacity.toFixed(3));
+                    }
+
+                    if (stage && runStageShaderPass) {
+                        setCachedVar(stage, '--mx', `${glareX}%`);
+                        setCachedVar(stage, '--my', `${glareY}%`);
+                        setCachedVar(stage, '--holo-pan-x', `${holoPanX}%`);
+                        setCachedVar(stage, '--holo-pan-y', `${holoPanY}%`);
+                        setCachedVar(stage, '--tilt-x', state.currentX.toFixed(3));
+                        setCachedVar(stage, '--tilt-y', state.currentY.toFixed(3));
+                    }
+
+                    setCachedStyle(card, 'transform', `perspective(1600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translate3d(0,0,0) scale(${(1 + depthAmount * 0.012).toFixed(3)})`);
+                    if (glare) setCachedStyle(glare, 'opacity', glareOpacity.toFixed(3));
+                    if (foil) setCachedStyle(foil, 'opacity', foilOpacity.toFixed(3));
+
+                    if (runLayerPass && bgLayer) {
+                        setCachedStyle(bgLayer, 'transform', `translate3d(${(-state.currentX * 3.4 * motionProfile.layerDepth).toFixed(2)}px, ${(-state.currentY * 3.4 * motionProfile.layerDepth).toFixed(2)}px, 10px) scale(${(1.025 + depthAmount * 0.015).toFixed(3)})`);
+                    }
+                    if (runLayerPass && midLayer) {
+                        setCachedStyle(midLayer, 'transform', `translate3d(${(state.currentX * 4.2 * motionProfile.layerDepth).toFixed(2)}px, ${(state.currentY * 4.2 * motionProfile.layerDepth).toFixed(2)}px, 38px)`);
+                    }
+                    if (runLayerPass && topLayer) {
+                        setCachedStyle(topLayer, 'transform', `translate3d(${(state.currentX * 5.8 * motionProfile.layerDepth).toFixed(2)}px, ${(state.currentY * 5.8 * motionProfile.layerDepth).toFixed(2)}px, 82px)`);
+                    }
+                    if (runLayerPass && floatingLayer) {
+                        setCachedStyle(floatingLayer, 'transform', `translate3d(${(state.currentX * 8.4 * motionProfile.iconDrift).toFixed(2)}px, ${(state.currentY * 8.4 * motionProfile.iconDrift).toFixed(2)}px, 110px) scale(${(1.01 + depthAmount * 0.016).toFixed(3)})`);
+                    }
+                    if (runIconPass && badgeImg && floatingLayer) {
+                        setCachedStyle(badgeImg, 'transform', `translate3d(${(state.currentX * 7.8 * motionProfile.iconDrift).toFixed(2)}px, ${(state.currentY * 7.8 * motionProfile.iconDrift).toFixed(2)}px, 0) scale(${(1.045 + depthAmount * 0.018).toFixed(3)}) rotateZ(${(state.currentX * 1.35).toFixed(2)}deg)`);
+                    }
+
+                    if (runStagePass && specularOrb) {
+                        setCachedStyle(specularOrb, 'transform', `translate3d(${(-state.currentX * 12 * motionProfile.layerDepth).toFixed(2)}px, ${(-state.currentY * 12 * motionProfile.layerDepth).toFixed(2)}px, 56px) scale(${(1.01 + depthAmount * 0.04).toFixed(3)})`);
+                        setCachedStyle(specularOrb, 'opacity', isLightBadgeSurface
+                            ? `${0.14 + Math.min(0.07, depthAmount * 0.07)}`
+                            : isNativeIOSBadgeRender
+                                ? `${0.24 + Math.min(0.1, depthAmount * 0.1)}`
+                                : `${0.2 + Math.min(0.14, depthAmount * 0.14)}`);
+                    }
+
+                    if (
+                        Math.abs(state.mouseX - state.currentX) > settleThreshold ||
+                        Math.abs(state.mouseY - state.currentY) > settleThreshold ||
+                        Math.abs(state.velocityX) > velocitySettleThreshold ||
+                        Math.abs(state.velocityY) > velocitySettleThreshold
+                    ) {
+                        requestTiltFrame();
+                    }
+                }
+
                 state.limits = motionProfile.idleLimit;
                 requestTiltFrame();
 
@@ -47962,10 +48129,12 @@ KULLANICI NOTU
                     if (!point) return;
                     const x = point.x;
                     const y = point.y;
+                    if (!motionListenerActive) setShaderMode('dynamic');
                     setTiltTarget(x, y, motionProfile.pointerLimit);
                 }
 
                 function handleMouseLeave() {
+                    if (isNativeIOSBadgeRender) setShaderMode('static');
                     setTiltTarget(0, 0, motionProfile.idleLimit);
                 }
 
@@ -47975,6 +48144,7 @@ KULLANICI NOTU
                     if (!point) return;
                     const x = point.x;
                     const y = point.y;
+                    if (!motionListenerActive) setShaderMode('dynamic');
                     setTiltTarget(x, y, motionProfile.pointerLimit);
                 }
 
@@ -47990,7 +48160,7 @@ KULLANICI NOTU
                     const now = window.performance && typeof window.performance.now === 'function'
                         ? window.performance.now()
                         : Date.now();
-                    const minFrameGap = isNativeIOSBadgeRender ? 30 : 16;
+                    const minFrameGap = isNativeIOSBadgeRender ? 8 : 12;
                     if (now - lastOrientationFrame < minFrameGap) return;
                     lastOrientationFrame = now;
 
@@ -48001,23 +48171,31 @@ KULLANICI NOTU
                         };
                     }
 
-                    setTiltTarget(
-                        normalizeTiltAxis(
-                            e.gamma - orientationBaseline.gamma,
-                            isNativeIOSBadgeRender ? 8.5 : 12,
-                            isNativeIOSBadgeRender ? 0.65 : 1.1
-                        ),
-                        normalizeTiltAxis(
-                            e.beta - orientationBaseline.beta,
-                            isNativeIOSBadgeRender ? 11 : 15,
-                            isNativeIOSBadgeRender ? 0.75 : 1.35
-                        ),
-                        motionProfile.gyroLimit
+                    const normalizedX = normalizeTiltAxis(
+                        e.gamma - orientationBaseline.gamma,
+                        isNativeIOSBadgeRender ? 9 : 12,
+                        isNativeIOSBadgeRender ? 0.55 : 1.1
                     );
+                    const normalizedY = normalizeTiltAxis(
+                        e.beta - orientationBaseline.beta,
+                        isNativeIOSBadgeRender ? 12 : 15,
+                        isNativeIOSBadgeRender ? 0.65 : 1.35
+                    );
+
+                    // Sensor low-pass: ani sıçramaları yumuşatır.
+                    state.gyroX += (normalizedX - state.gyroX) * springProfile.inputAlpha;
+                    state.gyroY += (normalizedY - state.gyroY) * springProfile.inputAlpha;
+
+                    // Uzun kullanımda merkez sapmasını azalt.
+                    orientationBaseline.gamma = orientationBaseline.gamma * 0.994 + e.gamma * 0.006;
+                    orientationBaseline.beta = orientationBaseline.beta * 0.994 + e.beta * 0.006;
+
+                    setTiltTarget(state.gyroX, state.gyroY, motionProfile.gyroLimit);
                 }
 
                 async function enableMotionTilt() {
                     if (!supportsOrientation || !hasTouch || prefersReducedMotion) {
+                        setShaderMode('dynamic');
                         updateTiltHint('Rozeti İncelemek İçin Sürükle');
                         return false;
                     }
@@ -48026,18 +48204,21 @@ KULLANICI NOTU
                         if (requiresMotionPermission) {
                             const permissionState = await window.DeviceOrientationEvent.requestPermission();
                             if (permissionState !== 'granted') {
+                                setShaderMode('dynamic');
                                 updateTiltHint('Rozeti İncelemek İçin Sürükle');
                                 return false;
                             }
                         }
 
                         orientationBaseline = null;
+                        setShaderMode(isNativeIOSBadgeRender ? 'static' : 'dynamic');
                         window.addEventListener('deviceorientation', handleOrientation, { passive: true });
                         motionListenerActive = true;
                         updateTiltHint('Telefonu Hafifçe Eğerek İncele');
                         return true;
                     } catch (error) {
                         console.log('[BADGE MOTION] Gyroscope unavailable:', error);
+                        setShaderMode('dynamic');
                         updateTiltHint('Rozeti İncelemek İçin Sürükle');
                         return false;
                     }
@@ -87396,6 +87577,46 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         contain: layout paint style !important;
         will-change: transform !important;
         transform: translateZ(0);
+    }
+
+    #nft-detail-modal .badge-detail-stage.badge-gyro-rasterized,
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.badge-gyro-rasterized {
+        contain: layout paint style !important;
+        transform-style: preserve-3d !important;
+        backface-visibility: hidden !important;
+        -webkit-backface-visibility: hidden !important;
+        transform: translateZ(0);
+        will-change: transform !important;
+    }
+
+    #nft-detail-modal .badge-detail-stage.badge-gyro-rasterized::before,
+    #nft-detail-modal .badge-detail-stage.badge-gyro-rasterized::after,
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.badge-gyro-rasterized .holo-foil,
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.badge-gyro-rasterized .holo-glare,
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.badge-gyro-rasterized .noise-texture,
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.badge-gyro-rasterized .badge-depth-rim {
+        contain: paint;
+        will-change: auto !important;
+    }
+
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.badge-gyro-rasterized .badge-card-art-icon,
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.badge-gyro-rasterized .badge-card-art-icon img,
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.badge-gyro-rasterized .badge-card-art-icon .badge-hero {
+        image-rendering: auto;
+        will-change: transform !important;
+        transform: translateZ(0.01px);
+        backface-visibility: hidden !important;
+        -webkit-backface-visibility: hidden !important;
+    }
+
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.badge-gyro-static-shader::before,
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.badge-gyro-static-shader::after,
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.badge-gyro-static-shader .holo-foil,
+    #nft-detail-modal .premium-3d-card.badge-rarity-card.badge-gyro-static-shader .holo-glare,
+    #nft-detail-modal .badge-detail-stage.badge-gyro-static-shader::before,
+    #nft-detail-modal .badge-detail-stage.badge-gyro-static-shader::after {
+        transition: none !important;
+        animation: none !important;
     }
 
     #nft-detail-modal .badge-detail-stage.ios-badge-stage::before {
