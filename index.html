@@ -29411,13 +29411,20 @@
                 --ekg-accent: #6366f1;
                 --ekg-glow: rgba(99, 102, 241, 0.42);
                 --ekg-speed: 1.25s;
+                --ekg-thickness: 4;
+                --ekg-scan-strength: 0.42;
+                --ekg-dot-size: 12px;
                 position: relative;
-                height: 148px;
+                height: 156px;
                 width: 100%;
                 margin-bottom: 14px;
-                border-radius: 22px;
+                border-radius: 24px;
                 overflow: hidden;
+                transform-style: preserve-3d;
+                isolation: isolate;
                 background:
+                    radial-gradient(circle at 20% 14%, rgba(255, 255, 255, 0.58), transparent 44%),
+                    radial-gradient(circle at 82% 90%, rgba(129, 140, 248, 0.14), transparent 45%),
                     linear-gradient(170deg, rgba(255, 255, 255, 0.95), rgba(238, 244, 255, 0.7)),
                     linear-gradient(110deg, rgba(99, 102, 241, 0.08), transparent 58%);
                 border: 1px solid rgba(148, 163, 184, 0.26);
@@ -29425,11 +29432,15 @@
                     inset 0 1px 0 rgba(255, 255, 255, 0.95),
                     inset 0 -14px 26px -22px rgba(79, 70, 229, 0.2),
                     0 14px 24px -20px rgba(15, 23, 42, 0.36);
-                transform: perspective(1100px) rotateX(4.5deg) translateZ(0);
+                transform: perspective(1100px) rotateX(5.4deg) rotateY(-1.2deg) translateZ(0);
+                -webkit-mask-image: -webkit-radial-gradient(white, black);
+                mask-image: radial-gradient(white, black);
             }
 
             html.dark .fingo-ekg-monitor {
                 background:
+                    radial-gradient(circle at 16% 12%, rgba(165, 180, 252, 0.14), transparent 42%),
+                    radial-gradient(circle at 84% 88%, rgba(56, 189, 248, 0.12), transparent 45%),
                     linear-gradient(175deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.9)),
                     linear-gradient(110deg, rgba(129, 140, 248, 0.14), transparent 58%);
                 border-color: rgba(148, 163, 184, 0.22);
@@ -29439,6 +29450,24 @@
                     0 18px 30px -22px rgba(2, 6, 23, 0.85);
             }
 
+            .fingo-ekg-depth {
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+                border-radius: inherit;
+                z-index: 0;
+                background:
+                    linear-gradient(180deg, rgba(255, 255, 255, 0.26), transparent 28%),
+                    linear-gradient(0deg, rgba(15, 23, 42, 0.08), transparent 34%);
+                transform: translateZ(6px);
+            }
+
+            html.dark .fingo-ekg-depth {
+                background:
+                    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 24%),
+                    linear-gradient(0deg, rgba(2, 6, 23, 0.24), transparent 36%);
+            }
+
             .fingo-ekg-grid {
                 position: absolute;
                 inset: 0;
@@ -29446,12 +29475,25 @@
                     linear-gradient(to right, rgba(99, 102, 241, 0.08) 1px, transparent 1px),
                     linear-gradient(to bottom, rgba(99, 102, 241, 0.08) 1px, transparent 1px);
                 background-size: 22px 22px;
-                opacity: 0.6;
+                opacity: 0.62;
                 pointer-events: none;
+                z-index: 1;
+            }
+
+            .fingo-ekg-grid.fingo-ekg-grid--minor {
+                background-image:
+                    linear-gradient(to right, rgba(99, 102, 241, 0.04) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(99, 102, 241, 0.04) 1px, transparent 1px);
+                background-size: 11px 11px;
+                opacity: 0.42;
             }
 
             html.dark .fingo-ekg-grid {
                 opacity: 0.38;
+            }
+
+            html.dark .fingo-ekg-grid.fingo-ekg-grid--minor {
+                opacity: 0.24;
             }
 
             .fingo-ekg-svg {
@@ -29464,40 +29506,84 @@
 
             .fingo-ekg-track {
                 fill: none;
-                stroke: rgba(100, 116, 139, 0.28);
-                stroke-width: 1.6;
+                stroke: rgba(100, 116, 139, 0.24);
+                stroke-width: 1.4;
             }
 
             html.dark .fingo-ekg-track {
-                stroke: rgba(148, 163, 184, 0.25);
+                stroke: rgba(148, 163, 184, 0.24);
+            }
+
+            .fingo-ekg-wave,
+            .fingo-ekg-wave-ghost,
+            .fingo-ekg-wave-spark {
+                fill: none;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+            }
+
+            .fingo-ekg-wave-ghost {
+                stroke: color-mix(in srgb, var(--ekg-accent) 62%, white 38%);
+                stroke-width: calc(var(--ekg-thickness) * 1.9);
+                opacity: 0.26;
+                filter: blur(2px);
+                stroke-dasharray: 16 12;
+                animation: fingo-ekg-flow calc(var(--ekg-speed) * 1.1) linear infinite reverse;
             }
 
             .fingo-ekg-wave {
-                fill: none;
                 stroke: var(--ekg-accent);
-                stroke-width: 4;
-                stroke-linecap: round;
-                stroke-linejoin: round;
+                stroke-width: var(--ekg-thickness);
                 stroke-dasharray: 18 12;
                 animation: fingo-ekg-flow var(--ekg-speed) linear infinite;
                 filter: drop-shadow(0 0 8px var(--ekg-glow));
+            }
+
+            .fingo-ekg-wave-spark {
+                stroke: rgba(255, 255, 255, 0.86);
+                stroke-width: calc(var(--ekg-thickness) * 0.38);
+                stroke-dasharray: 7 20;
+                opacity: 0.92;
+                animation: fingo-ekg-flow calc(var(--ekg-speed) * 0.86) linear infinite;
+            }
+
+            html.dark .fingo-ekg-wave-spark {
+                stroke: rgba(226, 232, 240, 0.72);
+                opacity: 0.76;
             }
 
             .fingo-ekg-scan {
                 position: absolute;
                 top: 0;
                 bottom: 0;
-                width: 20%;
-                left: -22%;
+                width: 24%;
+                left: -26%;
                 z-index: 3;
                 pointer-events: none;
-                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.44), transparent);
+                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, var(--ekg-scan-strength)), transparent);
                 mix-blend-mode: screen;
-                animation: fingo-ekg-scan calc(var(--ekg-speed) * 2.8) linear infinite;
+                animation: fingo-ekg-scan calc(var(--ekg-speed) * 2.4) linear infinite;
             }
 
             html.dark .fingo-ekg-scan {
-                background: linear-gradient(90deg, transparent, rgba(165, 180, 252, 0.28), transparent);
+                background: linear-gradient(90deg, transparent, rgba(165, 180, 252, calc(var(--ekg-scan-strength) * 0.72)), transparent);
+            }
+
+            .fingo-ekg-beat-dot {
+                position: absolute;
+                top: 50%;
+                left: -10%;
+                width: var(--ekg-dot-size);
+                height: var(--ekg-dot-size);
+                border-radius: 999px;
+                pointer-events: none;
+                z-index: 4;
+                transform: translate(-50%, -50%);
+                background: radial-gradient(circle, rgba(255, 255, 255, 0.96) 0%, color-mix(in srgb, var(--ekg-accent) 72%, white 28%) 42%, transparent 76%);
+                box-shadow: 0 0 14px var(--ekg-glow), 0 0 24px color-mix(in srgb, var(--ekg-accent) 44%, transparent);
+                animation:
+                    fingo-ekg-dot-travel var(--ekg-speed) linear infinite,
+                    fingo-ekg-dot-pulse calc(var(--ekg-speed) * 0.5) ease-in-out infinite;
             }
 
             .fingo-ekg-specular {
@@ -29505,37 +29591,55 @@
                 inset: 0;
                 pointer-events: none;
                 border-radius: 22px;
-                background: linear-gradient(120deg, rgba(255, 255, 255, 0.3), transparent 38%, transparent 62%, rgba(255, 255, 255, 0.16));
+                z-index: 5;
+                background:
+                    linear-gradient(120deg, rgba(255, 255, 255, 0.3), transparent 38%, transparent 62%, rgba(255, 255, 255, 0.16)),
+                    radial-gradient(circle at 24% 18%, rgba(255, 255, 255, 0.32), transparent 34%);
             }
 
             .fingo-ekg-monitor[data-level="excellent"] {
                 --ekg-accent: #10b981;
                 --ekg-glow: rgba(16, 185, 129, 0.5);
-                --ekg-speed: 0.96s;
+                --ekg-speed: 0.94s;
+                --ekg-thickness: 4.6;
+                --ekg-scan-strength: 0.5;
+                --ekg-dot-size: 13px;
             }
 
             .fingo-ekg-monitor[data-level="good"] {
                 --ekg-accent: #6366f1;
                 --ekg-glow: rgba(99, 102, 241, 0.5);
-                --ekg-speed: 1.18s;
+                --ekg-speed: 1.14s;
+                --ekg-thickness: 4.2;
+                --ekg-scan-strength: 0.45;
+                --ekg-dot-size: 12px;
             }
 
             .fingo-ekg-monitor[data-level="medium"] {
                 --ekg-accent: #f59e0b;
                 --ekg-glow: rgba(245, 158, 11, 0.48);
-                --ekg-speed: 1.38s;
+                --ekg-speed: 1.34s;
+                --ekg-thickness: 3.8;
+                --ekg-scan-strength: 0.4;
+                --ekg-dot-size: 11px;
             }
 
             .fingo-ekg-monitor[data-level="warning"] {
                 --ekg-accent: #f97316;
                 --ekg-glow: rgba(249, 115, 22, 0.46);
-                --ekg-speed: 1.66s;
+                --ekg-speed: 1.62s;
+                --ekg-thickness: 3.5;
+                --ekg-scan-strength: 0.36;
+                --ekg-dot-size: 10px;
             }
 
             .fingo-ekg-monitor[data-level="risk"] {
                 --ekg-accent: #ef4444;
                 --ekg-glow: rgba(239, 68, 68, 0.5);
-                --ekg-speed: 1.94s;
+                --ekg-speed: 1.92s;
+                --ekg-thickness: 3.2;
+                --ekg-scan-strength: 0.32;
+                --ekg-dot-size: 10px;
             }
 
             .fingo-score-display {
@@ -29605,9 +29709,35 @@
                 }
             }
 
+            @keyframes fingo-ekg-dot-travel {
+                from {
+                    left: -10%;
+                }
+
+                to {
+                    left: 110%;
+                }
+            }
+
+            @keyframes fingo-ekg-dot-pulse {
+                0%,
+                100% {
+                    transform: translate(-50%, -50%) scale(0.82);
+                    opacity: 0.8;
+                }
+
+                50% {
+                    transform: translate(-50%, -50%) scale(1.14);
+                    opacity: 1;
+                }
+            }
+
             @media (prefers-reduced-motion: reduce) {
+                .fingo-ekg-wave-ghost,
                 .fingo-ekg-wave,
-                .fingo-ekg-scan {
+                .fingo-ekg-wave-spark,
+                .fingo-ekg-scan,
+                .fingo-ekg-beat-dot {
                     animation: none !important;
                 }
 
@@ -31990,12 +32120,19 @@
 
                                 <div class="relative z-10 flex flex-col items-center">
                                     <div id="fingo-ekg-monitor" class="fingo-ekg-monitor" data-level="good">
+                                        <div class="fingo-ekg-depth"></div>
                                         <div class="fingo-ekg-grid"></div>
+                                        <div class="fingo-ekg-grid fingo-ekg-grid--minor"></div>
                                         <div class="fingo-ekg-scan"></div>
+                                        <div id="fingo-ekg-beat-dot" class="fingo-ekg-beat-dot"></div>
 
                                         <svg class="fingo-ekg-svg" viewBox="0 0 640 180" preserveAspectRatio="none" aria-hidden="true">
                                             <path class="fingo-ekg-track" d="M0 90 L640 90"></path>
+                                            <path id="fingo-ekg-wave-ghost" class="fingo-ekg-wave-ghost"
+                                                d="M0 90 L30 90 L50 90 L64 86 L76 96 L90 62 L102 125 L116 84 L138 90 L170 90 L188 88 L202 96 L216 70 L229 119 L246 86 L270 90 L306 90 L326 88 L338 96 L352 68 L365 121 L381 84 L406 90 L436 90 L454 88 L467 96 L481 66 L494 123 L509 85 L533 90 L568 90 L586 89 L599 95 L614 74 L626 111 L640 90"></path>
                                             <path id="fingo-ekg-wave" class="fingo-ekg-wave"
+                                                d="M0 90 L30 90 L50 90 L64 86 L76 96 L90 62 L102 125 L116 84 L138 90 L170 90 L188 88 L202 96 L216 70 L229 119 L246 86 L270 90 L306 90 L326 88 L338 96 L352 68 L365 121 L381 84 L406 90 L436 90 L454 88 L467 96 L481 66 L494 123 L509 85 L533 90 L568 90 L586 89 L599 95 L614 74 L626 111 L640 90"></path>
+                                            <path id="fingo-ekg-wave-spark" class="fingo-ekg-wave-spark"
                                                 d="M0 90 L30 90 L50 90 L64 86 L76 96 L90 62 L102 125 L116 84 L138 90 L170 90 L188 88 L202 96 L216 70 L229 119 L246 86 L270 90 L306 90 L326 88 L338 96 L352 68 L365 121 L381 84 L406 90 L436 90 L454 88 L467 96 L481 66 L494 123 L509 85 L533 90 L568 90 L586 89 L599 95 L614 74 L626 111 L640 90"></path>
                                         </svg>
 
@@ -71913,39 +72050,59 @@ html.perf: blur(8px) fallback
             high: { label: 'Yüksek', className: 'text-rose-600 dark:text-rose-400', detail: 'Dalgalanma yüksek. Limit yönetimi önerilir.' }
         };
 
-        function buildEkgPath(levelKey) {
+        function buildEkgPath(levelKey, pulseSeed = 0) {
             const profiles = {
-                excellent: { peak: 40, drop: 35, rebound: 10, spacing: 116 },
-                good: { peak: 34, drop: 31, rebound: 8, spacing: 124 },
-                medium: { peak: 28, drop: 24, rebound: 7, spacing: 132 },
-                warning: { peak: 22, drop: 20, rebound: 6, spacing: 144 },
-                risk: { peak: 16, drop: 14, rebound: 5, spacing: 158 }
+                excellent: { peak: 44, drop: 38, rebound: 12, spacing: 112, variance: 0.11 },
+                good: { peak: 36, drop: 32, rebound: 10, spacing: 122, variance: 0.12 },
+                medium: { peak: 30, drop: 25, rebound: 8, spacing: 134, variance: 0.14 },
+                warning: { peak: 24, drop: 21, rebound: 6, spacing: 146, variance: 0.16 },
+                risk: { peak: 18, drop: 15, rebound: 5, spacing: 160, variance: 0.18 }
             };
 
             const profile = profiles[levelKey] || profiles.good;
             const baseline = 90;
             const maxX = 640;
+            const seed = Number.isFinite(Number(pulseSeed)) ? Number(pulseSeed) : 0;
+            const seedPhase = (seed * 0.017) + (String(levelKey || '').length * 0.61);
+
             let x = 0;
+            let beatIndex = 0;
             const seg = [`M0 ${baseline}`];
 
             while (x < maxX) {
-                const a = x + 28;
-                const b = x + 42;
-                const c = x + 56;
-                const d = x + 72;
-                const e = x + 86;
-                const f = x + 102;
-                const g = x + 116;
+                const rhythmVariance =
+                    1
+                    + Math.sin((beatIndex * 0.92) + seedPhase) * 0.08
+                    + Math.cos((beatIndex * 1.47) + (seedPhase * 0.7)) * 0.04;
+                const cycle = profile.spacing * clamp(rhythmVariance, 0.84, 1.18);
 
-                seg.push(`L${Math.min(a, maxX)} ${baseline}`);
-                seg.push(`L${Math.min(b, maxX)} ${baseline - 3}`);
-                seg.push(`L${Math.min(c, maxX)} ${baseline + 6}`);
-                seg.push(`L${Math.min(d, maxX)} ${baseline - profile.peak}`);
-                seg.push(`L${Math.min(e, maxX)} ${baseline + profile.drop}`);
-                seg.push(`L${Math.min(f, maxX)} ${baseline - profile.rebound}`);
-                seg.push(`L${Math.min(g, maxX)} ${baseline}`);
+                const peak = profile.peak * (1 + Math.sin((beatIndex * 1.33) + seedPhase) * profile.variance);
+                const drop = profile.drop * (1 + Math.cos((beatIndex * 1.12) + seedPhase) * profile.variance * 0.82);
+                const rebound = profile.rebound * (1 + Math.sin((beatIndex * 1.62) + seedPhase) * profile.variance * 0.72);
+                const baselineNoise = Math.sin((beatIndex * 1.7) + seedPhase) * 1.4;
 
-                x += profile.spacing;
+                const p1 = x + (cycle * 0.18);
+                const p2 = x + (cycle * 0.31);
+                const p3 = x + (cycle * 0.44);
+                const p4 = x + (cycle * 0.56);
+                const p5 = x + (cycle * 0.67);
+                const p6 = x + (cycle * 0.82);
+                const p7 = x + cycle;
+
+                seg.push(`L${Math.min(p1, maxX).toFixed(1)} ${(baseline + baselineNoise).toFixed(1)}`);
+                seg.push(`L${Math.min(p2, maxX).toFixed(1)} ${(baseline - 2.6 + baselineNoise * 0.6).toFixed(1)}`);
+                seg.push(`L${Math.min(p3, maxX).toFixed(1)} ${(baseline + 5.2 + baselineNoise * 0.42).toFixed(1)}`);
+                seg.push(`L${Math.min(p4, maxX).toFixed(1)} ${(baseline - peak).toFixed(1)}`);
+                seg.push(`L${Math.min(p5, maxX).toFixed(1)} ${(baseline + drop).toFixed(1)}`);
+                seg.push(`L${Math.min(p6, maxX).toFixed(1)} ${(baseline - rebound).toFixed(1)}`);
+                seg.push(`L${Math.min(p7, maxX).toFixed(1)} ${(baseline + baselineNoise * 0.22).toFixed(1)}`);
+
+                x += cycle;
+                beatIndex += 1;
+            }
+
+            if (x < maxX) {
+                seg.push(`L${maxX} ${baseline}`);
             }
 
             return seg.join(' ');
@@ -72223,16 +72380,43 @@ html.perf: blur(8px) fallback
 
             const monitorEl = document.getElementById('fingo-ekg-monitor');
             if (monitorEl) {
+                const monitorMotionMap = {
+                    excellent: { speed: 0.94, thickness: 4.6, scan: 0.5, dot: 13 },
+                    good: { speed: 1.14, thickness: 4.2, scan: 0.45, dot: 12 },
+                    medium: { speed: 1.34, thickness: 3.8, scan: 0.4, dot: 11 },
+                    warning: { speed: 1.62, thickness: 3.5, scan: 0.36, dot: 10 },
+                    risk: { speed: 1.92, thickness: 3.2, scan: 0.32, dot: 10 }
+                };
+                const motion = monitorMotionMap[effectiveLevel] || monitorMotionMap.good;
+                const noData = metrics.txCount === 0;
+
                 monitorEl.setAttribute('data-level', effectiveLevel);
                 monitorEl.style.setProperty('--ekg-accent', metrics.scoreMeta.accent || '#6366f1');
                 monitorEl.style.setProperty('--ekg-glow', metrics.scoreMeta.glow || 'rgba(99, 102, 241, 0.45)');
+                monitorEl.style.setProperty('--ekg-speed', `${noData ? 2.04 : motion.speed}s`);
+                monitorEl.style.setProperty('--ekg-thickness', `${noData ? 3.1 : motion.thickness}`);
+                monitorEl.style.setProperty('--ekg-scan-strength', `${noData ? 0.24 : motion.scan}`);
+                monitorEl.style.setProperty('--ekg-dot-size', `${noData ? 9 : motion.dot}px`);
             }
 
-            const waveEl = document.getElementById('fingo-ekg-wave');
-            if (waveEl) {
-                const pathData = metrics.txCount === 0 ? buildFlatEkgPath() : buildEkgPath(effectiveLevel);
-                waveEl.setAttribute('d', pathData);
-                waveEl.style.opacity = metrics.txCount === 0 ? '0.62' : '1';
+            const pathSeed = (metrics.score * 13) + (metrics.txCount * 7) + (state.timeRange === 'day' ? 11 : state.timeRange === 'week' ? 23 : 37);
+            const pathData = metrics.txCount === 0
+                ? buildFlatEkgPath()
+                : buildEkgPath(effectiveLevel, pathSeed);
+            const waveOpacity = metrics.txCount === 0 ? '0.56' : '1';
+
+            ['fingo-ekg-wave', 'fingo-ekg-wave-ghost', 'fingo-ekg-wave-spark'].forEach((waveId) => {
+                const el = document.getElementById(waveId);
+                if (!el) return;
+                el.setAttribute('d', pathData);
+                el.style.opacity = waveId === 'fingo-ekg-wave-ghost'
+                    ? (metrics.txCount === 0 ? '0.2' : '0.3')
+                    : waveOpacity;
+            });
+
+            const beatDotEl = document.getElementById('fingo-ekg-beat-dot');
+            if (beatDotEl) {
+                beatDotEl.style.opacity = metrics.txCount === 0 ? '0.42' : '1';
             }
 
             const predictionEl = document.getElementById('prediction-balance');
