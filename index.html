@@ -32487,10 +32487,15 @@
                                     </button>
                                 </div>
 
-                                <!-- Chart Container -->
-                                <div class="relative h-64 w-full flex items-center justify-center mb-4">
-                                    <canvas id="radarChart"></canvas>
+                                <!-- 3D DNA Chart Container -->
+                                <div class="dna-helix-scene mb-4" id="dna-helix-scene" aria-live="polite">
+                                    <div class="dna-helix-scene__bg"></div>
+                                    <div class="dna-helix-scene__shine"></div>
+                                    <svg id="dna-helix-svg" class="dna-helix-svg" viewBox="0 0 320 230" fill="none"
+                                        role="img" aria-label="Harcama DNA görselleştirmesi"></svg>
+                                    <div id="dna-helix-labels" class="dna-helix-labels"></div>
                                 </div>
+                                <canvas id="radarChart" class="hidden" aria-hidden="true"></canvas>
 
                                 <!-- Stats Grid -->
                                 <div class="grid grid-cols-3 gap-2">
@@ -66330,6 +66335,228 @@ html.perf: blur(8px) fallback
     .dna-stat-card:hover::after {
         opacity: 1;
     }
+
+    /* DNA 3D Scene */
+    :root {
+        --dna-scene-surface: linear-gradient(150deg, rgba(244, 247, 255, 0.96), rgba(232, 238, 252, 0.88));
+        --dna-scene-border: rgba(99, 102, 241, 0.16);
+        --dna-scene-shadow: 0 22px 44px -28px rgba(79, 70, 229, 0.35);
+        --dna-scene-glow-a: rgba(96, 165, 250, 0.24);
+        --dna-scene-glow-b: rgba(168, 85, 247, 0.2);
+        --dna-helix-line: rgba(79, 70, 229, 0.62);
+        --dna-helix-rung: rgba(99, 102, 241, 0.2);
+        --dna-helix-node: #4f46e5;
+        --dna-label-bg: rgba(255, 255, 255, 0.82);
+        --dna-label-text: #1f2937;
+    }
+
+    html.dark {
+        --dna-scene-surface: linear-gradient(155deg, rgba(14, 23, 45, 0.96), rgba(20, 16, 45, 0.92));
+        --dna-scene-border: rgba(148, 163, 255, 0.22);
+        --dna-scene-shadow: 0 28px 52px -32px rgba(2, 8, 23, 0.72);
+        --dna-scene-glow-a: rgba(56, 189, 248, 0.2);
+        --dna-scene-glow-b: rgba(196, 113, 255, 0.2);
+        --dna-helix-line: rgba(165, 180, 252, 0.82);
+        --dna-helix-rung: rgba(148, 163, 184, 0.25);
+        --dna-helix-node: #a5b4fc;
+        --dna-label-bg: rgba(15, 23, 42, 0.72);
+        --dna-label-text: #e2e8f0;
+    }
+
+    .dna-helix-scene {
+        position: relative;
+        height: 268px;
+        border-radius: 28px;
+        overflow: hidden;
+        border: 1px solid var(--dna-scene-border);
+        background: var(--dna-scene-surface);
+        box-shadow: var(--dna-scene-shadow);
+        isolation: isolate;
+        transform: translateZ(0);
+        will-change: transform;
+    }
+
+    .dna-helix-scene__bg,
+    .dna-helix-scene__shine {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+    }
+
+    .dna-helix-scene__bg {
+        background:
+            radial-gradient(48% 44% at 18% 16%, var(--dna-scene-glow-a), transparent 70%),
+            radial-gradient(50% 50% at 82% 84%, var(--dna-scene-glow-b), transparent 72%),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 42%);
+    }
+
+    html.dark .dna-helix-scene__bg {
+        background:
+            radial-gradient(48% 44% at 18% 16%, var(--dna-scene-glow-a), transparent 70%),
+            radial-gradient(50% 50% at 82% 84%, var(--dna-scene-glow-b), transparent 72%),
+            linear-gradient(180deg, rgba(148, 163, 184, 0.08), transparent 42%);
+    }
+
+    .dna-helix-scene__shine {
+        background: linear-gradient(110deg, rgba(255, 255, 255, 0.28) 0%, transparent 34%, transparent 66%, rgba(255, 255, 255, 0.12) 100%);
+        mix-blend-mode: screen;
+        opacity: 0.72;
+        animation: dnaShineSweep 6.8s ease-in-out infinite;
+    }
+
+    .dna-helix-svg {
+        position: absolute;
+        inset: 8px 12px 42px;
+        width: calc(100% - 24px);
+        height: calc(100% - 50px);
+        overflow: visible;
+        filter: drop-shadow(0 10px 18px rgba(79, 70, 229, 0.16));
+        transform: perspective(900px) rotateX(8deg);
+        transform-origin: center 62%;
+        will-change: transform;
+        animation: dnaFloat 4.6s ease-in-out infinite;
+    }
+
+    .dna-helix-track {
+        fill: none;
+        stroke: var(--dna-helix-line);
+        stroke-width: 2.7;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        opacity: 0.9;
+        vector-effect: non-scaling-stroke;
+    }
+
+    .dna-helix-track--accent {
+        stroke-width: 1.5;
+        opacity: 0.42;
+        stroke-dasharray: 4 6;
+        animation: dnaDashFlow 9s linear infinite;
+    }
+
+    .dna-helix-rung {
+        stroke: var(--dna-helix-rung);
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        vector-effect: non-scaling-stroke;
+        animation: dnaRungPulse 2.7s ease-in-out infinite;
+    }
+
+    .dna-helix-node {
+        fill: var(--dna-helix-node);
+        stroke: rgba(255, 255, 255, 0.74);
+        stroke-width: 1.6;
+        vector-effect: non-scaling-stroke;
+        filter: drop-shadow(0 2px 6px rgba(79, 70, 229, 0.2));
+        animation: dnaNodeBreath 2.4s ease-in-out infinite;
+    }
+
+    .dna-helix-labels {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        pointer-events: none;
+    }
+
+    .dna-helix-label {
+        padding: 4px 9px;
+        border-radius: 999px;
+        font-size: 10px;
+        line-height: 1.15;
+        letter-spacing: 0.03em;
+        font-weight: 800;
+        background: var(--dna-label-bg);
+        color: var(--dna-label-text);
+        border: 1px solid rgba(255, 255, 255, 0.34);
+        box-shadow: 0 4px 10px rgba(2, 6, 23, 0.06);
+        backdrop-filter: blur(8px);
+    }
+
+    .dna-helix-label b {
+        font-weight: 900;
+        margin-left: 4px;
+    }
+
+    @keyframes dnaFloat {
+        0% {
+            transform: perspective(900px) rotateX(8deg) rotateY(-2.4deg) translateY(0);
+        }
+
+        50% {
+            transform: perspective(900px) rotateX(8deg) rotateY(2.8deg) translateY(-4px);
+        }
+
+        100% {
+            transform: perspective(900px) rotateX(8deg) rotateY(-2.4deg) translateY(0);
+        }
+    }
+
+    @keyframes dnaShineSweep {
+        0% {
+            opacity: 0.44;
+            transform: translateX(-6%);
+        }
+
+        50% {
+            opacity: 0.76;
+            transform: translateX(6%);
+        }
+
+        100% {
+            opacity: 0.44;
+            transform: translateX(-6%);
+        }
+    }
+
+    @keyframes dnaRungPulse {
+        0%,
+        100% {
+            opacity: 0.32;
+        }
+
+        50% {
+            opacity: 0.9;
+        }
+    }
+
+    @keyframes dnaNodeBreath {
+        0%,
+        100% {
+            transform: scale(0.92);
+            opacity: 0.88;
+        }
+
+        50% {
+            transform: scale(1.06);
+            opacity: 1;
+        }
+    }
+
+    @keyframes dnaDashFlow {
+        from {
+            stroke-dashoffset: 0;
+        }
+
+        to {
+            stroke-dashoffset: -80;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .dna-helix-scene__shine,
+        .dna-helix-svg,
+        .dna-helix-rung,
+        .dna-helix-node,
+        .dna-helix-track--accent {
+            animation: none !important;
+        }
+    }
 </style>
 
 <script>
@@ -73092,6 +73319,165 @@ html.perf: blur(8px) fallback
 
             const totCats = document.getElementById('dna-total-cats');
             if (totCats) totCats.textContent = '6 Kategori';
+        };
+
+        function calculateDNAHelixMetrics() {
+            const rangeTx = getRangeTransactions(state.timeRange);
+            const expenses = rangeTx.filter(tx => tx.type === 'expense' && !isSavingsExpense(tx));
+            const totals = new Map();
+
+            expenses.forEach(tx => {
+                const amount = Math.max(0, Number(tx.amount) || 0);
+                if (amount <= 0) return;
+                const key = String(tx.category || 'Diğer').trim() || 'Diğer';
+                totals.set(key, (totals.get(key) || 0) + amount);
+            });
+
+            let sorted = Array.from(totals.entries())
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 6);
+
+            if (sorted.length === 0) {
+                sorted = [
+                    ['Tamirat', 34],
+                    ['Aidat', 22],
+                    ['Sağlık', 18],
+                    ['Market', 12]
+                ];
+            }
+
+            const totalAmount = sorted.reduce((sum, item) => sum + item[1], 0) || 1;
+            const maxPercent = Math.max(...sorted.map(item => (item[1] / totalAmount) * 100), 1);
+
+            const labels = sorted.map(item => item[0]);
+            const percentages = sorted.map(item => (item[1] / totalAmount) * 100);
+            const visualValues = percentages.map(pct => clamp(Math.round((pct / maxPercent) * 100), 22, 100));
+
+            const simpson = percentages.reduce((sum, pct) => sum + Math.pow(pct / 100, 2), 0);
+            const diversityScore = Math.round(clamp((1 - simpson) * 100, 0, 100));
+
+            return {
+                labels,
+                percentages,
+                visualValues,
+                dominant: labels[0] || '--',
+                activeCategories: totals.size > 0 ? totals.size : labels.length,
+                diversityScore
+            };
+        }
+
+        function renderDNAHelixScene(labels, visualValues, percentages) {
+            const svg = document.getElementById('dna-helix-svg');
+            const labelsEl = document.getElementById('dna-helix-labels');
+            if (!svg || !labelsEl || !Array.isArray(labels) || labels.length === 0) return;
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const centerX = 160;
+            const topY = 12;
+            const height = 188;
+            const steps = 24;
+            const avgLevel = visualValues.reduce((sum, value) => sum + value, 0) / visualValues.length;
+            const amplitude = 42 + ((avgLevel / 100) * 18);
+            const twist = Math.PI * 4.2;
+
+            const left = [];
+            const right = [];
+            const rungs = [];
+            const nodes = [];
+
+            for (let i = 0; i < steps; i += 1) {
+                const t = i / (steps - 1);
+                const y = topY + (t * height);
+                const phase = (t * twist) - (Math.PI / 2);
+                const idx = i % visualValues.length;
+                const intensity = visualValues[idx] / 100;
+                const spread = Math.sin(phase) * amplitude * (0.78 + (intensity * 0.28));
+
+                const leftX = centerX - spread;
+                const rightX = centerX + spread;
+                const nodeRadius = 3.1 + (intensity * 1.95);
+                const delay = (i * 0.08).toFixed(2);
+                const opacity = (0.3 + (Math.abs(Math.sin(phase)) * 0.45)).toFixed(3);
+
+                left.push(`${leftX.toFixed(2)},${y.toFixed(2)}`);
+                right.push(`${rightX.toFixed(2)},${y.toFixed(2)}`);
+
+                rungs.push(
+                    `<line class="dna-helix-rung" x1="${leftX.toFixed(2)}" y1="${y.toFixed(2)}" x2="${rightX.toFixed(2)}" y2="${y.toFixed(2)}" style="animation-delay:${delay}s;opacity:${opacity};" />`
+                );
+                nodes.push(
+                    `<circle class="dna-helix-node" cx="${leftX.toFixed(2)}" cy="${y.toFixed(2)}" r="${nodeRadius.toFixed(2)}" style="animation-delay:${delay}s;" />` +
+                    `<circle class="dna-helix-node" cx="${rightX.toFixed(2)}" cy="${y.toFixed(2)}" r="${nodeRadius.toFixed(2)}" style="animation-delay:${delay}s;" />`
+                );
+            }
+
+            const accentA = isDark ? '#38bdf8' : '#4f46e5';
+            const accentB = isDark ? '#c084fc' : '#7c3aed';
+            const strandA = isDark ? '#a5b4fc' : '#4f46e5';
+            const strandB = isDark ? '#f0abfc' : '#a855f7';
+
+            svg.innerHTML = `
+                <defs>
+                    <linearGradient id="dna-track-gradient-a" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="${strandA}" />
+                        <stop offset="100%" stop-color="${accentA}" />
+                    </linearGradient>
+                    <linearGradient id="dna-track-gradient-b" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="${strandB}" />
+                        <stop offset="100%" stop-color="${accentB}" />
+                    </linearGradient>
+                </defs>
+                ${rungs.join('')}
+                <polyline class="dna-helix-track" points="${left.join(' ')}" style="stroke:url(#dna-track-gradient-a)" />
+                <polyline class="dna-helix-track" points="${right.join(' ')}" style="stroke:url(#dna-track-gradient-b)" />
+                <polyline class="dna-helix-track dna-helix-track--accent" points="${left.join(' ')}" style="stroke:${accentA}" />
+                <polyline class="dna-helix-track dna-helix-track--accent" points="${right.join(' ')}" style="stroke:${accentB}" />
+                ${nodes.join('')}
+            `;
+
+            const categoryEmoji = {
+                'Market': '🛒',
+                'Gıda': '🍽️',
+                'Ulaşım': '🚕',
+                'Eğlence': '🎮',
+                'Fatura': '🧾',
+                'Sağlık': '💊',
+                'Tamirat': '🔧',
+                'Aidat': '📊',
+                'Diğer': '✨'
+            };
+
+            labelsEl.innerHTML = labels.slice(0, 4).map((label, index) => {
+                const safeLabel = String(label || '').replace(/[&<>"']/g, (match) => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[match]));
+                const pctValue = Math.round(percentages[index] || 0);
+                const icon = categoryEmoji[label] || '✨';
+                return `<span class="dna-helix-label">${icon} ${safeLabel}<b>%${pctValue}</b></span>`;
+            }).join('');
+        }
+
+        window.renderRadarChart = function () {
+            if (state.charts.radar) {
+                state.charts.radar.destroy();
+                state.charts.radar = null;
+            }
+
+            const metrics = calculateDNAHelixMetrics();
+            renderDNAHelixScene(metrics.labels, metrics.visualValues, metrics.percentages);
+
+            const domCat = document.getElementById('dna-dominant-cat');
+            if (domCat) domCat.textContent = metrics.dominant;
+
+            const divScore = document.getElementById('dna-diversity-score');
+            if (divScore) divScore.textContent = `%${metrics.diversityScore}`;
+
+            const totCats = document.getElementById('dna-total-cats');
+            if (totCats) totCats.textContent = `${metrics.activeCategories}`;
         };
 
         // ═══════════════════════════════════════════════════════════════
