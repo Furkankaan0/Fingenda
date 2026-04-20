@@ -67141,6 +67141,28 @@ html.perf: blur(8px) fallback
                 // Render category pills
                 window.renderDNACategoryPills(sorted, total);
 
+                // Keep DNA visual synced with the same computed source data
+                const fallbackDNA = [
+                    ['Tamirat', 34],
+                    ['Aidat', 22],
+                    ['Sağlık', 18],
+                    ['Market', 12]
+                ];
+                const helixSource = (sorted.length > 0 ? sorted : fallbackDNA).slice(0, 6);
+                const helixTotal = helixSource.reduce((sum, item) => sum + (Number(item[1]) || 0), 0) || 1;
+                const helixLabels = helixSource.map(item => String(item[0] || 'Diğer'));
+                const helixPercentages = helixSource.map(item => ((Number(item[1]) || 0) / helixTotal) * 100);
+                const helixMaxPct = Math.max(...helixPercentages, 1);
+                const helixVisualValues = helixPercentages.map(pct => Math.max(22, Math.min(100, Math.round((pct / helixMaxPct) * 100))));
+
+                if (typeof window.renderDNAHelixScene === 'function') {
+                    try {
+                        window.renderDNAHelixScene(helixLabels, helixVisualValues, helixPercentages);
+                    } catch (helixError) {
+                        console.warn('[DNAWidget] Helix render failed:', helixError);
+                    }
+                }
+
                 // Update dominant card text
                 const domTextEl = document.getElementById('dna-dominant-text');
                 if (domTextEl) {
@@ -73720,6 +73742,8 @@ html.perf: blur(8px) fallback
                 return `<span class="dna-helix-label">${icon} ${safeLabel}<b>%${pctValue}</b></span>`;
             }).join('');
         }
+
+        window.renderDNAHelixScene = renderDNAHelixScene;
 
         window.renderRadarChart = function () {
             if (state.charts.radar) {
