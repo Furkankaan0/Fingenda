@@ -6914,6 +6914,27 @@
                 letter-spacing: 0.5px !important;
             }
 
+            /* Header plan badge - explicit light mode readability fix (FREE) */
+            html:not(.dark) #user-plan-badge[data-plan="free"] {
+                background: linear-gradient(135deg, #e9f2ff 0%, #cfe2ff 100%) !important;
+                color: #1e40af !important;
+                border: 1px solid rgba(37, 99, 235, 0.32) !important;
+                box-shadow:
+                    0 6px 14px rgba(37, 99, 235, 0.16),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+                text-shadow: none !important;
+            }
+
+            html:not(.dark) #user-plan-badge[data-plan="free"] .animate-pulse,
+            html:not(.dark) #user-plan-badge[data-plan="free"] span {
+                color: #1e40af !important;
+            }
+
+            html:not(.dark) #user-plan-badge[data-plan="free"] .shimmer {
+                opacity: 0.32 !important;
+                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent) !important;
+            }
+
             /* Month Selector Pills - Capsule Style */
             .month-pill,
             [class*="month-"] button {
@@ -30007,7 +30028,7 @@
 
                     <!-- Plan Durumu (Free/Pro) -->
                     <div class="flex items-center mt-2 space-x-2" id="plan-status-container">
-                        <span id="user-plan-badge"
+                        <span id="user-plan-badge" data-plan="free"
                             class="relative overflow-hidden text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider cursor-pointer hover:scale-105 transition-all duration-300"
                             style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; box-shadow: 0 4px 15px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.3);"
                             onclick="document.getElementById('premium-modal').classList.remove('hidden')">
@@ -38122,6 +38143,7 @@
                     planBadge.innerHTML = isPro
                         ? '<span class="relative z-10 flex items-center gap-1"><span class="animate-pulse">👑</span>PRO</span><div class="absolute inset-0 shimmer opacity-50"></div>'
                         : '<span class="relative z-10 flex items-center gap-1"><span class="animate-pulse">✨</span>FREE</span><div class="absolute inset-0 shimmer opacity-50"></div>';
+                    planBadge.setAttribute('data-plan', isPro ? 'pro' : 'free');
                     planBadge.style.cssText = isPro
                         ? 'background: linear-gradient(135deg, #f59e0b, #ea580c); color: white; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4), inset 0 1px 0 rgba(255,255,255,0.3); cursor: default;'
                         : 'background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; box-shadow: 0 4px 15px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.3);';
@@ -55822,6 +55844,9 @@ KULLANICI NOTU
                 },
 
                 lockFeatures() {
+                    const headerPlanBadge = document.getElementById('user-plan-badge');
+                    if (headerPlanBadge) headerPlanBadge.setAttribute('data-plan', 'free');
+
                     PREMIUM_CONFIG.lockedFeatureIds.forEach(id => {
                         const el = document.getElementById(id);
                         if (el) {
@@ -55847,6 +55872,9 @@ KULLANICI NOTU
                 },
 
                 unlockAllFeatures() {
+                    const headerPlanBadge = document.getElementById('user-plan-badge');
+                    if (headerPlanBadge) headerPlanBadge.setAttribute('data-plan', 'pro');
+
                     PREMIUM_CONFIG.lockedFeatureIds.forEach(id => {
                         const el = document.getElementById(id);
                         if (el) {
@@ -60130,6 +60158,7 @@ KULLANICI NOTU
                         badge.innerHTML = '<span class="relative z-10 flex items-center gap-1"><span>👑</span>PRO</span>';
 
                         // Eski stilleri temizle
+                        badge.setAttribute('data-plan', 'pro');
                         badge.classList.remove('bg-gray-200', 'text-gray-600', 'border-gray-300');
                         // Kritik: Inline style varsa temizle (gradient'i bozmaması için)
                         badge.removeAttribute('style');
@@ -60163,6 +60192,7 @@ KULLANICI NOTU
 
                 if (badge) {
                     badge.innerHTML = '<span class="relative z-10 flex items-center gap-1"><span>👑</span>PRO</span>';
+                    badge.setAttribute('data-plan', 'pro');
                     badge.classList.remove('bg-gray-200', 'text-gray-600');
                     badge.removeAttribute('style');
                     badge.classList.add('bg-gradient-to-r', 'from-amber-300', 'to-yellow-500', 'text-yellow-900', 'shadow-lg');
