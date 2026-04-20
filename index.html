@@ -8692,14 +8692,14 @@
 
                 /* Avatar grid - Daha kompakt */
                 #profile-modal #avatar-selection {
-                    gap: 8px !important;
-                    padding: 8px !important;
+                    gap: 10px !important;
+                    padding: 10px 8px !important;
                 }
 
-                #profile-modal #avatar-selection>div,
-                #profile-modal #avatar-selection>button {
-                    width: 44px !important;
-                    height: 44px !important;
+                #profile-modal #avatar-selection.avatar-selection-grid>button {
+                    width: 52px !important;
+                    height: 52px !important;
+                    border-radius: 16px !important;
                 }
 
                 /* Label stilleri */
@@ -11392,6 +11392,189 @@
             /* Container-Mask Yapısı: Alt kısım daire içinde, üst kısım dışarı taşıyor */
 
             /* Ana Wrapper - overflow: visible ile taşmaya izin */
+            /* === AVATAR SEÇİMİ (REFINED UI OVERRIDE) === */
+            .avatar-picker-surface {
+                position: relative;
+                border-radius: 22px;
+                padding: 10px 10px 8px;
+                border: 1px solid color-mix(in srgb, var(--border-subtle) 88%, transparent);
+                background:
+                    radial-gradient(120% 120% at 8% 4%, rgba(99, 102, 241, 0.08), transparent 48%),
+                    radial-gradient(100% 100% at 92% 98%, rgba(14, 165, 233, 0.06), transparent 52%),
+                    linear-gradient(145deg, rgba(255, 255, 255, 0.78), rgba(248, 250, 252, 0.92));
+                box-shadow:
+                    0 1px 0 rgba(255, 255, 255, 0.75) inset,
+                    0 14px 30px rgba(15, 23, 42, 0.08);
+            }
+
+            html.dark .avatar-picker-surface {
+                border-color: rgba(148, 163, 184, 0.24);
+                background:
+                    radial-gradient(120% 120% at 8% 4%, rgba(99, 102, 241, 0.14), transparent 48%),
+                    radial-gradient(100% 100% at 92% 98%, rgba(56, 189, 248, 0.1), transparent 52%),
+                    linear-gradient(145deg, rgba(15, 23, 42, 0.88), rgba(30, 41, 59, 0.92));
+                box-shadow:
+                    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+                    0 16px 32px rgba(2, 6, 23, 0.46);
+            }
+
+            .avatar-selection-grid {
+                display: grid;
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+                justify-items: center;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .avatar-option {
+                position: relative;
+                width: 56px;
+                height: 56px;
+                border-radius: 18px;
+                padding: 0;
+                border: 1px solid rgba(148, 163, 184, 0.25);
+                background: linear-gradient(145deg, rgba(255, 255, 255, 0.72), rgba(241, 245, 249, 0.95));
+                box-shadow:
+                    0 8px 18px rgba(15, 23, 42, 0.08),
+                    0 1px 0 rgba(255, 255, 255, 0.85) inset;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+                overflow: visible;
+                isolation: isolate;
+            }
+
+            html.dark .avatar-option {
+                border-color: rgba(148, 163, 184, 0.3);
+                background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+                box-shadow:
+                    0 10px 22px rgba(2, 6, 23, 0.45),
+                    0 1px 0 rgba(255, 255, 255, 0.06) inset;
+            }
+
+            .avatar-option:hover {
+                transform: translateY(-2px) scale(1.04);
+                border-color: color-mix(in srgb, var(--accent-primary) 34%, rgba(148, 163, 184, 0.35));
+                box-shadow:
+                    0 14px 24px rgba(15, 23, 42, 0.16),
+                    0 1px 0 rgba(255, 255, 255, 0.9) inset;
+            }
+
+            html.dark .avatar-option:hover {
+                box-shadow:
+                    0 14px 26px rgba(2, 6, 23, 0.58),
+                    0 1px 0 rgba(255, 255, 255, 0.08) inset;
+            }
+
+            .avatar-option__media {
+                width: 100%;
+                height: 100%;
+                border-radius: 16px;
+                overflow: hidden;
+                position: relative;
+                border: 1px solid rgba(255, 255, 255, 0.55);
+                background: rgba(255, 255, 255, 0.72);
+            }
+
+            html.dark .avatar-option__media {
+                border-color: rgba(148, 163, 184, 0.22);
+                background: rgba(15, 23, 42, 0.64);
+            }
+
+            .premium-avatar-img,
+            .avatar-option__img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+                image-rendering: -webkit-optimize-contrast;
+                transition: transform 180ms ease, filter 180ms ease;
+                filter: saturate(1.02) contrast(1.01);
+            }
+
+            .avatar-option:hover .avatar-option__img {
+                transform: scale(1.06);
+            }
+
+            .avatar-option.is-selected {
+                transform: translateY(-2px) scale(1.06);
+                border-color: color-mix(in srgb, var(--accent-primary) 62%, rgba(99, 102, 241, 0.4));
+                box-shadow:
+                    0 0 0 2px color-mix(in srgb, var(--accent-primary) 24%, transparent),
+                    0 16px 28px color-mix(in srgb, var(--accent-primary) 26%, transparent),
+                    0 1px 0 rgba(255, 255, 255, 0.95) inset;
+            }
+
+            html.dark .avatar-option.is-selected {
+                box-shadow:
+                    0 0 0 2px color-mix(in srgb, var(--accent-primary) 40%, transparent),
+                    0 18px 30px rgba(30, 64, 175, 0.3),
+                    0 1px 0 rgba(255, 255, 255, 0.08) inset;
+            }
+
+            .avatar-option__tier {
+                position: absolute;
+                top: -6px;
+                right: -6px;
+                width: 18px;
+                height: 18px;
+                border-radius: 9999px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 11px;
+                background: linear-gradient(145deg, #fbbf24, #f59e0b);
+                border: 1px solid rgba(255, 255, 255, 0.9);
+                box-shadow: 0 6px 12px rgba(245, 158, 11, 0.32);
+                z-index: 3;
+            }
+
+            .avatar-option__check {
+                position: absolute;
+                bottom: -6px;
+                right: -6px;
+                width: 18px;
+                height: 18px;
+                border-radius: 9999px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: linear-gradient(145deg, #10b981, #059669);
+                color: #fff;
+                font-size: 11px;
+                border: 1px solid rgba(255, 255, 255, 0.95);
+                box-shadow: 0 6px 12px rgba(5, 150, 105, 0.28);
+                z-index: 3;
+            }
+
+            .avatar-option__lock {
+                position: absolute;
+                inset: 0;
+                border-radius: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(2, 6, 23, 0.42);
+                backdrop-filter: blur(1.5px);
+                -webkit-backdrop-filter: blur(1.5px);
+                z-index: 2;
+            }
+
+            .avatar-option.is-locked {
+                opacity: 0.9;
+                cursor: not-allowed;
+            }
+
+            .avatar-option.is-locked .avatar-option__img {
+                filter: grayscale(0.8) brightness(0.86);
+            }
+
+            .avatar-option.is-locked .avatar-option__tier {
+                background: linear-gradient(145deg, #94a3b8, #64748b);
+                box-shadow: none;
+            }
+
             .avatar-pop-wrapper {
                 position: relative;
                 width: 100%;
@@ -34102,7 +34285,8 @@
                                 <h4 class="profile-section-title text-sm md:text-base"
                                     data-i18n="profile.avatarSelection">🎭 Avatar Seçimi</h4>
                                 <!-- Mobilde 5 sütun, kompakt gap -->
-                                <div id="avatar-selection" class="grid grid-cols-5 gap-2 md:gap-3 p-1 md:p-2">
+                                <div class="avatar-picker-surface">
+                                    <div id="avatar-selection" class="avatar-selection-grid"></div>
                                 </div>
                                 <p class="profile-help text-[10px] md:text-xs" data-i18n="profile.avatarHelp">Bir avatar
                                     seçerek profilini
@@ -88667,6 +88851,149 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
             window.openBadgeDetail = function (badgeId) {
                 return modules.badgeDetail.open(badgeId);
             };
+        }
+    })();
+</script>
+<script id="avatar-grid-refined-v1">
+    (function () {
+        'use strict';
+
+        window.renderAvatarGrid = function () {
+            const container = document.getElementById('avatar-selection');
+            if (!container) return;
+
+            container.classList.add('avatar-selection-grid');
+            container.innerHTML = '';
+
+            const avatars = [
+                { url: 'https://cdn-icons-png.flaticon.com/512/4140/4140057.png', premium: false },
+                { url: 'https://cdn-icons-png.flaticon.com/512/4140/4140037.png', premium: false },
+                { url: 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png', premium: false },
+                { url: 'https://cdn-icons-png.flaticon.com/512/4140/4140061.png', premium: false },
+                { url: 'https://cdn-icons-png.flaticon.com/512/4140/4140039.png', premium: false },
+                { url: 'https://cdn-icons-png.flaticon.com/512/4140/4140047.png', premium: false },
+                { url: 'https://cdn-icons-png.flaticon.com/512/4140/4140060.png', premium: false },
+                { url: 'https://cdn-icons-png.flaticon.com/512/4140/4140040.png', premium: false },
+                { url: 'https://cdn-icons-png.flaticon.com/512/1154/1154473.png', premium: false },
+                { url: 'https://cdn-icons-png.flaticon.com/512/1154/1154448.png', premium: false },
+                { url: 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Black%20Bird.png', premium: true },
+                { url: 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Cowboy%20Hat%20Face.png', premium: true },
+                { url: 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Robot.png', premium: true },
+                { url: 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Bear.png', premium: true },
+                { url: 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Clown%20Face.png', premium: true },
+                { url: 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Skull.png', premium: true },
+                { url: 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Dog%20Face.png', premium: true },
+                { url: 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Cow%20Face.png', premium: true },
+                { url: 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Fox.png', premium: true },
+                { url: 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Alien.png', premium: true }
+            ];
+
+            const isPro = (window.userStatus || localStorage.getItem('user_status') || '').toLowerCase() === 'pro';
+
+            let activeSelection = null;
+            try { activeSelection = selectedAvatar || null; } catch (e) { }
+            if (!activeSelection && window.__avatarSelectedFallback) {
+                activeSelection = window.__avatarSelectedFallback;
+            }
+
+            avatars.forEach((av) => {
+                const isLocked = av.premium && !isPro;
+                const isSelected = activeSelection === av.url;
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = [
+                    'avatar-option',
+                    av.premium ? 'avatar-option--premium' : 'avatar-option--free',
+                    isSelected ? 'is-selected' : '',
+                    isLocked ? 'is-locked' : ''
+                ].join(' ').trim();
+                btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+                btn.setAttribute('aria-label', av.premium ? 'Premium Avatar' : 'Avatar');
+
+                const media = document.createElement('div');
+                media.className = 'avatar-option__media';
+
+                const img = document.createElement('img');
+                img.src = av.url;
+                img.className = 'avatar-option__img premium-avatar-img';
+                img.alt = 'Avatar';
+                img.loading = 'lazy';
+                media.appendChild(img);
+
+                if (isLocked) {
+                    const lockOverlay = document.createElement('div');
+                    lockOverlay.className = 'avatar-option__lock';
+                    lockOverlay.innerHTML = '<span class="text-white text-sm drop-shadow-md">🔒</span>';
+                    media.appendChild(lockOverlay);
+                }
+
+                btn.appendChild(media);
+
+                if (av.premium) {
+                    const tier = document.createElement('div');
+                    tier.className = 'avatar-option__tier';
+                    tier.innerHTML = '<span>👑</span>';
+                    btn.appendChild(tier);
+                }
+
+                if (isSelected) {
+                    const check = document.createElement('div');
+                    check.className = 'avatar-option__check';
+                    check.innerHTML = '<span>✓</span>';
+                    btn.appendChild(check);
+                }
+
+                btn.onclick = (e) => {
+                    e.preventDefault();
+                    if (isLocked) {
+                        const premiumModal = document.getElementById('premium-modal');
+                        if (premiumModal) {
+                            premiumModal.classList.remove('hidden');
+                            if (typeof window.toggleProfileModal === 'function') {
+                                window.toggleProfileModal(false);
+                            }
+                        }
+                        btn.classList.add('animate-pulse');
+                        setTimeout(() => btn.classList.remove('animate-pulse'), 450);
+                        return;
+                    }
+
+                    try { selectedAvatar = av.url; } catch (err) { }
+                    window.__avatarSelectedFallback = av.url;
+                    window.renderAvatarGrid();
+                    if (typeof window.updateModalPreview === 'function') {
+                        window.updateModalPreview(av.url);
+                    }
+                };
+
+                container.appendChild(btn);
+            });
+        };
+    })();
+</script>
+<script id="avatar-grid-glyph-fix-v1">
+    (function () {
+        'use strict';
+        if (typeof window.renderAvatarGrid !== 'function') return;
+
+        const originalRenderAvatarGrid = window.renderAvatarGrid;
+        window.renderAvatarGrid = function () {
+            originalRenderAvatarGrid();
+
+            document.querySelectorAll('.avatar-option__lock span').forEach(function (el) {
+                el.textContent = String.fromCodePoint(0x1F512);
+            });
+            document.querySelectorAll('.avatar-option__tier span').forEach(function (el) {
+                el.textContent = String.fromCodePoint(0x1F451);
+            });
+            document.querySelectorAll('.avatar-option__check span').forEach(function (el) {
+                el.textContent = '\u2713';
+            });
+        };
+
+        if (document.getElementById('avatar-selection')) {
+            window.renderAvatarGrid();
         }
     })();
 </script>
