@@ -32529,36 +32529,10 @@
                                     </button>
                                 </div>
 
-                                <!-- 3D DNA Chart Container -->
-                                <div class="dna-helix-scene mb-4" id="dna-helix-scene" aria-live="polite">
-                                    <div class="dna-helix-scene__bg"></div>
-                                    <div class="dna-helix-scene__shine"></div>
-                                    <div class="dna-molecule-stage" id="dna-molecule-stage"
-                                        role="img" aria-label="Harcama DNA görselleştirmesi">
-                                        <div class="dna-molecule-orbit dna-molecule-orbit--back"></div>
-                                        <div class="dna-molecule-orbit dna-molecule-orbit--front"></div>
-                                        <div class="dna-molecule-core"></div>
-                                        <div class="dna-molecule-helix" id="dna-molecule-helix">
-                                            <span class="dna-molecule-rung" style="--i: 0; --w: 22%; --r: -10deg;"></span>
-                                            <span class="dna-molecule-rung" style="--i: 1; --w: 38%; --r: -7deg;"></span>
-                                            <span class="dna-molecule-rung" style="--i: 2; --w: 56%; --r: -4deg;"></span>
-                                            <span class="dna-molecule-rung" style="--i: 3; --w: 74%; --r: 1deg;"></span>
-                                            <span class="dna-molecule-rung" style="--i: 4; --w: 86%; --r: 7deg;"></span>
-                                            <span class="dna-molecule-rung" style="--i: 5; --w: 74%; --r: 10deg;"></span>
-                                            <span class="dna-molecule-rung" style="--i: 6; --w: 56%; --r: 6deg;"></span>
-                                            <span class="dna-molecule-rung" style="--i: 7; --w: 38%; --r: 2deg;"></span>
-                                            <span class="dna-molecule-rung" style="--i: 8; --w: 22%; --r: -3deg;"></span>
-                                            <span class="dna-molecule-rung" style="--i: 9; --w: 38%; --r: -8deg;"></span>
-                                            <span class="dna-molecule-rung" style="--i: 10; --w: 56%; --r: -10deg;"></span>
-                                            <span class="dna-molecule-rung" style="--i: 11; --w: 74%; --r: -5deg;"></span>
-                                            <span class="dna-molecule-rung" style="--i: 12; --w: 86%; --r: 2deg;"></span>
-                                            <span class="dna-molecule-rung" style="--i: 13; --w: 74%; --r: 8deg;"></span>
-                                            <span class="dna-molecule-rung" style="--i: 14; --w: 56%; --r: 10deg;"></span>
-                                        </div>
-                                    </div>
-                                    <div id="dna-helix-labels" class="dna-helix-labels"></div>
+                                <!-- Spider-web DNA chart -->
+                                <div class="dna-radar-scene mb-4" id="dna-radar-scene" aria-live="polite">
+                                    <canvas id="radarChart" role="img" aria-label="Harcama DNA kategori dağılım grafiği"></canvas>
                                 </div>
-                                <canvas id="radarChart" class="hidden" aria-hidden="true"></canvas>
 
                                 <!-- Stats Grid -->
                                 <div class="grid grid-cols-3 gap-2">
@@ -66613,146 +66587,6 @@ html.perf: blur(8px) fallback
         animation: dnaShineSweep 7.2s ease-in-out infinite;
     }
 
-    .dna-molecule-stage {
-        position: absolute;
-        inset: 12px 12px 48px;
-        z-index: 2;
-        display: grid;
-        place-items: center;
-        perspective: 760px;
-        pointer-events: none;
-        transform-style: preserve-3d;
-    }
-
-    .dna-molecule-stage::before {
-        content: "";
-        position: absolute;
-        width: min(72%, 280px);
-        height: 78%;
-        border-radius: 999px;
-        background:
-            radial-gradient(circle at 50% 42%, var(--dna-primary), transparent 62%),
-            radial-gradient(circle at 48% 60%, var(--dna-secondary), transparent 68%);
-        filter: blur(18px);
-        opacity: 0.95;
-        transform: rotateX(64deg) translateY(8px);
-        animation: dnaCoreBreath 5.4s ease-in-out infinite;
-    }
-
-    .dna-molecule-orbit {
-        position: absolute;
-        width: min(76%, 300px);
-        height: 48%;
-        border-radius: 999px;
-        border: 1px solid rgba(37, 99, 235, 0.24);
-        background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.22), transparent 64%);
-        transform: rotateX(68deg) rotateZ(-6deg);
-        opacity: 0.62;
-    }
-
-    html.dark .dna-molecule-orbit {
-        background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.08), transparent 64%);
-    }
-
-    .dna-molecule-orbit--front {
-        width: min(62%, 238px);
-        height: 38%;
-        transform: rotateX(68deg) rotateZ(12deg) translateZ(18px);
-        border-color: rgba(20, 184, 166, 0.28);
-        opacity: 0.76;
-    }
-
-    .dna-molecule-core {
-        position: absolute;
-        width: 94px;
-        height: 94px;
-        border-radius: 50%;
-        background:
-            radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.9), transparent 18%),
-            radial-gradient(circle at 52% 50%, var(--dna-primary), transparent 58%),
-            radial-gradient(circle at 58% 62%, var(--dna-secondary), transparent 70%);
-        opacity: 0.26;
-        filter: blur(2px);
-        transform: translateZ(-26px);
-    }
-
-    .dna-molecule-helix {
-        position: relative;
-        width: min(76%, 278px);
-        height: 100%;
-        min-height: 178px;
-        transform-style: preserve-3d;
-        transform: rotateX(58deg) rotateZ(-8deg) translateZ(26px);
-        animation: dnaMoleculeFloat 5.8s ease-in-out infinite;
-    }
-
-    .dna-molecule-helix::before,
-    .dna-molecule-helix::after {
-        content: "";
-        position: absolute;
-        top: 5%;
-        bottom: 5%;
-        left: 50%;
-        width: 4px;
-        border-radius: 999px;
-        background: linear-gradient(180deg, transparent, var(--dna-primary), var(--dna-secondary), transparent);
-        box-shadow: 0 0 18px rgba(37, 99, 235, 0.32);
-        opacity: 0.82;
-        transform-origin: center;
-    }
-
-    .dna-molecule-helix::before {
-        transform: translateX(-50%) rotateZ(18deg) rotateY(28deg);
-    }
-
-    .dna-molecule-helix::after {
-        background: linear-gradient(180deg, transparent, var(--dna-secondary), var(--dna-spark), transparent);
-        transform: translateX(-50%) rotateZ(-18deg) rotateY(-28deg);
-        box-shadow: 0 0 18px rgba(20, 184, 166, 0.32);
-    }
-
-    .dna-molecule-rung {
-        position: absolute;
-        left: 50%;
-        top: calc(6% + (var(--i) * 6.25%));
-        width: var(--w);
-        height: 3px;
-        border-radius: 999px;
-        background: linear-gradient(90deg, var(--dna-primary), rgba(255, 255, 255, 0.76), var(--dna-secondary));
-        box-shadow: 0 0 14px rgba(37, 99, 235, 0.2);
-        transform: translateX(-50%) rotateZ(var(--r)) translateZ(calc(8px + (var(--i) * 0.8px)));
-        opacity: calc(0.52 + (var(--dna-energy) * 0.42));
-        animation: dnaRungPulse 2.8s ease-in-out infinite;
-        animation-delay: calc(var(--i) * -0.11s);
-    }
-
-    .dna-molecule-rung::before,
-    .dna-molecule-rung::after {
-        content: "";
-        position: absolute;
-        top: 50%;
-        width: 13px;
-        height: 13px;
-        border-radius: 50%;
-        background:
-            radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.96), transparent 22%),
-            linear-gradient(135deg, var(--dna-primary), var(--dna-secondary));
-        border: 1px solid rgba(255, 255, 255, 0.78);
-        box-shadow: 0 5px 14px rgba(37, 99, 235, 0.22);
-        transform: translateY(-50%);
-    }
-
-    .dna-molecule-rung::before {
-        left: -7px;
-    }
-
-    .dna-molecule-rung::after {
-        right: -7px;
-        background:
-            radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.96), transparent 22%),
-            linear-gradient(135deg, var(--dna-secondary), var(--dna-spark));
-    }
-
     .dna-helix-labels {
         position: absolute;
         left: 12px;
@@ -66848,11 +66682,53 @@ html.perf: blur(8px) fallback
 
     @media (prefers-reduced-motion: reduce) {
         .dna-helix-scene__shine,
-        .dna-molecule-stage::before,
-        .dna-molecule-helix,
-        .dna-molecule-rung {
+        .dna-radar-scene::before {
             animation: none !important;
         }
+    }
+
+    .dna-radar-scene {
+        position: relative;
+        height: 268px;
+        min-height: 268px;
+        overflow: hidden;
+        border-radius: 28px;
+        border: 1px solid var(--dna-scene-border);
+        background:
+            radial-gradient(56% 54% at 18% 16%, var(--dna-scene-glow-a), transparent 72%),
+            radial-gradient(50% 54% at 84% 82%, var(--dna-scene-glow-b), transparent 74%),
+            repeating-linear-gradient(0deg, transparent 0 31px, rgba(99, 102, 241, 0.055) 31px 32px),
+            repeating-linear-gradient(90deg, transparent 0 43px, rgba(99, 102, 241, 0.055) 43px 44px),
+            var(--dna-scene-surface);
+        box-shadow: var(--dna-scene-shadow);
+        transform: translateZ(0);
+        contain: layout paint style;
+    }
+
+    html.dark .dna-radar-scene {
+        background:
+            radial-gradient(56% 54% at 18% 16%, var(--dna-scene-glow-a), transparent 72%),
+            radial-gradient(50% 54% at 84% 82%, var(--dna-scene-glow-b), transparent 74%),
+            repeating-linear-gradient(0deg, transparent 0 31px, rgba(125, 211, 252, 0.055) 31px 32px),
+            repeating-linear-gradient(90deg, transparent 0 43px, rgba(125, 211, 252, 0.055) 43px 44px),
+            var(--dna-scene-surface);
+    }
+
+    .dna-radar-scene::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(112deg, rgba(255, 255, 255, 0.22), transparent 36%, transparent 68%, rgba(255, 255, 255, 0.12));
+        opacity: 0.64;
+        pointer-events: none;
+    }
+
+    .dna-radar-scene canvas {
+        position: relative;
+        z-index: 1;
+        display: block !important;
+        width: 100% !important;
+        height: 100% !important;
     }
 </style>
 
@@ -67248,11 +67124,11 @@ html.perf: blur(8px) fallback
                 const helixMaxPct = Math.max(...helixPercentages, 1);
                 const helixVisualValues = helixPercentages.map(pct => Math.max(22, Math.min(100, Math.round((pct / helixMaxPct) * 100))));
 
-                if (typeof window.renderDNAHelixScene === 'function') {
+                if (typeof window.renderRadarChart === 'function') {
                     try {
-                        window.renderDNAHelixScene(helixLabels, helixVisualValues, helixPercentages);
-                    } catch (helixError) {
-                        console.warn('[DNAWidget] Helix render failed:', helixError);
+                        window.requestAnimationFrame(() => window.renderRadarChart());
+                    } catch (chartError) {
+                        console.warn('[DNAWidget] Radar render failed:', chartError);
                     }
                 }
 
@@ -73836,7 +73712,7 @@ html.perf: blur(8px) fallback
             }).join('');
         }
 
-        window.renderDNAHelixScene = renderDNAHelixScene;
+        window.renderDNAHelixScene = function () {};
 
         function getDNAThemeForCategory(category) {
             const normalized = String(category || '').toLocaleLowerCase('tr-TR');
@@ -73855,8 +73731,8 @@ html.perf: blur(8px) fallback
 
         function renderDNAHelixSceneDOM(labels, visualValues, percentages) {
             const scene = document.getElementById('dna-helix-scene');
-            const stage = document.getElementById('dna-molecule-stage');
-            const helix = document.getElementById('dna-molecule-helix');
+            const stage = null;
+            const helix = null;
             const labelsEl = document.getElementById('dna-helix-labels');
             if (!scene || !stage || !helix || !labelsEl) return;
 
@@ -73875,7 +73751,7 @@ html.perf: blur(8px) fallback
             stage.setAttribute('aria-label', `Harcama DNA görselleştirmesi. Baskın kategori: ${dominant}. Çeşitlilik: ${Math.round(energy * 100)}%.`);
 
             const baseWidths = [22, 38, 56, 74, 86, 74, 56, 38, 22, 38, 56, 74, 86, 74, 56];
-            helix.querySelectorAll('.dna-molecule-rung').forEach((rung, index) => {
+            [].forEach.call([], (rung, index) => {
                 const value = Number(safeValues[index % safeValues.length]) || 46;
                 const base = baseWidths[index % baseWidths.length];
                 const width = Math.max(18, Math.min(90, base + ((value - 50) * 0.16)));
@@ -73898,17 +73774,87 @@ html.perf: blur(8px) fallback
             }).join('');
         }
 
-        renderDNAHelixScene = renderDNAHelixSceneDOM;
-        window.renderDNAHelixScene = renderDNAHelixSceneDOM;
+        renderDNAHelixScene = function () {};
+        window.renderDNAHelixScene = function () {};
 
         window.renderRadarChart = function () {
             if (state.charts.radar) {
                 state.charts.radar.destroy();
                 state.charts.radar = null;
             }
+            if (window.__radarChartInstance) {
+                try { window.__radarChartInstance.destroy(); } catch (_) { /* noop */ }
+                window.__radarChartInstance = null;
+            }
+            if (window.radarChartInstance) {
+                try { window.radarChartInstance.destroy(); } catch (_) { /* noop */ }
+                window.radarChartInstance = null;
+            }
 
+            const canvas = document.getElementById('radarChart');
             const metrics = calculateDNAHelixMetrics();
-            renderDNAHelixScene(metrics.labels, metrics.visualValues, metrics.percentages);
+            const isDark = document.documentElement.classList.contains('dark');
+            const labels = metrics.labels.length ? metrics.labels : ['Market', 'Fatura', 'Ulaşım', 'Sağlık', 'Diğer'];
+            const values = metrics.percentages.length ? metrics.percentages.map(value => Math.max(8, Math.round(value))) : [40, 24, 18, 12, 8];
+
+            if (canvas && typeof Chart !== 'undefined') {
+                const lineColor = isDark ? 'rgba(125, 211, 252, 0.92)' : 'rgba(37, 99, 235, 0.9)';
+                const fillColor = isDark ? 'rgba(59, 130, 246, 0.18)' : 'rgba(37, 99, 235, 0.14)';
+                const accentColor = isDark ? 'rgba(20, 184, 166, 0.92)' : 'rgba(20, 184, 166, 0.88)';
+                const gridColor = isDark ? 'rgba(148, 163, 184, 0.16)' : 'rgba(30, 64, 175, 0.12)';
+                const labelColor = isDark ? 'rgba(226, 232, 240, 0.78)' : 'rgba(51, 65, 85, 0.78)';
+
+                state.charts.radar = new Chart(canvas.getContext('2d'), {
+                    type: 'radar',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: 'Harcama DNA',
+                            data: values,
+                            backgroundColor: fillColor,
+                            borderColor: lineColor,
+                            borderWidth: 2.4,
+                            pointRadius: 4.8,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: accentColor,
+                            pointBorderColor: isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                            pointBorderWidth: 2,
+                            tension: 0.16
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: { duration: 520, easing: 'easeOutQuart' },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                enabled: true,
+                                callbacks: {
+                                    label: (context) => `%${Math.round(context.raw || 0)}`
+                                }
+                            }
+                        },
+                        scales: {
+                            r: {
+                                beginAtZero: true,
+                                min: 0,
+                                max: 100,
+                                angleLines: { color: gridColor, lineWidth: 1 },
+                                grid: { color: gridColor, circular: false, lineWidth: 1 },
+                                pointLabels: {
+                                    color: labelColor,
+                                    font: { size: 11, weight: '700' }
+                                },
+                                ticks: { display: false, stepSize: 20 }
+                            }
+                        },
+                        elements: {
+                            line: { borderJoinStyle: 'round', borderCapStyle: 'round' }
+                        }
+                    }
+                });
+            }
 
             const domCat = document.getElementById('dna-dominant-cat');
             if (domCat) domCat.textContent = metrics.dominant;
@@ -73925,7 +73871,7 @@ html.perf: blur(8px) fallback
             window.__dnaSceneHooksAttached = true;
 
             const tryRepaint = () => {
-                const scene = document.getElementById('dna-helix-scene');
+                const scene = document.getElementById('dna-radar-scene');
                 if (!scene) return;
                 const rect = scene.getBoundingClientRect();
                 if (rect.width < 80 || rect.height < 80) return;
@@ -73942,7 +73888,7 @@ html.perf: blur(8px) fallback
             });
 
             if ('ResizeObserver' in window) {
-                const scene = document.getElementById('dna-helix-scene');
+                const scene = document.getElementById('dna-radar-scene');
                 if (scene) {
                     const observer = new ResizeObserver(() => {
                         window.requestAnimationFrame(tryRepaint);
