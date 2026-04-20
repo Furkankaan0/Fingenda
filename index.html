@@ -47762,6 +47762,128 @@ KULLANICI NOTU
                     rarity: 'mythic',
                     desc: '5 Milyon TL Net Varlık. Sen bir efsanesin! 🦄',
                     condition: () => getTotalNetWorth() >= 5000000
+                },
+                {
+                    id: 'b_com_8',
+                    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Bullseye/3D/bullseye_3d.png',
+                    title: 'PLANCI',
+                    rarity: 'common',
+                    desc: 'Ilk finansal hedefini olusturdun. Yönün artik net. 📌',
+                    condition: () => Array.isArray(goals) && goals.length >= 1
+                },
+                {
+                    id: 'b_com_9',
+                    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Repeat%20single%20button/3D/repeat_single_button_3d.png',
+                    title: 'ILK DENGE',
+                    rarity: 'common',
+                    desc: 'Hem gelir hem gider girdin. Finans dengesi basladi. ⚖️',
+                    condition: () => {
+                        const incomeCount = (transactions || []).filter(t => t.type === 'income').length;
+                        const expenseCount = (transactions || []).filter(t => t.type === 'expense').length;
+                        return incomeCount >= 1 && expenseCount >= 1;
+                    }
+                },
+                {
+                    id: 'b_rare_8',
+                    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Spiral%20notepad/3D/spiral_notepad_3d.png',
+                    title: 'NOT USTASI',
+                    rarity: 'rare',
+                    desc: '15 not ekledin. Planlama refleksin cok guclu. 📚',
+                    condition: () => Array.isArray(notes) && notes.length >= 15
+                },
+                {
+                    id: 'b_rare_9',
+                    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Direct%20hit/3D/direct_hit_3d.png',
+                    title: 'HEDEFCI',
+                    rarity: 'rare',
+                    desc: '3 aktif hedefin var. Rotani net belirledin. 🎯',
+                    condition: () => Array.isArray(goals) && goals.length >= 3
+                },
+                {
+                    id: 'b_rare_10',
+                    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Clockwise%20vertical%20arrows/3D/clockwise_vertical_arrows_3d.png',
+                    title: 'RUTIN KURAN',
+                    rarity: 'rare',
+                    desc: '2 otomatik talimat olusturdun. Sistem senin icin calisiyor. ⚙️',
+                    condition: () => Array.isArray(recurringRules) && recurringRules.length >= 2
+                },
+                {
+                    id: 'b_epic_7',
+                    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Clipboard/3D/clipboard_3d.png',
+                    title: 'TAKSIT KOMUTANI',
+                    rarity: 'epic',
+                    desc: '3 taksit plani yönetiyorsun. Borc disiplini senden sorulur. 🧩',
+                    condition: () => Array.isArray(installments) && installments.length >= 3
+                },
+                {
+                    id: 'b_epic_8',
+                    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Abacus/3D/abacus_3d.png',
+                    title: 'BUTCECI',
+                    rarity: 'epic',
+                    desc: 'En az 4 kategoriye bütce koydun. Harcama kontrolü sende. 🧮',
+                    condition: () => {
+                        try {
+                            const raw = JSON.parse(localStorage.getItem('fingo_category_budgets') || '{}');
+                            return raw && typeof raw === 'object' && Object.keys(raw).length >= 4;
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                },
+                {
+                    id: 'b_leg_5',
+                    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Trophy/3D/trophy_3d.png',
+                    title: 'MARATONCU',
+                    rarity: 'legendary',
+                    desc: '250 islem kaydettin. Bu tempo gercekten efsane. 🏆',
+                    condition: () => (transactions || []).length >= 250
+                },
+                {
+                    id: 'b_leg_6',
+                    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Puzzle%20piece/3D/puzzle_piece_3d.png',
+                    title: 'COK YONLU',
+                    rarity: 'legendary',
+                    desc: '8 farkli kategoride gider islemi yaptin. Dengeli bir profil. 🧠',
+                    condition: () => {
+                        const set = new Set(
+                            (transactions || [])
+                                .filter(t => t.type === 'expense' && t.category)
+                                .map(t => String(t.category).toLowerCase().trim())
+                        );
+                        return set.size >= 8;
+                    }
+                },
+                {
+                    id: 'b_myt_6',
+                    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Balance%20scale/3D/balance_scale_3d.png',
+                    title: 'DENGE USTASI',
+                    rarity: 'mythic',
+                    desc: '120+ islemde gelir toplamin giderden yüksek kaldi. Finansal ustalik. 🔱',
+                    condition: () => {
+                        const totalIncome = (transactions || [])
+                            .filter(t => t.type === 'income')
+                            .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+                        const totalExpense = (transactions || [])
+                            .filter(t => t.type === 'expense')
+                            .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+                        return (transactions || []).length >= 120 && totalIncome > totalExpense;
+                    }
+                },
+                {
+                    id: 'b_myt_7',
+                    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Milky%20way/3D/milky_way_3d.png',
+                    title: 'KOLEKSIYONCU',
+                    rarity: 'mythic',
+                    desc: '30 rozet esigini gectin. Koleksiyonun artik dev seviyede. 🌌',
+                    condition: () => {
+                        try {
+                            const currentYear = (typeof APP_YEAR !== 'undefined') ? APP_YEAR : new Date().getFullYear();
+                            const unlocked = JSON.parse(localStorage.getItem(`my_badges_${currentYear}`) || '[]');
+                            return Array.isArray(unlocked) && unlocked.length >= 30;
+                        } catch (e) {
+                            return false;
+                        }
+                    }
                 }
             ];
 
