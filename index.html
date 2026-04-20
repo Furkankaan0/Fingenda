@@ -32533,10 +32533,29 @@
                                 <div class="dna-helix-scene mb-4" id="dna-helix-scene" aria-live="polite">
                                     <div class="dna-helix-scene__bg"></div>
                                     <div class="dna-helix-scene__shine"></div>
-                                    <canvas id="dna-helix-canvas" class="dna-helix-canvas"
-                                        role="img" aria-label="Harcama DNA görselleştirmesi"></canvas>
-                                    <svg id="dna-helix-svg" class="dna-helix-svg" viewBox="0 0 320 230" fill="none"
-                                        role="img" aria-label="Harcama DNA görselleştirmesi"></svg>
+                                    <div class="dna-molecule-stage" id="dna-molecule-stage"
+                                        role="img" aria-label="Harcama DNA görselleştirmesi">
+                                        <div class="dna-molecule-orbit dna-molecule-orbit--back"></div>
+                                        <div class="dna-molecule-orbit dna-molecule-orbit--front"></div>
+                                        <div class="dna-molecule-core"></div>
+                                        <div class="dna-molecule-helix" id="dna-molecule-helix">
+                                            <span class="dna-molecule-rung" style="--i: 0; --w: 22%; --r: -10deg;"></span>
+                                            <span class="dna-molecule-rung" style="--i: 1; --w: 38%; --r: -7deg;"></span>
+                                            <span class="dna-molecule-rung" style="--i: 2; --w: 56%; --r: -4deg;"></span>
+                                            <span class="dna-molecule-rung" style="--i: 3; --w: 74%; --r: 1deg;"></span>
+                                            <span class="dna-molecule-rung" style="--i: 4; --w: 86%; --r: 7deg;"></span>
+                                            <span class="dna-molecule-rung" style="--i: 5; --w: 74%; --r: 10deg;"></span>
+                                            <span class="dna-molecule-rung" style="--i: 6; --w: 56%; --r: 6deg;"></span>
+                                            <span class="dna-molecule-rung" style="--i: 7; --w: 38%; --r: 2deg;"></span>
+                                            <span class="dna-molecule-rung" style="--i: 8; --w: 22%; --r: -3deg;"></span>
+                                            <span class="dna-molecule-rung" style="--i: 9; --w: 38%; --r: -8deg;"></span>
+                                            <span class="dna-molecule-rung" style="--i: 10; --w: 56%; --r: -10deg;"></span>
+                                            <span class="dna-molecule-rung" style="--i: 11; --w: 74%; --r: -5deg;"></span>
+                                            <span class="dna-molecule-rung" style="--i: 12; --w: 86%; --r: 2deg;"></span>
+                                            <span class="dna-molecule-rung" style="--i: 13; --w: 74%; --r: 8deg;"></span>
+                                            <span class="dna-molecule-rung" style="--i: 14; --w: 56%; --r: 10deg;"></span>
+                                        </div>
+                                    </div>
                                     <div id="dna-helix-labels" class="dna-helix-labels"></div>
                                 </div>
                                 <canvas id="radarChart" class="hidden" aria-hidden="true"></canvas>
@@ -66523,36 +66542,35 @@ html.perf: blur(8px) fallback
         opacity: 1;
     }
 
-    /* DNA 3D Scene */
+    /* DNA 3D Scene - DOM/CSS only, no canvas dependency */
     :root {
-        --dna-scene-surface: linear-gradient(150deg, rgba(244, 247, 255, 0.96), rgba(232, 238, 252, 0.88));
-        --dna-scene-border: rgba(99, 102, 241, 0.16);
-        --dna-scene-shadow: 0 22px 44px -28px rgba(79, 70, 229, 0.35);
-        --dna-scene-glow-a: rgba(96, 165, 250, 0.24);
-        --dna-scene-glow-b: rgba(168, 85, 247, 0.2);
-        --dna-helix-line: rgba(79, 70, 229, 0.62);
-        --dna-helix-rung: rgba(99, 102, 241, 0.2);
-        --dna-helix-node: #4f46e5;
-        --dna-label-bg: rgba(255, 255, 255, 0.82);
-        --dna-label-text: #1f2937;
+        --dna-scene-surface: linear-gradient(150deg, rgba(248, 251, 255, 0.98), rgba(235, 244, 255, 0.92));
+        --dna-scene-border: rgba(37, 99, 235, 0.14);
+        --dna-scene-shadow: 0 22px 44px -28px rgba(30, 64, 175, 0.34);
+        --dna-scene-glow-a: rgba(20, 184, 166, 0.18);
+        --dna-scene-glow-b: rgba(59, 130, 246, 0.2);
+        --dna-primary: #2563eb;
+        --dna-secondary: #14b8a6;
+        --dna-spark: #f59e0b;
+        --dna-energy: 0.68;
+        --dna-label-bg: rgba(255, 255, 255, 0.86);
+        --dna-label-text: #111827;
     }
 
     html.dark {
-        --dna-scene-surface: linear-gradient(155deg, rgba(14, 23, 45, 0.96), rgba(20, 16, 45, 0.92));
-        --dna-scene-border: rgba(148, 163, 255, 0.22);
-        --dna-scene-shadow: 0 28px 52px -32px rgba(2, 8, 23, 0.72);
-        --dna-scene-glow-a: rgba(56, 189, 248, 0.2);
-        --dna-scene-glow-b: rgba(196, 113, 255, 0.2);
-        --dna-helix-line: rgba(165, 180, 252, 0.82);
-        --dna-helix-rung: rgba(148, 163, 184, 0.25);
-        --dna-helix-node: #a5b4fc;
-        --dna-label-bg: rgba(15, 23, 42, 0.72);
-        --dna-label-text: #e2e8f0;
+        --dna-scene-surface: linear-gradient(155deg, rgba(7, 14, 29, 0.96), rgba(16, 24, 44, 0.94));
+        --dna-scene-border: rgba(125, 211, 252, 0.18);
+        --dna-scene-shadow: 0 28px 52px -32px rgba(0, 0, 0, 0.8);
+        --dna-scene-glow-a: rgba(45, 212, 191, 0.16);
+        --dna-scene-glow-b: rgba(96, 165, 250, 0.18);
+        --dna-label-bg: rgba(15, 23, 42, 0.76);
+        --dna-label-text: #f8fafc;
     }
 
     .dna-helix-scene {
         position: relative;
         height: 268px;
+        min-height: 268px;
         border-radius: 28px;
         overflow: hidden;
         border: 1px solid var(--dna-scene-border);
@@ -66560,7 +66578,7 @@ html.perf: blur(8px) fallback
         box-shadow: var(--dna-scene-shadow);
         isolation: isolate;
         transform: translateZ(0);
-        will-change: transform;
+        contain: layout paint style;
     }
 
     .dna-helix-scene__bg,
@@ -66571,87 +66589,168 @@ html.perf: blur(8px) fallback
     }
 
     .dna-helix-scene__bg {
+        z-index: 0;
         background:
-            radial-gradient(48% 44% at 18% 16%, var(--dna-scene-glow-a), transparent 70%),
-            radial-gradient(50% 50% at 82% 84%, var(--dna-scene-glow-b), transparent 72%),
-            linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 42%);
+            radial-gradient(42% 42% at 16% 18%, var(--dna-scene-glow-a), transparent 72%),
+            radial-gradient(48% 48% at 84% 82%, var(--dna-scene-glow-b), transparent 74%),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 42%);
     }
 
     html.dark .dna-helix-scene__bg {
         background:
-            radial-gradient(48% 44% at 18% 16%, var(--dna-scene-glow-a), transparent 70%),
-            radial-gradient(50% 50% at 82% 84%, var(--dna-scene-glow-b), transparent 72%),
-            linear-gradient(180deg, rgba(148, 163, 184, 0.08), transparent 42%);
+            radial-gradient(42% 42% at 16% 18%, var(--dna-scene-glow-a), transparent 72%),
+            radial-gradient(48% 48% at 84% 82%, var(--dna-scene-glow-b), transparent 74%),
+            linear-gradient(180deg, rgba(148, 163, 184, 0.08), transparent 44%);
     }
 
     .dna-helix-scene__shine {
-        background: linear-gradient(110deg, rgba(255, 255, 255, 0.28) 0%, transparent 34%, transparent 66%, rgba(255, 255, 255, 0.12) 100%);
+        z-index: 1;
+        background:
+            linear-gradient(112deg, rgba(255, 255, 255, 0.38) 0%, transparent 32%, transparent 67%, rgba(255, 255, 255, 0.16) 100%),
+            repeating-linear-gradient(90deg, rgba(37, 99, 235, 0.045) 0 1px, transparent 1px 22px);
         mix-blend-mode: screen;
-        opacity: 0.72;
-        animation: dnaShineSweep 6.8s ease-in-out infinite;
+        opacity: 0.7;
+        animation: dnaShineSweep 7.2s ease-in-out infinite;
     }
 
-    .dna-helix-svg {
+    .dna-molecule-stage {
         position: absolute;
-        inset: 8px 12px 42px;
-        width: calc(100% - 24px);
-        height: calc(100% - 50px);
-        display: none;
+        inset: 12px 12px 48px;
         z-index: 2;
-        overflow: visible;
-        filter: drop-shadow(0 10px 18px rgba(79, 70, 229, 0.16));
-        transform: translate3d(0, 0, 0);
-        transform-origin: center center;
-        will-change: transform;
-        animation: dnaFloat 4.6s ease-in-out infinite;
+        display: grid;
+        place-items: center;
+        perspective: 760px;
+        pointer-events: none;
+        transform-style: preserve-3d;
     }
 
-    .dna-helix-canvas {
+    .dna-molecule-stage::before {
+        content: "";
         position: absolute;
-        inset: 8px 12px 42px;
-        width: calc(100% - 24px);
-        height: calc(100% - 50px);
-        display: block;
-        z-index: 2;
-        transform: translate3d(0, 0, 0);
-        transform-origin: center center;
-        will-change: transform;
-        animation: dnaFloat 4.6s ease-in-out infinite;
-        filter: drop-shadow(0 10px 18px rgba(79, 70, 229, 0.16));
+        width: min(72%, 280px);
+        height: 78%;
+        border-radius: 999px;
+        background:
+            radial-gradient(circle at 50% 42%, var(--dna-primary), transparent 62%),
+            radial-gradient(circle at 48% 60%, var(--dna-secondary), transparent 68%);
+        filter: blur(18px);
+        opacity: 0.95;
+        transform: rotateX(64deg) translateY(8px);
+        animation: dnaCoreBreath 5.4s ease-in-out infinite;
     }
 
-    .dna-helix-track {
-        fill: none;
-        stroke: var(--dna-helix-line);
-        stroke-width: 2.7;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        opacity: 0.9;
-        vector-effect: non-scaling-stroke;
+    .dna-molecule-orbit {
+        position: absolute;
+        width: min(76%, 300px);
+        height: 48%;
+        border-radius: 999px;
+        border: 1px solid rgba(37, 99, 235, 0.24);
+        background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.22), transparent 64%);
+        transform: rotateX(68deg) rotateZ(-6deg);
+        opacity: 0.62;
     }
 
-    .dna-helix-track--accent {
-        stroke-width: 1.5;
-        opacity: 0.42;
-        stroke-dasharray: 4 6;
-        animation: dnaDashFlow 9s linear infinite;
+    html.dark .dna-molecule-orbit {
+        background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.08), transparent 64%);
     }
 
-    .dna-helix-rung {
-        stroke: var(--dna-helix-rung);
-        stroke-width: 1.8;
-        stroke-linecap: round;
-        vector-effect: non-scaling-stroke;
-        animation: dnaRungPulse 2.7s ease-in-out infinite;
+    .dna-molecule-orbit--front {
+        width: min(62%, 238px);
+        height: 38%;
+        transform: rotateX(68deg) rotateZ(12deg) translateZ(18px);
+        border-color: rgba(20, 184, 166, 0.28);
+        opacity: 0.76;
     }
 
-    .dna-helix-node {
-        fill: var(--dna-helix-node);
-        stroke: rgba(255, 255, 255, 0.74);
-        stroke-width: 1.6;
-        vector-effect: non-scaling-stroke;
-        filter: drop-shadow(0 2px 6px rgba(79, 70, 229, 0.2));
-        animation: dnaNodeBreath 2.4s ease-in-out infinite;
+    .dna-molecule-core {
+        position: absolute;
+        width: 94px;
+        height: 94px;
+        border-radius: 50%;
+        background:
+            radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.9), transparent 18%),
+            radial-gradient(circle at 52% 50%, var(--dna-primary), transparent 58%),
+            radial-gradient(circle at 58% 62%, var(--dna-secondary), transparent 70%);
+        opacity: 0.26;
+        filter: blur(2px);
+        transform: translateZ(-26px);
+    }
+
+    .dna-molecule-helix {
+        position: relative;
+        width: min(76%, 278px);
+        height: 100%;
+        min-height: 178px;
+        transform-style: preserve-3d;
+        transform: rotateX(58deg) rotateZ(-8deg) translateZ(26px);
+        animation: dnaMoleculeFloat 5.8s ease-in-out infinite;
+    }
+
+    .dna-molecule-helix::before,
+    .dna-molecule-helix::after {
+        content: "";
+        position: absolute;
+        top: 5%;
+        bottom: 5%;
+        left: 50%;
+        width: 4px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, transparent, var(--dna-primary), var(--dna-secondary), transparent);
+        box-shadow: 0 0 18px rgba(37, 99, 235, 0.32);
+        opacity: 0.82;
+        transform-origin: center;
+    }
+
+    .dna-molecule-helix::before {
+        transform: translateX(-50%) rotateZ(18deg) rotateY(28deg);
+    }
+
+    .dna-molecule-helix::after {
+        background: linear-gradient(180deg, transparent, var(--dna-secondary), var(--dna-spark), transparent);
+        transform: translateX(-50%) rotateZ(-18deg) rotateY(-28deg);
+        box-shadow: 0 0 18px rgba(20, 184, 166, 0.32);
+    }
+
+    .dna-molecule-rung {
+        position: absolute;
+        left: 50%;
+        top: calc(6% + (var(--i) * 6.25%));
+        width: var(--w);
+        height: 3px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--dna-primary), rgba(255, 255, 255, 0.76), var(--dna-secondary));
+        box-shadow: 0 0 14px rgba(37, 99, 235, 0.2);
+        transform: translateX(-50%) rotateZ(var(--r)) translateZ(calc(8px + (var(--i) * 0.8px)));
+        opacity: calc(0.52 + (var(--dna-energy) * 0.42));
+        animation: dnaRungPulse 2.8s ease-in-out infinite;
+        animation-delay: calc(var(--i) * -0.11s);
+    }
+
+    .dna-molecule-rung::before,
+    .dna-molecule-rung::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        background:
+            radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.96), transparent 22%),
+            linear-gradient(135deg, var(--dna-primary), var(--dna-secondary));
+        border: 1px solid rgba(255, 255, 255, 0.78);
+        box-shadow: 0 5px 14px rgba(37, 99, 235, 0.22);
+        transform: translateY(-50%);
+    }
+
+    .dna-molecule-rung::before {
+        left: -7px;
+    }
+
+    .dna-molecule-rung::after {
+        right: -7px;
+        background:
+            radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.96), transparent 22%),
+            linear-gradient(135deg, var(--dna-secondary), var(--dna-spark));
     }
 
     .dna-helix-labels {
@@ -66659,6 +66758,7 @@ html.perf: blur(8px) fallback
         left: 12px;
         right: 12px;
         bottom: 10px;
+        z-index: 3;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -66668,96 +66768,89 @@ html.perf: blur(8px) fallback
     }
 
     .dna-helix-label {
-        padding: 4px 9px;
+        padding: 5px 10px;
         border-radius: 999px;
         font-size: 10px;
         line-height: 1.15;
         letter-spacing: 0.03em;
-        font-weight: 800;
+        font-weight: 850;
         background: var(--dna-label-bg);
         color: var(--dna-label-text);
-        border: 1px solid rgba(255, 255, 255, 0.34);
-        box-shadow: 0 4px 10px rgba(2, 6, 23, 0.06);
-        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.42);
+        box-shadow: 0 6px 14px rgba(2, 6, 23, 0.08);
+        backdrop-filter: blur(10px);
+    }
+
+    html.dark .dna-helix-label {
+        border-color: rgba(148, 163, 184, 0.18);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
     }
 
     .dna-helix-label b {
-        font-weight: 900;
+        font-weight: 950;
         margin-left: 4px;
     }
 
-    @keyframes dnaFloat {
+    @keyframes dnaMoleculeFloat {
         0% {
-            transform: translate3d(0, 0, 0) rotate(-0.4deg);
+            transform: rotateX(58deg) rotateZ(-9deg) translate3d(0, 0, 26px);
         }
 
         50% {
-            transform: translate3d(0, -4px, 0) rotate(0.4deg);
+            transform: rotateX(61deg) rotateZ(7deg) translate3d(0, -5px, 34px);
         }
 
         100% {
-            transform: translate3d(0, 0, 0) rotate(-0.4deg);
+            transform: rotateX(58deg) rotateZ(-9deg) translate3d(0, 0, 26px);
+        }
+    }
+
+    @keyframes dnaCoreBreath {
+        0%,
+        100% {
+            opacity: 0.72;
+            transform: rotateX(64deg) translateY(8px) scale(0.96);
+        }
+
+        50% {
+            opacity: 0.98;
+            transform: rotateX(64deg) translateY(4px) scale(1.04);
         }
     }
 
     @keyframes dnaShineSweep {
         0% {
-            opacity: 0.44;
-            transform: translateX(-6%);
+            opacity: 0.42;
+            transform: translateX(-5%);
         }
 
         50% {
-            opacity: 0.76;
-            transform: translateX(6%);
+            opacity: 0.74;
+            transform: translateX(5%);
         }
 
         100% {
-            opacity: 0.44;
-            transform: translateX(-6%);
+            opacity: 0.42;
+            transform: translateX(-5%);
         }
     }
 
     @keyframes dnaRungPulse {
         0%,
         100% {
-            opacity: 0.32;
+            filter: saturate(1) brightness(1);
         }
 
         50% {
-            opacity: 0.9;
-        }
-    }
-
-    @keyframes dnaNodeBreath {
-        0%,
-        100% {
-            transform: scale(0.92);
-            opacity: 0.88;
-        }
-
-        50% {
-            transform: scale(1.06);
-            opacity: 1;
-        }
-    }
-
-    @keyframes dnaDashFlow {
-        from {
-            stroke-dashoffset: 0;
-        }
-
-        to {
-            stroke-dashoffset: -80;
+            filter: saturate(1.2) brightness(1.08);
         }
     }
 
     @media (prefers-reduced-motion: reduce) {
         .dna-helix-scene__shine,
-        .dna-helix-canvas,
-        .dna-helix-svg,
-        .dna-helix-rung,
-        .dna-helix-node,
-        .dna-helix-track--accent {
+        .dna-molecule-stage::before,
+        .dna-molecule-helix,
+        .dna-molecule-rung {
             animation: none !important;
         }
     }
@@ -73744,6 +73837,69 @@ html.perf: blur(8px) fallback
         }
 
         window.renderDNAHelixScene = renderDNAHelixScene;
+
+        function getDNAThemeForCategory(category) {
+            const normalized = String(category || '').toLocaleLowerCase('tr-TR');
+            const palettes = [
+                { match: ['market', 'gıda', 'gida'], colors: ['#16a34a', '#22c55e', '#f59e0b'], icon: '🛒' },
+                { match: ['ulaşım', 'ulasim', 'yol', 'benzin'], colors: ['#0ea5e9', '#38bdf8', '#f97316'], icon: '🚕' },
+                { match: ['tamirat', 'onarım', 'onarim'], colors: ['#475569', '#38bdf8', '#f59e0b'], icon: '🔧' },
+                { match: ['sağlık', 'saglik'], colors: ['#dc2626', '#fb7185', '#22c55e'], icon: '💊' },
+                { match: ['aidat', 'fatura', 'kira'], colors: ['#2563eb', '#60a5fa', '#f59e0b'], icon: '📊' },
+                { match: ['eğlence', 'eglence'], colors: ['#7c3aed', '#ec4899', '#facc15'], icon: '🎮' },
+                { match: ['giyim', 'alışveriş', 'alisveris'], colors: ['#db2777', '#fb7185', '#38bdf8'], icon: '👕' },
+                { match: ['diğer', 'diger'], colors: ['#2563eb', '#14b8a6', '#f59e0b'], icon: '✨' }
+            ];
+            return palettes.find(item => item.match.some(key => normalized.includes(key))) || palettes[palettes.length - 1];
+        }
+
+        function renderDNAHelixSceneDOM(labels, visualValues, percentages) {
+            const scene = document.getElementById('dna-helix-scene');
+            const stage = document.getElementById('dna-molecule-stage');
+            const helix = document.getElementById('dna-molecule-helix');
+            const labelsEl = document.getElementById('dna-helix-labels');
+            if (!scene || !stage || !helix || !labelsEl) return;
+
+            const safeLabels = Array.isArray(labels) && labels.length > 0 ? labels : ['Denge'];
+            const safeValues = Array.isArray(visualValues) && visualValues.length > 0 ? visualValues : [68, 54, 42, 36];
+            const safePercentages = Array.isArray(percentages) && percentages.length > 0 ? percentages : [34, 28, 22, 16];
+            const dominant = safeLabels[0] || 'Denge';
+            const theme = getDNAThemeForCategory(dominant);
+            const averageEnergy = safeValues.reduce((sum, value) => sum + (Number(value) || 0), 0) / Math.max(1, safeValues.length);
+            const energy = Math.max(0.42, Math.min(0.96, averageEnergy / 100));
+
+            scene.style.setProperty('--dna-primary', theme.colors[0]);
+            scene.style.setProperty('--dna-secondary', theme.colors[1]);
+            scene.style.setProperty('--dna-spark', theme.colors[2]);
+            scene.style.setProperty('--dna-energy', energy.toFixed(2));
+            stage.setAttribute('aria-label', `Harcama DNA görselleştirmesi. Baskın kategori: ${dominant}. Çeşitlilik: ${Math.round(energy * 100)}%.`);
+
+            const baseWidths = [22, 38, 56, 74, 86, 74, 56, 38, 22, 38, 56, 74, 86, 74, 56];
+            helix.querySelectorAll('.dna-molecule-rung').forEach((rung, index) => {
+                const value = Number(safeValues[index % safeValues.length]) || 46;
+                const base = baseWidths[index % baseWidths.length];
+                const width = Math.max(18, Math.min(90, base + ((value - 50) * 0.16)));
+                rung.style.setProperty('--w', `${Math.round(width)}%`);
+                rung.style.opacity = String(Math.max(0.54, Math.min(0.98, 0.48 + (value / 145))));
+            });
+
+            const escapeHTML = (value) => String(value || '').replace(/[&<>"']/g, (match) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[match]));
+
+            labelsEl.innerHTML = safeLabels.slice(0, 4).map((label, index) => {
+                const itemTheme = getDNAThemeForCategory(label);
+                const pctValue = Math.round(Number(safePercentages[index]) || 0);
+                return `<span class="dna-helix-label">${itemTheme.icon} ${escapeHTML(label)}<b>%${pctValue}</b></span>`;
+            }).join('');
+        }
+
+        renderDNAHelixScene = renderDNAHelixSceneDOM;
+        window.renderDNAHelixScene = renderDNAHelixSceneDOM;
 
         window.renderRadarChart = function () {
             if (state.charts.radar) {
