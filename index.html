@@ -32533,6 +32533,8 @@
                                 <div class="dna-helix-scene mb-4" id="dna-helix-scene" aria-live="polite">
                                     <div class="dna-helix-scene__bg"></div>
                                     <div class="dna-helix-scene__shine"></div>
+                                    <canvas id="dna-helix-canvas" class="dna-helix-canvas"
+                                        role="img" aria-label="Harcama DNA görselleştirmesi"></canvas>
                                     <svg id="dna-helix-svg" class="dna-helix-svg" viewBox="0 0 320 230" fill="none"
                                         role="img" aria-label="Harcama DNA görselleştirmesi"></svg>
                                     <div id="dna-helix-labels" class="dna-helix-labels"></div>
@@ -66470,6 +66472,20 @@ html.perf: blur(8px) fallback
         animation: dnaFloat 4.6s ease-in-out infinite;
     }
 
+    .dna-helix-canvas {
+        position: absolute;
+        inset: 8px 12px 42px;
+        width: calc(100% - 24px);
+        height: calc(100% - 50px);
+        display: block;
+        z-index: 2;
+        transform: translate3d(0, 0, 0);
+        transform-origin: center center;
+        will-change: transform;
+        animation: dnaFloat 4.6s ease-in-out infinite;
+        filter: drop-shadow(0 10px 18px rgba(79, 70, 229, 0.16));
+    }
+
     .dna-helix-track {
         fill: none;
         stroke: var(--dna-helix-line);
@@ -66603,6 +66619,7 @@ html.perf: blur(8px) fallback
 
     @media (prefers-reduced-motion: reduce) {
         .dna-helix-scene__shine,
+        .dna-helix-canvas,
         .dna-helix-svg,
         .dna-helix-rung,
         .dna-helix-node,
@@ -73419,64 +73436,129 @@ html.perf: blur(8px) fallback
             };
         }
 
-        function renderDNAHelixScene(labels, visualValues, percentages) {
-            const svg = document.getElementById('dna-helix-svg');
-            const labelsEl = document.getElementById('dna-helix-labels');
-            if (!svg || !labelsEl || !Array.isArray(labels) || labels.length === 0) return;
+        function drawDNAHelixCanvas(canvas, visualValues) {
+            const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
+            if (!ctx) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const cssWidth = Math.max(1, Math.round(rect.width || canvas.clientWidth || 296));
+            const cssHeight = Math.max(1, Math.round(rect.height || canvas.clientHeight || 206));
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            const targetWidth = Math.round(cssWidth * dpr);
+            const targetHeight = Math.round(cssHeight * dpr);
+
+            if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+                canvas.width = targetWidth;
+                canvas.height = targetHeight;
+            }
+
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.scale(dpr, dpr);
 
             const isDark = document.documentElement.classList.contains('dark');
-            const centerX = 160;
-            const topY = 12;
-            const height = 188;
-            const steps = 24;
-            const avgLevel = visualValues.reduce((sum, value) => sum + value, 0) / visualValues.length;
-            const amplitude = 42 + ((avgLevel / 100) * 18);
+            const centerX = cssWidth / 2;
+            const topY = 10;
+            const height = Math.max(120, cssHeight - 20);
+            const steps = 26;
+            const avgLevel = visualValues.reduce((sum, value) => sum + value, 0) / Math.max(1, visualValues.length);
+            const amplitude = Math.min(cssWidth * 0.21, 42 + ((avgLevel / 100) * 18));
             const twist = Math.PI * 4.2;
 
             const left = [];
             const right = [];
-            const rungs = [];
-            const nodes = [];
+            const rungOpacity = [];
+            const nodeRadii = [];
 
             for (let i = 0; i < steps; i += 1) {
                 const t = i / (steps - 1);
                 const y = topY + (t * height);
                 const phase = (t * twist) - (Math.PI / 2);
                 const idx = i % visualValues.length;
-                const intensity = visualValues[idx] / 100;
+                const intensity = (visualValues[idx] || 40) / 100;
                 const spread = Math.sin(phase) * amplitude * (0.78 + (intensity * 0.28));
 
-                const leftX = centerX - spread;
-                const rightX = centerX + spread;
-                const nodeRadius = 3.1 + (intensity * 1.95);
-                const delay = (i * 0.08).toFixed(2);
-                const opacity = (0.3 + (Math.abs(Math.sin(phase)) * 0.45)).toFixed(3);
-
-                left.push(`${leftX.toFixed(2)},${y.toFixed(2)}`);
-                right.push(`${rightX.toFixed(2)},${y.toFixed(2)}`);
-
-                rungs.push(
-                    `<line class="dna-helix-rung" x1="${leftX.toFixed(2)}" y1="${y.toFixed(2)}" x2="${rightX.toFixed(2)}" y2="${y.toFixed(2)}" style="animation-delay:${delay}s;opacity:${opacity};" />`
-                );
-                nodes.push(
-                    `<circle class="dna-helix-node" cx="${leftX.toFixed(2)}" cy="${y.toFixed(2)}" r="${nodeRadius.toFixed(2)}" style="animation-delay:${delay}s;" />` +
-                    `<circle class="dna-helix-node" cx="${rightX.toFixed(2)}" cy="${y.toFixed(2)}" r="${nodeRadius.toFixed(2)}" style="animation-delay:${delay}s;" />`
-                );
+                left.push({ x: centerX - spread, y });
+                right.push({ x: centerX + spread, y });
+                nodeRadii.push(3.1 + (intensity * 1.95));
+                rungOpacity.push(0.3 + (Math.abs(Math.sin(phase)) * 0.45));
             }
 
-            const accentA = isDark ? '#38bdf8' : '#4f46e5';
-            const accentB = isDark ? '#c084fc' : '#7c3aed';
-            const strandA = isDark ? '#a5b4fc' : '#5b52e8';
-            const strandB = isDark ? '#f0abfc' : '#9a4cf6';
+            const accentA = isDark ? 'rgba(56, 189, 248, 0.78)' : 'rgba(79, 70, 229, 0.75)';
+            const accentB = isDark ? 'rgba(192, 132, 252, 0.76)' : 'rgba(124, 58, 237, 0.72)';
+            const strandA = isDark ? 'rgba(165, 180, 252, 0.92)' : 'rgba(91, 82, 232, 0.9)';
+            const strandB = isDark ? 'rgba(240, 171, 252, 0.88)' : 'rgba(154, 76, 246, 0.86)';
+            const rungColor = isDark ? 'rgba(148, 163, 184, 0.36)' : 'rgba(99, 102, 241, 0.26)';
+            const nodeColor = isDark ? '#a5b4fc' : '#4f46e5';
+            const nodeStroke = isDark ? 'rgba(226, 232, 240, 0.72)' : 'rgba(255, 255, 255, 0.76)';
 
-            svg.innerHTML = `
-                ${rungs.join('')}
-                <polyline class="dna-helix-track" points="${left.join(' ')}" style="stroke:${strandA}" />
-                <polyline class="dna-helix-track" points="${right.join(' ')}" style="stroke:${strandB}" />
-                <polyline class="dna-helix-track dna-helix-track--accent" points="${left.join(' ')}" style="stroke:${accentA}" />
-                <polyline class="dna-helix-track dna-helix-track--accent" points="${right.join(' ')}" style="stroke:${accentB}" />
-                ${nodes.join('')}
-            `;
+            const drawPath = (points, strokeStyle, lineWidth, dashed) => {
+                if (!points.length) return;
+                ctx.save();
+                ctx.beginPath();
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.strokeStyle = strokeStyle;
+                ctx.lineWidth = lineWidth;
+                if (dashed) ctx.setLineDash([4, 6]);
+                ctx.moveTo(points[0].x, points[0].y);
+                for (let i = 1; i < points.length; i += 1) ctx.lineTo(points[i].x, points[i].y);
+                ctx.stroke();
+                ctx.restore();
+            };
+
+            for (let i = 0; i < left.length; i += 1) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(left[i].x, left[i].y);
+                ctx.lineTo(right[i].x, right[i].y);
+                ctx.strokeStyle = rungColor;
+                ctx.lineWidth = 1.8;
+                ctx.lineCap = 'round';
+                ctx.globalAlpha = rungOpacity[i];
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            drawPath(left, strandA, 2.7, false);
+            drawPath(right, strandB, 2.7, false);
+            drawPath(left, accentA, 1.4, true);
+            drawPath(right, accentB, 1.4, true);
+
+            for (let i = 0; i < left.length; i += 1) {
+                const points = [left[i], right[i]];
+                for (let p = 0; p < points.length; p += 1) {
+                    const point = points[p];
+                    const radius = nodeRadii[i];
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+                    ctx.fillStyle = nodeColor;
+                    ctx.strokeStyle = nodeStroke;
+                    ctx.lineWidth = 1.6;
+                    ctx.shadowColor = isDark ? 'rgba(56, 189, 248, 0.2)' : 'rgba(79, 70, 229, 0.18)';
+                    ctx.shadowBlur = 6;
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+        }
+
+        function renderDNAHelixScene(labels, visualValues, percentages) {
+            const canvas = document.getElementById('dna-helix-canvas');
+            const svg = document.getElementById('dna-helix-svg');
+            const labelsEl = document.getElementById('dna-helix-labels');
+            if (!labelsEl || !Array.isArray(labels) || labels.length === 0) return;
+
+            if (canvas) {
+                drawDNAHelixCanvas(canvas, visualValues);
+                requestAnimationFrame(() => drawDNAHelixCanvas(canvas, visualValues));
+                setTimeout(() => drawDNAHelixCanvas(canvas, visualValues), 120);
+            } else if (svg) {
+                // Canvas unavailable fallback: clear SVG to avoid stale visuals.
+                svg.innerHTML = '';
+            }
 
             const categoryEmoji = {
                 'Market': '🛒',
