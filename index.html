@@ -5185,6 +5185,48 @@
 
             const APP_YEAR = new Date().getFullYear(); // Dinamik Yıl Yapısı
 
+            // Storage hardening: keep Capacitor Preferences + localStorage in sync
+            (function hardenAppStoragePersistence() {
+                try {
+                    if (!AppStorage || AppStorage.__mirrorPatched) return;
+
+                    const baseGet = AppStorage.get.bind(AppStorage);
+                    const baseSet = AppStorage.set.bind(AppStorage);
+                    const baseRemove = AppStorage.remove.bind(AppStorage);
+                    const baseClear = AppStorage.clear.bind(AppStorage);
+
+                    AppStorage.get = async function (key) {
+                        let value = null;
+                        try { value = await baseGet(key); } catch (e) { /* fallback below */ }
+                        if (value === null || value === undefined) {
+                            value = localStorage.getItem(key);
+                        } else {
+                            try { localStorage.setItem(key, value); } catch (e) { /* ignore */ }
+                        }
+                        return value;
+                    };
+
+                    AppStorage.set = async function (key, value) {
+                        try { await baseSet(key, value); } catch (e) { /* continue */ }
+                        try { localStorage.setItem(key, value); } catch (e) { /* ignore */ }
+                    };
+
+                    AppStorage.remove = async function (key) {
+                        try { await baseRemove(key); } catch (e) { /* continue */ }
+                        try { localStorage.removeItem(key); } catch (e) { /* ignore */ }
+                    };
+
+                    AppStorage.clear = async function () {
+                        try { await baseClear(); } catch (e) { /* continue */ }
+                        try { localStorage.clear(); } catch (e) { /* ignore */ }
+                    };
+
+                    AppStorage.__mirrorPatched = true;
+                } catch (e) {
+                    console.warn('[Storage] Mirror hardening failed:', e);
+                }
+            })();
+
             tailwind.config = {
                 darkMode: 'class',
                 theme: {
@@ -43346,7 +43388,7 @@
                     else if (type === 'transaction') {
                         transactions = transactions.filter(x => x.id !== id);
                         window.transactions = transactions;
-                        localStorage.setItem(`my_expenses_${APP_YEAR}`, JSON.stringify(transactions));
+                        await AppStorage.set(`my_expenses_${APP_YEAR}`, JSON.stringify(transactions));
                         window.processTransactions(transactions);
                     }
                 } catch (error) {
@@ -43990,9 +44032,11 @@
                 }
             };
 
-            window.loadLocalData = function () {
+            window.loadLocalData = async function () {
                 try {
-                    transactions = JSON.parse(localStorage.getItem(`my_expenses_${APP_YEAR}`) || '[]'); window.transactions = transactions;
+                    const txRaw = await AppStorage.get(`my_expenses_${APP_YEAR}`);
+                    transactions = JSON.parse(txRaw || localStorage.getItem(`my_expenses_${APP_YEAR}`) || '[]');
+                    window.transactions = transactions;
 
                     // ✅ ONE-TIME FIX: Yanlış excludeFromBalance işaretli expense'leri düzelt
                     // Kredi kartı gibi kategoriler yatırım değil, excludeFromBalance = false olmalı
@@ -44013,11 +44057,18 @@
                     }
                     window.transactions = transactions;
 
-                    goals = JSON.parse(localStorage.getItem(`my_goals_${APP_YEAR}`) || '[]');
-                    notes = JSON.parse(localStorage.getItem(`my_tasks_${APP_YEAR}`) || '[]');
-                    installments = JSON.parse(localStorage.getItem(`my_installments_${APP_YEAR}`) || '[]');
-                    categoryBudgets = JSON.parse(localStorage.getItem(`my_budgets_${APP_YEAR}`) || '{}');
-                    const savedCats = localStorage.getItem(`my_categories_${APP_YEAR}`);
+                    const [goalsRaw, notesRaw, installmentsRaw, budgetsRaw, savedCatsRaw] = await Promise.all([
+                        AppStorage.get(`my_goals_${APP_YEAR}`),
+                        AppStorage.get(`my_tasks_${APP_YEAR}`),
+                        AppStorage.get(`my_installments_${APP_YEAR}`),
+                        AppStorage.get(`my_budgets_${APP_YEAR}`),
+                        AppStorage.get(`my_categories_${APP_YEAR}`)
+                    ]);
+                    goals = JSON.parse(goalsRaw || localStorage.getItem(`my_goals_${APP_YEAR}`) || '[]');
+                    notes = JSON.parse(notesRaw || localStorage.getItem(`my_tasks_${APP_YEAR}`) || '[]');
+                    installments = JSON.parse(installmentsRaw || localStorage.getItem(`my_installments_${APP_YEAR}`) || '[]');
+                    categoryBudgets = JSON.parse(budgetsRaw || localStorage.getItem(`my_budgets_${APP_YEAR}`) || '{}');
+                    const savedCats = savedCatsRaw || localStorage.getItem(`my_categories_${APP_YEAR}`);
                     if (savedCats) { categories = JSON.parse(savedCats); } else { categories = JSON.parse(JSON.stringify(defaultCategories)); }
                     window.processTransactions(transactions); window.renderGoalsList(); window.renderNotes();
                     window.updateLoanRateDisplay(3.5);
