@@ -46683,6 +46683,30 @@ KULLANICI NOTU
 
             // 4. Galeri Render (Güncel)
             /* --- ROZET GALERİSİNİ RENDER ETME - APPLE FITNESS+ AWARDS STYLE --- */
+            const BADGE_RARITY_ORDER = {
+                common: 0,
+                rare: 1,
+                epic: 2,
+                legendary: 3,
+                mythic: 4
+            };
+
+            function getSortedBadgesByRarity() {
+                return [...badgesDef].sort((a, b) => {
+                    const aRarity = String(a?.rarity || 'common').toLowerCase();
+                    const bRarity = String(b?.rarity || 'common').toLowerCase();
+                    const rarityDiff = (BADGE_RARITY_ORDER[aRarity] ?? 999) - (BADGE_RARITY_ORDER[bRarity] ?? 999);
+                    if (rarityDiff !== 0) return rarityDiff;
+
+                    const aTitle = String(a?.title || '');
+                    const bTitle = String(b?.title || '');
+                    const titleDiff = aTitle.localeCompare(bTitle, 'tr', { sensitivity: 'base' });
+                    if (titleDiff !== 0) return titleDiff;
+
+                    return String(a?.id || '').localeCompare(String(b?.id || ''), 'en', { sensitivity: 'base' });
+                });
+            }
+
             window.renderNFTGalleryLegacy = function () {
                 let container = document.getElementById('nft-gallery-grid');
                 if (!container) container = document.getElementById('nft-gallery');
@@ -46694,7 +46718,7 @@ KULLANICI NOTU
 
                 container.innerHTML = '';
 
-                badgesDef.forEach((def, index) => {
+                getSortedBadgesByRarity().forEach((def, index) => {
                     const isUnlocked = myBadges.includes(def.id);
                     const rarityClass = `rarity-${def.rarity || 'common'}`;
                     const stateClass = isUnlocked ? 'badge-unlocked' : 'badge-locked';
@@ -46737,7 +46761,7 @@ KULLANICI NOTU
                 const myBadges = JSON.parse(localStorage.getItem(`my_badges_${currentYear}`) || '[]');
                 container.innerHTML = '';
 
-                badgesDef.forEach((def, index) => {
+                getSortedBadgesByRarity().forEach((def, index) => {
                     const isUnlocked = myBadges.includes(def.id);
                     const rarity = (def.rarity || 'common').toLowerCase();
                     const rarityClass = `rarity-${rarity}`;
