@@ -56940,14 +56940,16 @@ KULLANICI NOTU
                 /**
                  * KRİTİK DÜZELTME:
                  * - Kullanıcı "Yeni İşlem > Gider" kısmında Euro/Dolar/Altın/Çeyrek girerse:
-                 *   - "Bakiyeden düşme" AÇIK  => bu işlem BİRİKİM/YATIRIM (expense değil)
-                 *   - "Bakiyeden düşme" KAPALI => bu işlem GERÇEK GİDER
+                 *   - "Birikime Ekle" AÇIK     => işlem HEM gider HEM birikim akışına girer.
+                 *   - "Bakiyeden düşme" AÇIK   => işlem BİRİKİM/YATIRIM (expense değil).
+                 *   - İki toggle da kapalıysa  => işlem GERÇEK GİDER.
                  *
                  * - Geriye dönük uyumluluk:
                  *   Eski kayıtlarda excludeFromBalance alanı yoksa (undefined/null),
                  *   önceki davranış bozulmasın diye FX işlemini BİRİKİM sayıyoruz.
                  */
                 if (type === "expense" && isFx) {
+                    if (t.addToSavings === true) return true;
                     if (t.excludeFromBalance === true) return true;
                     if (t.excludeFromBalance === false) return false;
                     return true; // legacy
