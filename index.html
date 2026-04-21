@@ -45541,6 +45541,13 @@
                     const btnLbl = document.getElementById('lbl-pin-settings');
                     if (btnLbl) btnLbl.innerText = savedPin ? "PIN Kodunu Kaldır" : "PIN Oluştur";
 
+                    if (savedPin) {
+                        localStorage.setItem('pin_enabled', 'true');
+                    } else {
+                        localStorage.removeItem('pin_enabled');
+                        localStorage.removeItem('bio_enabled');
+                    }
+
                     const verified = sessionStorage.getItem('pin_verified');
                     if (savedPin && !verified) { this.showLockScreen("unlock"); }
 
@@ -45566,6 +45573,9 @@
                         if (mode === 'unlock') { title.innerText = "Giriş Yapın"; if (sub) sub.innerText = "Devam etmek için PIN girin"; }
                         else if (mode === 'create') { title.innerText = "PIN Oluştur"; if (sub) sub.innerText = "4 haneli yeni şifrenizi belirleyin"; }
                         else if (mode === 'confirm') { title.innerText = "PIN Doğrula"; if (sub) sub.innerText = "Şifrenizi tekrar girin"; }
+                    }
+                    if (mode === 'unlock') {
+                        setTimeout(() => window.BiometricBridge?.tryBiometricFirst?.(), 120);
                     }
                 },
                 cancelSetup() {
@@ -45595,7 +45605,19 @@
                     } else if (this.mode === 'confirm') {
                         if (this.currentInput === this.tempPin) {
                             await AppStorage.set('app_pin', this.tempPin);
+                            localStorage.setItem('pin_enabled', 'true');
                             this.unlock();
+                            if (window.BiometricBridge?.isAvailable) {
+                                const bioPref = localStorage.getItem('bio_enabled');
+                                if (bioPref === null || bioPref === 'false') {
+                                    localStorage.setItem('bio_enabled', 'true');
+                                    window.BiometricBridge.updateUI();
+                                    window.showMicroFeedback?.({
+                                        message: '🔐 Face ID / Touch ID aktif edildi',
+                                        type: 'success'
+                                    });
+                                }
+                            }
                             window.alertMessage("Güvenlik", "PIN kilidi oluşturuldu! 🔒", "green");
                             document.getElementById('lbl-pin-settings').innerText = "PIN Kodunu Kaldır";
                         } else {
@@ -45629,6 +45651,10 @@
                         });
                         if (confirmed) {
                             await AppStorage.remove('app_pin');
+                            localStorage.removeItem('pin_enabled');
+                            localStorage.removeItem('bio_enabled');
+                            sessionStorage.removeItem('pin_verified');
+                            window.BiometricBridge?.updateUI?.();
                             document.getElementById('lbl-pin-settings').innerText = "PIN Oluştur";
                             window.alertMessage("Bilgi", "Güvenlik kilidi kaldırıldı.", "blue");
                         }
@@ -45655,31 +45681,83 @@
             // ═══════════════════════════════════════════════════════════════════════════════════
             window.BiometricBridge = {
                 isAvailable: false,
+                provider: 'none',
+                biometryType: 'none',
+                normalizeBiometryType(type) {
+                    const raw = String(type || '').toLowerCase();
+                    if (raw.includes('face')) return 'faceid';
+                    if (raw.includes('touch') || raw.includes('finger')) return 'touchid';
+                    if (raw.includes('iris')) return 'iris';
+                    return 'none';
+                },
+                getLocalizedTypeLabel() {
+                    const lang = window.FINGENDA_LANG || 'tr';
+                    if (this.biometryType === 'faceid') return 'Face ID';
+                    if (this.biometryType === 'touchid') return lang === 'en' ? 'Touch ID' : 'Touch ID';
+                    if (this.biometryType === 'iris') return lang === 'en' ? 'Iris' : 'İris';
+                    return lang === 'en' ? 'Biometric' : 'Biyometrik';
+                },
+                getBioEnabledPreference() {
+                    const stored = localStorage.getItem('bio_enabled');
+                    if (stored === null && this.isAvailable) {
+                        localStorage.setItem('bio_enabled', 'true');
+                        return true;
+                    }
+                    return stored === 'true';
+                },
                 async init() {
                     try {
-                        // Check for Capacitor native biometric plugin
-                        if (window.Capacitor?.Plugins?.NativeBiometric) {
+                        this.isAvailable = false;
+                        this.provider = 'none';
+                        this.biometryType = 'none';
+
+                        if (window.Capacitor?.Plugins?.NativeBiometric?.isAvailable) {
                             const result = await window.Capacitor.Plugins.NativeBiometric.isAvailable();
-                            this.isAvailable = result?.isAvailable ?? false;
-                        } else if (window.Capacitor?.Plugins?.BiometricAuth) {
-                            this.isAvailable = true;
+                            const available = !!(result?.isAvailable ?? result?.available);
+                            if (available) {
+                                this.isAvailable = true;
+                                this.provider = 'native-biometric';
+                                this.biometryType = this.normalizeBiometryType(result?.biometryType || result?.strongBiometryType);
+                            }
                         }
-                        // Update UI if biometric available
-                        this.updateUI();
+
+                        if (!this.isAvailable && window.FingoBiometric?.isAvailable) {
+                            const available = await window.FingoBiometric.isAvailable();
+                            if (available) {
+                                this.isAvailable = true;
+                                this.provider = 'fingo-biometric';
+                                this.biometryType = this.normalizeBiometryType(await window.FingoBiometric.getBiometryType?.());
+                            }
+                        }
+
+                        if (!this.isAvailable && window.Capacitor?.Plugins?.BiometricAuth) {
+                            this.isAvailable = true;
+                            this.provider = 'biometric-auth';
+                            const typeResult = await window.Capacitor.Plugins.BiometricAuth.getBiometryType?.();
+                            this.biometryType = this.normalizeBiometryType(typeResult?.biometryType || typeResult?.type);
+                        }
                     } catch (e) {
                         console.warn('BiometricBridge init error:', e);
                         this.isAvailable = false;
+                        this.provider = 'none';
+                        this.biometryType = 'none';
+                    } finally {
+                        this.updateUI();
                     }
                 },
                 updateUI() {
                     const bioBtn = document.getElementById('btn-biometric-unlock');
                     const bioToggleRow = document.getElementById('bio-toggle-row');
                     const bioToggle = document.getElementById('bio-enabled-toggle');
-                    const bioLabel = document.getElementById('lbl-biometric-status');
+                    const bioStatusLabel = document.getElementById('lbl-biometric-status');
+                    const bioUnlockLabel = document.getElementById('lbl-biometric-unlock');
+                    const lang = window.FINGENDA_LANG || 'tr';
+                    const typeLabel = this.getLocalizedTypeLabel();
+                    const bioLabel = bioStatusLabel;
 
                     // Show/hide biometric button on PIN screen
                     if (bioBtn) {
-                        const bioEnabled = localStorage.getItem('bio_enabled') === 'true';
+                        const bioEnabled = this.getBioEnabledPreference();
                         bioBtn.classList.toggle('hidden', !this.isAvailable || !bioEnabled);
                     }
 
@@ -45691,26 +45769,47 @@
 
                     // Set toggle state
                     if (bioToggle) {
-                        bioToggle.checked = localStorage.getItem('bio_enabled') === 'true';
+                        bioToggle.checked = this.getBioEnabledPreference();
+                    }
+
+                    if (bioUnlockLabel) {
+                        bioUnlockLabel.textContent = this.isAvailable
+                            ? (lang === 'en' ? `Unlock with ${typeLabel}` : `${typeLabel} ile Aç`)
+                            : (lang === 'en' ? 'Unlock with biometrics' : 'Biyometrik ile Aç');
                     }
 
                     // Update label
-                    if (bioLabel) {
-                        bioLabel.textContent = this.isAvailable ? 'Biyometrik ile hızlı giriş' : 'Biyometrik mevcut değil';
+                    if (bioStatusLabel) {
+                        bioLabel.textContent = this.isAvailable
+                            ? (lang === 'en' ? `${typeLabel} quick unlock` : `${typeLabel} ile hızlı giriş`)
+                            : (lang === 'en' ? 'Biometric unavailable' : 'Biyometrik mevcut değil');
                     }
                 },
                 async authenticate() {
                     try {
                         if (!this.isAvailable) return false;
 
-                        // Try Capacitor NativeBiometric
-                        if (window.Capacitor?.Plugins?.NativeBiometric) {
+                        // Try Capacitor NativeBiometric first
+                        if (this.provider === 'native-biometric' && window.Capacitor?.Plugins?.NativeBiometric?.verifyIdentity) {
                             await window.Capacitor.Plugins.NativeBiometric.verifyIdentity({
-                                reason: 'Fingenda\'ya giriş yapmak için doğrulayın',
-                                title: 'Biyometrik Doğrulama',
-                                subtitle: 'Parmak izi veya yüz tanıma'
+                                reason: 'Authenticate to unlock Fingenda',
+                                title: 'Biometric Authentication',
+                                subtitle: 'Face ID or Touch ID'
                             });
                             return true;
+                        }
+                        if (window.FingoBiometric?.authenticate) {
+                            const result = await window.FingoBiometric.authenticate('Authenticate to unlock Fingenda');
+                            return !!result?.success;
+                        }
+                        if (window.Capacitor?.Plugins?.BiometricAuth?.authenticate) {
+                            const result = await window.Capacitor.Plugins.BiometricAuth.authenticate({
+                                reason: 'Authenticate to unlock Fingenda',
+                                title: 'Biometric Authentication',
+                                subtitle: 'Face ID or Touch ID',
+                                negativeButtonText: 'Cancel'
+                            });
+                            return !!(result?.verified || result?.authenticated || result?.success);
                         }
                         return false;
                     } catch (e) {
@@ -45720,7 +45819,7 @@
                 },
                 async tryBiometricFirst() {
                     // Only try biometric if enabled in settings
-                    const bioEnabled = localStorage.getItem('bio_enabled') === 'true';
+                    const bioEnabled = this.getBioEnabledPreference();
                     if (this.isAvailable && bioEnabled) {
                         const success = await this.authenticate();
                         if (success) {
@@ -45758,7 +45857,7 @@
                     } else {
                         // App came back - check if we should lock
                         if (backgroundTime && (Date.now() - backgroundTime) >= AUTO_LOCK_DELAY) {
-                            localStorage.removeItem('pin_verified');
+                            sessionStorage.removeItem('pin_verified');
                             window.showMicroFeedback?.({ message: '🔒 Güvenlik için kilit aktif', type: 'info' });
 
                             // Show PIN screen
@@ -47234,7 +47333,7 @@ KULLANICI NOTU
                                     <circle cx="12" cy="12" r="1.75" fill="currentColor" />
                                 </svg>
                             </span>
-                            <span id="lbl-biometric-status">Face ID / Touch ID ile Aç</span>
+                            <span id="lbl-biometric-unlock">Face ID / Touch ID ile Aç</span>
                         </button>
                     </section>
                 </div>

@@ -11,6 +11,7 @@ const SPEECH_BLOCK = `
 // FINGENDA_NATIVE_SPEECH_PLUGIN_BEGIN
 import Speech
 import AVFoundation
+import LocalAuthentication
 import UIKit
 
 @objc(FingendaSpeechRecognitionPlugin)
@@ -351,6 +352,76 @@ public class FingendaSpeechRecognitionPlugin: CAPPlugin, CAPBridgedPlugin, SFSpe
     }
 }
 
+@objc(FingendaBiometricAuthPlugin)
+public class FingendaBiometricAuthPlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "FingendaBiometricAuthPlugin"
+    public let jsName = "BiometricAuth"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "isAvailable", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getBiometryType", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "authenticate", returnType: CAPPluginReturnPromise)
+    ]
+
+    @objc func isAvailable(_ call: CAPPluginCall) {
+        let context = LAContext()
+        var error: NSError?
+        let available = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
+        call.resolve([
+            "isAvailable": available,
+            "biometryType": mapBiometryType(context.biometryType),
+            "error": error?.localizedDescription ?? ""
+        ])
+    }
+
+    @objc func getBiometryType(_ call: CAPPluginCall) {
+        let context = LAContext()
+        _ = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
+        call.resolve([
+            "biometryType": mapBiometryType(context.biometryType)
+        ])
+    }
+
+    @objc func authenticate(_ call: CAPPluginCall) {
+        let context = LAContext()
+        let reason = call.getString("reason") ?? "Authenticate to continue."
+        let negative = call.getString("negativeButtonText") ?? "Cancel"
+        context.localizedCancelTitle = negative
+
+        var error: NSError?
+        guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
+            call.resolve([
+                "verified": false,
+                "error": error?.localizedDescription ?? "Biometric authentication is not available."
+            ])
+            return
+        }
+
+        context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { success, evaluateError in
+            DispatchQueue.main.async {
+                if success {
+                    call.resolve(["verified": true])
+                } else {
+                    call.resolve([
+                        "verified": false,
+                        "error": evaluateError?.localizedDescription ?? "Biometric authentication failed."
+                    ])
+                }
+            }
+        }
+    }
+
+    private func mapBiometryType(_ type: LABiometryType) -> String {
+        switch type {
+        case .faceID:
+            return "faceId"
+        case .touchID:
+            return "touchId"
+        default:
+            return "none"
+        }
+    }
+}
+
 @objc(FingendaFileExporterPlugin)
 public class FingendaFileExporterPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "FingendaFileExporterPlugin"
@@ -440,6 +511,7 @@ public class FingendaFileExporterPlugin: CAPPlugin, CAPBridgedPlugin {
 class FingendaBridgeViewController: CAPBridgeViewController {
     override open func capacitorDidLoad() {
         bridge?.registerPluginInstance(FingendaSpeechRecognitionPlugin())
+        bridge?.registerPluginInstance(FingendaBiometricAuthPlugin())
         bridge?.registerPluginInstance(FingendaFileExporterPlugin())
     }
 }
@@ -467,9 +539,10 @@ function patchInfoPlist() {
     let content = fs.readFileSync(INFO_PLIST_PATH, 'utf8');
     content = setPlistString(content, 'NSMicrophoneUsageDescription', 'Fingenda, sesle islem ekleme ozelligi icin mikrofonunuza erisim istiyor.');
     content = setPlistString(content, 'NSSpeechRecognitionUsageDescription', 'Fingenda, sesinizi yaziya cevirerek hizli islem girisi yapabilmek icin ses tanima izni istiyor.');
+    content = setPlistString(content, 'NSFaceIDUsageDescription', 'Fingenda, finansal verilerinizi korumak icin Face ID / Touch ID kullanir.');
 
     fs.writeFileSync(INFO_PLIST_PATH, content, 'utf8');
-    console.log('[iOS Speech] Info.plist mikrofon ve ses tanima izin metinleri dogrulandi.');
+    console.log('[iOS Speech] Info.plist mikrofon, ses tanima ve Face ID izin metinleri dogrulandi.');
 }
 
 function patchAppDelegate() {
@@ -484,7 +557,7 @@ function patchAppDelegate() {
         throw new Error('AppDelegate.swift beklenen Capacitor importunu icermiyor.');
     }
 
-    const importLines = ['import Speech', 'import AVFoundation', 'import UIKit'];
+    const importLines = ['import Speech', 'import AVFoundation', 'import LocalAuthentication', 'import UIKit'];
     let nextContent = content;
     for (const importLine of importLines) {
         if (!nextContent.includes(importLine)) {
