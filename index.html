@@ -54875,6 +54875,124 @@ KULLANICI NOTU
            ========================================================= */
 
             /* Root: zaten fixed & center; light’ta sadece daha temiz spacing */
+            /* === PIN FULLSCREEN LAYOUT FIX (final override) === */
+            #pin-lock-screen.pin-modal-shell {
+                overflow-x: hidden !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            #pin-lock-screen:not(.hidden) {
+                align-items: stretch !important;
+                justify-content: stretch !important;
+                padding:
+                    calc(env(safe-area-inset-top, 0px) + 8px)
+                    10px
+                    calc(env(safe-area-inset-bottom, 0px) + 10px) !important;
+            }
+
+            #pin-lock-screen .pin-wrapper {
+                width: 100% !important;
+                max-width: min(560px, 100%) !important;
+                min-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 18px);
+                min-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 18px);
+                margin: 0 auto !important;
+                display: flex;
+                align-items: stretch;
+            }
+
+            #pin-lock-screen .pin-stage {
+                width: 100% !important;
+                min-height: 100%;
+                display: flex !important;
+                align-items: stretch !important;
+                justify-content: center !important;
+            }
+
+            #pin-lock-screen .pin-card {
+                width: 100% !important;
+                min-height: 100% !important;
+                border-radius: 30px !important;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
+                overflow-x: hidden !important;
+                overflow-y: auto !important;
+            }
+
+            #pin-lock-screen .pin-header {
+                margin-bottom: clamp(14px, 2.2vh, 22px) !important;
+            }
+
+            #pin-lock-screen .pin-dots-shell {
+                margin-bottom: clamp(12px, 2vh, 20px) !important;
+                flex-shrink: 0;
+            }
+
+            #pin-lock-screen .pin-keypad-shell {
+                flex: 1 1 auto;
+                display: flex;
+                align-items: stretch;
+            }
+
+            #pin-lock-screen .pin-keypad-grid {
+                width: 100%;
+                height: 100%;
+                align-content: stretch;
+                grid-auto-rows: minmax(56px, 1fr);
+                gap: clamp(10px, 1.8vh, 14px) !important;
+            }
+
+            #pin-lock-screen .liquid-key,
+            #pin-lock-screen .pin-action-tile {
+                height: auto !important;
+                min-height: 56px !important;
+                border-radius: 20px !important;
+            }
+
+            #pin-lock-screen .pin-biometric-btn {
+                margin-top: clamp(12px, 2vh, 18px) !important;
+                flex-shrink: 0;
+            }
+
+            @media (min-width: 700px) {
+                #pin-lock-screen:not(.hidden) {
+                    padding-left: 16px !important;
+                    padding-right: 16px !important;
+                }
+
+                #pin-lock-screen .pin-wrapper {
+                    max-width: 520px !important;
+                }
+            }
+
+            @media (max-height: 760px) {
+                #pin-lock-screen .pin-card {
+                    border-radius: 24px !important;
+                    padding: 20px 16px 16px !important;
+                }
+
+                #pin-lock-screen .pin-hero,
+                #pin-lock-screen .pin-hero-icon {
+                    width: 74px !important;
+                    height: 74px !important;
+                }
+
+                #pin-lock-screen .pin-hero-icon {
+                    border-radius: 22px !important;
+                }
+
+                #pin-lock-screen #pin-title {
+                    font-size: clamp(1.75rem, 4.8vw, 2.15rem) !important;
+                }
+
+                #pin-lock-screen .pin-dots-shell {
+                    min-height: 44px !important;
+                    width: 172px !important;
+                    padding: 0 16px !important;
+                }
+            }
+
             html:not(.dark) #micro-feedback-root:not(.hidden) {
                 padding: 0 14px !important;
             }
