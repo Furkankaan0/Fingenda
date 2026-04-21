@@ -2743,6 +2743,8 @@
                     'transaction.amountPlaceholder': '0,00',
                     'installment.excludeBalance': 'Bakiyeden Düşme',
                     'installment.excludeBalanceDesc': 'Net nakit etkilenmez, varlık artar.',
+                    'installment.addToSavings': 'Birikime Ekle',
+                    'installment.addToSavingsDesc': 'Gider olarak kalır, birikime de yansır.',
                     'action.cancelEdit': 'Düzenlemeyi İptal Et',
 
                     // ── Extra Dash/Common ──
@@ -3367,6 +3369,8 @@
                     'transaction.amountPlaceholder': '0.00',
                     'installment.excludeBalance': 'Exclude from Balance',
                     'installment.excludeBalanceDesc': 'Net cash is not affected, assets increase.',
+                    'installment.addToSavings': 'Add to Savings',
+                    'installment.addToSavingsDesc': 'Stays as an expense and also reflects in savings.',
                     'action.cancelEdit': 'Cancel Edit',
 
                     // ── Extra Dash/Common ──
@@ -32962,13 +32966,11 @@
                                     <span>🧠</span>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2">
-                                        <h3 class="text-base font-bold text-gray-900 dark:text-white truncate">
+                                    <h3 class="text-base font-bold text-gray-900 dark:text-white truncate">
                                             Fingo Brain
-                                        </h3>
-                                        <span
-                                            class="px-1.5 py-0.5 rounded-md bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300 text-[10px] font-bold uppercase tracking-wide">AI</span>
-                                    </div>
+                                    </h3>
+                                    <span
+                                        class="px-1.5 py-0.5 rounded-md bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300 text-[10px] font-bold uppercase tracking-wide">AI</span>
                                     <div class="fb-chat-status mt-0.5">
                                         <span class="fb-chat-status-dot"></span>
                                         <span class="text-gray-500 dark:text-gray-400 font-medium text-xs"
@@ -33566,27 +33568,52 @@
                                 </div>
 
                                 <div id="savings-options"
-                                    class="hidden flex items-center justify-between border-t border-gray-200 dark:border-white/10 pt-3 mt-2">
-                                    <div class="flex items-center gap-2">
+                                    class="hidden border-t border-gray-200 dark:border-white/10 pt-3 mt-2">
+                                    <div id="exclude-balance-row" class="savings-option-row">
+                                        <div class="flex items-center gap-2 savings-option-copy">
                                         <div
-                                            class="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 flex items-center justify-center text-xs">
+                                            class="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 flex items-center justify-center text-xs savings-option-icon">
                                             🛡️</div>
-                                        <div class="flex flex-col">
+                                        <div class="flex flex-col savings-option-text">
                                             <label for="input-exclude-balance"
-                                                class="text-xs font-bold text-gray-700 dark:text-gray-300 cursor-pointer"
+                                                class="text-xs font-bold text-gray-700 dark:text-gray-300 cursor-pointer savings-option-label"
                                                 data-i18n="installment.excludeBalance">Bakiyeden
                                                 Düşme</label>
-                                            <span class="text-[8px] text-gray-400"
+                                            <span class="text-[8px] text-gray-400 savings-option-desc"
                                                 data-i18n="installment.excludeBalanceDesc">Net nakit etkilenmez, varlık
                                                 artar.</span>
                                         </div>
                                     </div>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" id="input-exclude-balance" class="sr-only peer">
+                                    <label class="relative inline-flex items-center cursor-pointer savings-option-switch">
+                                        <input type="checkbox" id="input-exclude-balance" class="sr-only peer"
+                                            onchange="window.handleInvestmentToggleChange('exclude')">
                                         <div
                                             class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500">
                                         </div>
                                     </label>
+                                    </div>
+                                    <div id="add-to-savings-row" class="savings-option-row hidden">
+                                        <div class="flex items-center gap-2 savings-option-copy">
+                                            <div
+                                                class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center text-xs savings-option-icon">
+                                                💎</div>
+                                            <div class="flex flex-col savings-option-text">
+                                                <label for="input-add-to-savings"
+                                                    class="text-xs font-bold text-gray-700 dark:text-gray-300 cursor-pointer savings-option-label"
+                                                    data-i18n="installment.addToSavings">Birikime Ekle</label>
+                                                <span class="text-[8px] text-gray-400 savings-option-desc"
+                                                    data-i18n="installment.addToSavingsDesc">Gider olarak kalır, birikime
+                                                    de yansır.</span>
+                                            </div>
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer savings-option-switch">
+                                            <input type="checkbox" id="input-add-to-savings" class="sr-only peer"
+                                                onchange="window.handleInvestmentToggleChange('addToSavings')">
+                                            <div
+                                                class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500">
+                                            </div>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
 
@@ -35883,7 +35910,7 @@
                 }
             };
 
-            // PATCH: Tek "gerçek kaynak" finans özeti fonksiyonu - giderlerde birikimi asla sayma
+            // PATCH: Tek "gerçek kaynak" finans özeti fonksiyonu (dual-akış destekli)
             window.getFinanceSnapshot = function (scope = 'month') {
                 const all = window.transactions || [];
                 const now = currentDate;
@@ -35900,16 +35927,26 @@
 
                 let income = 0, expense = 0, savings = 0;
 
-                // PATCH: processTransactions ile tam aynı mantık - isSavingsTransaction kullan
+                // "Birikime Ekle" açılan giderler çift akışlıdır:
+                // hem gidere hem birikime yansır.
                 filtered.forEach(t => {
                     const val = typeof t.amount === 'number' ? t.amount : (parseFloat(t.amount) || (window.parseSimpleCurrency ? window.parseSimpleCurrency(t.amount) : 0) || 0);
                     if (t.type === 'income') {
                         income += val;
-                    } else if (isSavingsTransaction(t)) {
-                        savings += val; // Gider DEĞİL, birikim!
-                    } else {
-                        expense += val;
+                        return;
                     }
+
+                    if (String(t.type || '').toLowerCase() !== 'expense') return;
+
+                    const isExpenseFlow = window.isExpenseFlowTransaction
+                        ? window.isExpenseFlowTransaction(t)
+                        : !isSavingsTransaction(t);
+                    const isSavingsFlow = window.isSavingsFlowTransaction
+                        ? window.isSavingsFlowTransaction(t)
+                        : isSavingsTransaction(t);
+
+                    if (isExpenseFlow) expense += val;
+                    if (isSavingsFlow) savings += val;
                 });
 
                 // PATCH: Kur endeksli birikim değeri
@@ -39177,6 +39214,34 @@
                 const amountInput = document.getElementById('input-amount');
                 if (invGroup) invGroup.classList.add('hidden');
                 if (amountInput) { amountInput.readOnly = false; amountInput.placeholder = window.t('transaction.amountPlaceholder'); amountInput.classList.remove('bg-gray-100', 'dark:bg-gray-800', 'cursor-not-allowed'); }
+
+                const excludeCb = document.getElementById('input-exclude-balance');
+                const addSavingsCb = document.getElementById('input-add-to-savings');
+                const addSavingsRow = document.getElementById('add-to-savings-row');
+                const savingsOpt = document.getElementById('savings-options');
+
+                if (type !== 'expense') {
+                    if (excludeCb) { excludeCb.checked = false; excludeCb.disabled = true; }
+                    if (addSavingsCb) { addSavingsCb.checked = false; addSavingsCb.disabled = true; }
+                    if (addSavingsRow) addSavingsRow.classList.add('hidden');
+                    if (savingsOpt) savingsOpt.classList.add('hidden');
+                }
+
+                if (typeof window.checkInvestmentInput === 'function') {
+                    window.checkInvestmentInput();
+                }
+            };
+
+            window.handleInvestmentToggleChange = function (source) {
+                const excludeCb = document.getElementById('input-exclude-balance');
+                const addSavingsCb = document.getElementById('input-add-to-savings');
+                if (!excludeCb || !addSavingsCb) return;
+
+                if (source === 'exclude' && excludeCb.checked) {
+                    addSavingsCb.checked = false;
+                } else if (source === 'addToSavings' && addSavingsCb.checked) {
+                    excludeCb.checked = false;
+                }
             };
 
             window.checkInvestmentInput = function () {
@@ -39190,6 +39255,10 @@
                 const invGroup = document.getElementById('investment-input-group');
                 const invInput = document.getElementById('input-investment-qty');
                 const amountInput = document.getElementById('input-amount');
+                const savingsOptLegacy = document.getElementById('savings-options');
+                const addSavingsRowLegacy = document.getElementById('add-to-savings-row');
+                const excludeToggleEl = document.getElementById('input-exclude-balance');
+                const addSavingsToggleEl = document.getElementById('input-add-to-savings');
 
                 invGroup.classList.add('hidden'); if (invInput) invInput.value = '';
                 if (amountInput) { amountInput.readOnly = false; amountInput.placeholder = "0.00"; amountInput.classList.remove('bg-gray-100', 'dark:bg-gray-800', 'cursor-not-allowed'); }
@@ -39224,6 +39293,73 @@
 
                 const savingsOpt = document.getElementById('savings-options');
                 if (savingsOpt) savingsOpt.classList.toggle('hidden', !isInvestment);
+            };
+
+            window.checkInvestmentInput = function () {
+                const catSelect = document.getElementById('input-category');
+                if (!catSelect) return;
+                const cat = catSelect.value || '';
+
+                if (window.renderSubCategories) window.renderSubCategories();
+
+                const invGroup = document.getElementById('investment-input-group');
+                const invInput = document.getElementById('input-investment-qty');
+                const amountInput = document.getElementById('input-amount');
+                const savingsOpt = document.getElementById('savings-options');
+                const addSavingsRow = document.getElementById('add-to-savings-row');
+                const excludeCb = document.getElementById('input-exclude-balance');
+                const addSavingsCb = document.getElementById('input-add-to-savings');
+
+                if (invGroup) invGroup.classList.add('hidden');
+                if (invInput) invInput.value = '';
+                if (amountInput) {
+                    amountInput.readOnly = false;
+                    amountInput.placeholder = "0.00";
+                    amountInput.classList.remove('bg-gray-100', 'dark:bg-gray-800', 'cursor-not-allowed');
+                }
+
+                let rate = 0;
+                let placeholder = "";
+                let isInvestment = false;
+                const parseRate = (rStr) => {
+                    if (!rStr) return 0;
+                    if (typeof rStr === 'number') return rStr;
+                    return parseFloat(String(rStr).replace(' ₺', '').replace(/\./g, '').replace(',', '.'));
+                };
+
+                if (cat.includes('Altın Gr')) { rate = parseRate(liveRates.GRAM); placeholder = "Kaç Gram?"; isInvestment = true; }
+                else if (cat.includes('Çeyrek Altın')) { rate = parseRate(liveRates.QUARTER); placeholder = "Kaç Adet?"; isInvestment = true; }
+                else if (cat.includes('Dolar')) { rate = parseRate(liveRates.USD); placeholder = "Kaç Dolar?"; isInvestment = true; }
+                else if (cat.includes('Euro')) { rate = parseRate(liveRates.EUR); placeholder = "Kaç Euro?"; isInvestment = true; }
+
+                const canUseInvestmentToggles = isInvestment && currentType === 'expense';
+                if (!canUseInvestmentToggles && excludeCb) excludeCb.checked = false;
+                if (!canUseInvestmentToggles && addSavingsCb) addSavingsCb.checked = false;
+                if (excludeCb) excludeCb.disabled = !canUseInvestmentToggles;
+                if (addSavingsCb) addSavingsCb.disabled = !canUseInvestmentToggles;
+
+                if (isInvestment) {
+                    if (invGroup) invGroup.classList.remove('hidden');
+                    if (invInput) invInput.placeholder = placeholder;
+                    if (amountInput) {
+                        amountInput.readOnly = true;
+                        amountInput.placeholder = "Otomatik Hesaplanıyor...";
+                        amountInput.classList.add('bg-gray-100', 'dark:bg-gray-800', 'cursor-not-allowed');
+                    }
+                    if (invInput) {
+                        invInput.oninput = function () {
+                            const qty = parseFloat(this.value.replace(',', '.'));
+                            if (amountInput && qty && rate) {
+                                amountInput.value = (qty * rate).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            } else if (amountInput) {
+                                amountInput.value = '';
+                            }
+                        };
+                    }
+                }
+
+                if (savingsOpt) savingsOpt.classList.toggle('hidden', !canUseInvestmentToggles);
+                if (addSavingsRow) addSavingsRow.classList.toggle('hidden', !canUseInvestmentToggles);
             };
 
             window.changePeriod = function (direction) {
@@ -39274,6 +39410,11 @@
                 window.setTransactionType(t.type);
                 const catInput = document.getElementById('input-category'); if (catInput) catInput.value = t.category;
                 window.checkInvestmentInput();
+                const excludeCb = document.getElementById('input-exclude-balance');
+                const addSavingsCb = document.getElementById('input-add-to-savings');
+                if (excludeCb) excludeCb.checked = !!t.excludeFromBalance;
+                if (addSavingsCb) addSavingsCb.checked = !!t.addToSavings;
+                if (t.addToSavings && excludeCb) excludeCb.checked = false;
                 const invInput = document.getElementById('input-investment-qty'); if (t.unitAmount && invInput) invInput.value = t.unitAmount;
             };
 
@@ -39291,7 +39432,11 @@
 
                 // YENİ EKLENEN KISIM: Bakiyeden Düşme/Yatırım alanlarını sıfırla
                 document.getElementById('input-exclude-balance').checked = false;
+                const addSavingsCb = document.getElementById('input-add-to-savings');
+                if (addSavingsCb) addSavingsCb.checked = false;
                 document.getElementById('savings-options').classList.add('hidden');
+                const addSavingsRow = document.getElementById('add-to-savings-row');
+                if (addSavingsRow) addSavingsRow.classList.add('hidden');
             };
 
             window.updateChart = function (inc, exp, sav) {
@@ -39314,7 +39459,9 @@
                     const tDate = t.timestamp && t.timestamp.toDate ? t.timestamp.toDate() : new Date(t.date);
                     const d = tDate;
                     const matchDate = viewScope === 'year' ? d.getFullYear() === targetYear : (d.getMonth() === targetMonth && d.getFullYear() === targetYear);
-                    return matchDate && t.type === 'expense' && !isSavingsTransaction(t);
+                    return window.isExpenseFlowTransaction
+                        ? window.isExpenseFlowTransaction(t) && matchDate
+                        : (matchDate && t.type === 'expense' && !isSavingsTransaction(t));
                 }).forEach(t => { cats[t.category] = (cats[t.category] || 0) + parseFloat(t.amount); });
                 const labels = Object.keys(cats); const data = Object.values(cats);
                 const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#C9CBCF', '#E7E9ED', '#71B37C'];
@@ -39332,7 +39479,24 @@
 
                 if (currentChartType === 'general') {
                     let inc = 0, exp = 0, savFlow = 0;
-                    dataList.forEach(t => { const val = parseFloat(t.amount); if (t.type === 'income') inc += val; else if (isSavingsTransaction(t)) savFlow += val; else exp += val; });
+                    dataList.forEach(t => {
+                        const val = parseFloat(t.amount);
+                        if (t.type === 'income') {
+                            inc += val;
+                            return;
+                        }
+                        if (String(t.type || '').toLowerCase() !== 'expense') return;
+
+                        const isExpenseFlow = window.isExpenseFlowTransaction
+                            ? window.isExpenseFlowTransaction(t)
+                            : !isSavingsTransaction(t);
+                        const isSavingsFlow = window.isSavingsFlowTransaction
+                            ? window.isSavingsFlowTransaction(t)
+                            : isSavingsTransaction(t);
+
+                        if (isExpenseFlow) exp += val;
+                        if (isSavingsFlow) savFlow += val;
+                    });
 
                     // Kur endeksli birikim değeri kullan (grafikteki ile uyumlu olsun)
                     const sav = window.getIndexedSavingsValue ? window.getIndexedSavingsValue(dataList, savFlow) : savFlow;
@@ -39357,7 +39521,9 @@
                 const categoriesMap = {};
                 let totalExpense = 0;
 
-                dataList.filter(t => t.type === 'expense' && !isSavingsTransaction(t)).forEach(t => {
+                dataList.filter(t => window.isExpenseFlowTransaction
+                    ? window.isExpenseFlowTransaction(t)
+                    : (t.type === 'expense' && !isSavingsTransaction(t))).forEach(t => {
                     const amount = parseFloat(t.amount);
                     categoriesMap[t.category] = (categoriesMap[t.category] || 0) + amount;
                     totalExpense += amount;
@@ -39881,14 +40047,23 @@
                     const val = parseFloat(t.amount);
                     if (t.type === 'income') {
                         income += val;
-                    } else {
-                        // PATCH: isSavingsTransaction(t) kullanarak tek kaynak sınıflandırma
-                        if (isSavingsTransaction(t)) {
+                    } else if (String(t.type || '').toLowerCase() === 'expense') {
+                        const isExpenseFlow = window.isExpenseFlowTransaction
+                            ? window.isExpenseFlowTransaction(t)
+                            : !isSavingsTransaction(t);
+                        const isSavingsFlow = window.isSavingsFlowTransaction
+                            ? window.isSavingsFlowTransaction(t)
+                            : isSavingsTransaction(t);
+                        const isDualFlow = window.isDualSavingsTransaction
+                            ? window.isDualSavingsTransaction(t)
+                            : (t.addToSavings === true && t.type === 'expense');
+
+                        if (isExpenseFlow) expense += val;
+
+                        if (isSavingsFlow) {
                             savings += val;
-                            // Eğer "Bakiyeden Düşme" seçili DEĞİLSE (false/undefined), düşülecek tutara ekle
-                            if (!t.excludeFromBalance) { deductableSavings += val; }
-                        } else {
-                            expense += val;
+                            // Net bakiyeden sadece saf birikim (dual olmayan) düşülür.
+                            if (!isDualFlow && !t.excludeFromBalance) { deductableSavings += val; }
                         }
                     }
                 });
@@ -39911,11 +40086,20 @@
                         const val = parseFloat(t.amount);
                         if (t.type === 'income') {
                             prevIncome += val;
-                        } else {
-                            if (isSavingsTransaction(t)) {
-                                if (!t.excludeFromBalance) { prevDeductableSavings += val; }
-                            } else {
-                                prevExpense += val;
+                        } else if (String(t.type || '').toLowerCase() === 'expense') {
+                            const isExpenseFlow = window.isExpenseFlowTransaction
+                                ? window.isExpenseFlowTransaction(t)
+                                : !isSavingsTransaction(t);
+                            const isSavingsFlow = window.isSavingsFlowTransaction
+                                ? window.isSavingsFlowTransaction(t)
+                                : isSavingsTransaction(t);
+                            const isDualFlow = window.isDualSavingsTransaction
+                                ? window.isDualSavingsTransaction(t)
+                                : (t.addToSavings === true && t.type === 'expense');
+
+                            if (isExpenseFlow) prevExpense += val;
+                            if (isSavingsFlow && !isDualFlow && !t.excludeFromBalance) {
+                                prevDeductableSavings += val;
                             }
                         }
                     });
@@ -41285,7 +41469,10 @@
                 const sortedTx = transactions
                     .filter(t => {
                         const d = t.timestamp && t.timestamp.toDate ? t.timestamp.toDate() : new Date(t.date);
-                        return d.getMonth() === targetMonth && d.getFullYear() === targetYear && t.type === 'expense' && !isSavingsTransaction(t);
+                        const isExpenseFlow = window.isExpenseFlowTransaction
+                            ? window.isExpenseFlowTransaction(t)
+                            : (t.type === 'expense' && !isSavingsTransaction(t));
+                        return d.getMonth() === targetMonth && d.getFullYear() === targetYear && isExpenseFlow;
                     })
                     .sort((a, b) => new Date(a.date) - new Date(b.date));
 
@@ -41366,7 +41553,9 @@
                     if (tDate.getMonth() === targetMonth && tDate.getFullYear() === targetYear) {
                         const val = parseFloat(t.amount);
                         if (t.type === 'income') income += val;
-                        else if (t.type === 'expense') expense += val;
+                        else if (window.isExpenseFlowTransaction
+                            ? window.isExpenseFlowTransaction(t)
+                            : t.type === 'expense') expense += val;
                     }
                 });
 
@@ -41446,7 +41635,11 @@
                     return dateMatch && t.type === type;
                 });
 
-                if (type === 'expense') { filteredData = filteredData.filter(t => !isSavingsTransaction(t)); }
+                if (type === 'expense') {
+                    filteredData = filteredData.filter(t => window.isExpenseFlowTransaction
+                        ? window.isExpenseFlowTransaction(t)
+                        : !isSavingsTransaction(t));
+                }
 
                 const cats = {}; let total = 0;
                 filteredData.forEach(t => { cats[t.category] = (cats[t.category] || 0) + parseFloat(t.amount); total += parseFloat(t.amount); });
@@ -41663,10 +41856,15 @@
                         tDate = new Date(t.timestamp).toLocaleDateString('tr-TR');
                     }
 
+                    const isExpenseFlow = window.isExpenseFlowTransaction
+                        ? window.isExpenseFlowTransaction(t)
+                        : (t.type === 'expense' && !isSavingsTransaction(t));
+                    const isSavingsFlow = window.isSavingsFlowTransaction
+                        ? window.isSavingsFlowTransaction(t)
+                        : (t.type === 'expense' && isSavingsTransaction(t));
                     let typeLabel = t.type === 'income' ? 'Gelir' : 'Gider';
-                    if (t.type === 'expense' && isSavingsTransaction(t)) {
-                        typeLabel = 'Birikim';
-                    }
+                    if (isExpenseFlow && isSavingsFlow) typeLabel = 'Gider + Birikim';
+                    else if (isSavingsFlow) typeLabel = 'Birikim';
 
                     // Temizleme işlemi
                     const cleanDesc = removeEmojis((t.description || '').replace(/;/g, ' ').replace(/\n/g, ' '));
@@ -41736,13 +41934,16 @@
                     const val = parseFloat(t.amount);
                     if (t.type === 'income') {
                         totalIncome += val;
-                    } else {
-                        if (isSavingsTransaction(t)) {
-                            totalSavings += val;
-                        } else {
-                            totalExpense += val;
-                        }
+                        return;
                     }
+                    const isExpenseFlow = window.isExpenseFlowTransaction
+                        ? window.isExpenseFlowTransaction(t)
+                        : (t.type === 'expense' && !isSavingsTransaction(t));
+                    const isSavingsFlow = window.isSavingsFlowTransaction
+                        ? window.isSavingsFlowTransaction(t)
+                        : (t.type === 'expense' && isSavingsTransaction(t));
+                    if (isExpenseFlow) totalExpense += val;
+                    if (isSavingsFlow) totalSavings += val;
                 });
 
                 const netStatus = totalIncome - totalExpense;
@@ -41776,10 +41977,15 @@
                     if (t.timestamp && t.timestamp.toDate) tDate = t.timestamp.toDate().toLocaleDateString('tr-TR');
                     else if (t.timestamp) tDate = new Date(t.timestamp).toLocaleDateString('tr-TR');
 
+                    const isExpenseFlow = window.isExpenseFlowTransaction
+                        ? window.isExpenseFlowTransaction(t)
+                        : (t.type === 'expense' && !isSavingsTransaction(t));
+                    const isSavingsFlow = window.isSavingsFlowTransaction
+                        ? window.isSavingsFlowTransaction(t)
+                        : (t.type === 'expense' && isSavingsTransaction(t));
                     let typeLabel = t.type === 'income' ? 'Gelir' : 'Gider';
-                    if (t.type === 'expense' && isSavingsTransaction(t)) {
-                        typeLabel = 'Birikim';
-                    }
+                    if (isExpenseFlow && isSavingsFlow) typeLabel = 'Gider + Birikim';
+                    else if (isSavingsFlow) typeLabel = 'Birikim';
 
                     return [
                         tDate,
@@ -41801,7 +42007,7 @@
                         if (data.section === 'body' && data.column.index === 2) {
                             const rowType = data.row.raw[3];
                             if (rowType === 'Gelir') data.cell.styles.textColor = [22, 163, 74];
-                            else if (rowType === 'Birikim') data.cell.styles.textColor = [37, 99, 235];
+                            else if (rowType === 'Birikim' || rowType === 'Gider + Birikim') data.cell.styles.textColor = [37, 99, 235];
                             else data.cell.styles.textColor = [220, 38, 38];
                         }
                     }
@@ -41943,8 +42149,42 @@
                     unitAmountVal = parseFloat(unitAmountStr.replace(',', '.'));
                 }
 
-                const excludeFromBalance = document.getElementById('input-exclude-balance').checked;
-                const newTx = { type: currentType, amount: amount, date, category, description: desc, unitAmount: unitAmountVal, excludeFromBalance: excludeFromBalance };
+                const excludeCb = document.getElementById('input-exclude-balance');
+                const addSavingsCb = document.getElementById('input-add-to-savings');
+                const rawExcludeToggle = !!(excludeCb && excludeCb.checked);
+                const rawAddSavingsToggle = !!(addSavingsCb && addSavingsCb.checked);
+                let isInvestmentCategory = (typeof isInvestmentKeyword === 'function')
+                    ? isInvestmentKeyword(category)
+                    : /Dolar|Euro|AltÄ±n|Ã‡eyrek|Gram|USD|EUR/i.test(String(category || ''));
+                if (!isInvestmentCategory) {
+                    const catText = String(category || '').toLocaleLowerCase('tr-TR');
+                    isInvestmentCategory = /dolar|usd|euro|eur|altın|altin|çeyrek|ceyrek|gram/.test(catText);
+                }
+                if (!isInvestmentCategory) {
+                    const normalizedCategory = (typeof normalizeText === 'function')
+                        ? normalizeText(String(category || ''))
+                        : String(category || '')
+                            .toLocaleLowerCase('tr-TR')
+                            .normalize('NFD')
+                            .replace(/[\u0300-\u036f]/g, '')
+                            .replace(/[^a-z0-9]+/g, ' ')
+                            .trim();
+                    isInvestmentCategory = /(dolar|usd|euro|eur|altin|ceyrek|gram|gumus|ons)/.test(normalizedCategory);
+                }
+
+                const canUseInvestmentFlags = currentType === 'expense' && isInvestmentCategory;
+                const addToSavings = canUseInvestmentFlags && rawAddSavingsToggle;
+                const excludeFromBalance = canUseInvestmentFlags && rawExcludeToggle && !addToSavings;
+                const newTx = {
+                    type: currentType,
+                    amount: amount,
+                    date,
+                    category,
+                    description: desc,
+                    unitAmount: unitAmountVal,
+                    excludeFromBalance: excludeFromBalance,
+                    addToSavings: addToSavings
+                };
 
                 if (currentType === 'expense' && categoryBudgets[category] && !editingTransactionId) {
                     const limit = categoryBudgets[category];
@@ -41995,10 +42235,14 @@
                 // ✅ FIX: Kayıttan sonra "Bakiyeden Düşme" reset
                 const excludeCb2 = document.getElementById('input-exclude-balance');
                 if (excludeCb2) excludeCb2.checked = false;
+                const addSavingsCb2 = document.getElementById('input-add-to-savings');
+                if (addSavingsCb2) addSavingsCb2.checked = false;
 
                 // Panel de kapansın
                 const savingsOpt = document.getElementById('savings-options');
                 if (savingsOpt) savingsOpt.classList.add('hidden');
+                const addSavingsRow2 = document.getElementById('add-to-savings-row');
+                if (addSavingsRow2) addSavingsRow2.classList.add('hidden');
             };
 
             window.deleteItem = async function (id) { window.requestDelete('transaction', id); };
@@ -42270,7 +42514,11 @@
                 // Filter current month expenses
                 const monthlyExpenses = transactions.filter(t => {
                     const d = new Date(t.date);
-                    return t.type === 'expense' && d.getMonth() === currentMonth && d.getFullYear() === currentYear && !t.excludeFromBalance;
+                    return d.getMonth() === currentMonth
+                        && d.getFullYear() === currentYear
+                        && (window.isExpenseFlowTransaction
+                            ? window.isExpenseFlowTransaction(t)
+                            : (t.type === 'expense' && !t.excludeFromBalance));
                 });
 
                 // Calculate totals by category
@@ -43624,7 +43872,7 @@
                     if (tDate.getMonth() === targetMonth && tDate.getFullYear() === targetYear) {
                         const val = parseFloat(t.amount);
                         if (t.type === 'income') income += val;
-                        else if (!isSavingsTransaction(t)) expense += val;
+                        else if (window.isExpenseFlowTransaction ? window.isExpenseFlowTransaction(t) : !isSavingsTransaction(t)) expense += val;
                     }
                 });
 
@@ -43772,7 +44020,9 @@
                     const categoryTotals = {};
 
                     // SavingsTransactions HARİÇ tutarak hesapla (Altın, Yatırım önerilmemeli)
-                    snap.filtered.filter(t => t.type === 'expense' && !window.isSavingsTransaction(t)).forEach(t => {
+                    snap.filtered.filter(t => window.isExpenseFlowTransaction
+                        ? window.isExpenseFlowTransaction(t)
+                        : (t.type === 'expense' && !window.isSavingsTransaction(t))).forEach(t => {
                         const cat = t.category || 'Diğer';
                         const val = typeof t.amount === 'number' ? t.amount : parseFloat(t.amount) || 0;
                         categoryTotals[cat] = (categoryTotals[cat] || 0) + val;
@@ -50671,18 +50921,21 @@ KULLANICI NOTU
                 };
                 const monthTxns = txns.filter(t => getDateStr(t) === currentMonthStr);
 
-                // Gelir, Gider, Tasarruf (isSavingsTransaction kullan)
+                // Gelir, Gider, Tasarruf (dual-akış destekli)
                 let monthIncome = 0, monthExpense = 0, monthSaving = 0;
                 monthTxns.forEach(t => {
                     const amount = parseFloat(t.amount) || 0;
                     if (t.type === 'income') {
                         monthIncome += amount;
                     } else if (t.type === 'expense') {
-                        if (typeof isSavingsTransaction === 'function' && isSavingsTransaction(t)) {
-                            monthSaving += amount;
-                        } else {
-                            monthExpense += amount;
-                        }
+                        const isExpenseFlow = window.isExpenseFlowTransaction
+                            ? window.isExpenseFlowTransaction(t)
+                            : !(typeof isSavingsTransaction === 'function' && isSavingsTransaction(t));
+                        const isSavingsFlow = window.isSavingsFlowTransaction
+                            ? window.isSavingsFlowTransaction(t)
+                            : (typeof isSavingsTransaction === 'function' && isSavingsTransaction(t));
+                        if (isExpenseFlow) monthExpense += amount;
+                        if (isSavingsFlow) monthSaving += amount;
                     }
                 });
 
@@ -50731,8 +50984,9 @@ KULLANICI NOTU
                 let recentVariableTotal = 0, recentVariableDays = 0;
                 const countedDays = new Set();
                 txns.forEach(t => {
-                    if (t.type !== 'expense') return;
-                    if (typeof isSavingsTransaction === 'function' && isSavingsTransaction(t)) return;
+                    if (!(window.isExpenseFlowTransaction
+                        ? window.isExpenseFlowTransaction(t)
+                        : (t.type === 'expense' && !(typeof isSavingsTransaction === 'function' && isSavingsTransaction(t))))) return;
                     // Otomatik işlemleri atla
                     const desc = (t.description || '').toLowerCase();
                     if (desc.includes('(otomatik)') || desc.includes('otomatik')) return;
@@ -50756,8 +51010,10 @@ KULLANICI NOTU
 
                 // === 7. VOLATİLİTE HESABI ===
                 const expenseAmounts = monthTxns
-                    .filter(t => t.type === 'expense' && parseFloat(t.amount) > 0)
-                    .filter(t => !(typeof isSavingsTransaction === 'function' && isSavingsTransaction(t)))
+                    .filter(t => parseFloat(t.amount) > 0)
+                    .filter(t => window.isExpenseFlowTransaction
+                        ? window.isExpenseFlowTransaction(t)
+                        : (t.type === 'expense' && !(typeof isSavingsTransaction === 'function' && isSavingsTransaction(t))))
                     .map(t => parseFloat(t.amount));
 
                 let volatility = 'Düşük', cv = 0;
@@ -56675,8 +56931,8 @@ KULLANICI NOTU
                 // "telefon taksit" içindeki "fon" gibi alt metinler yanlış pozitif üretmesin.
                 const byCategory = isSavingsCategory(cat);
 
-                // 2) Kullanıcı "Bakiyeden düşme" seçtiyse (yani: bu işlem gider değil, birikim/yatırım)
-                const byToggle = t.excludeFromBalance === true;
+                // 2) Kullanıcı "Bakiyeden düşme" veya "Birikime Ekle" seçtiyse
+                const byToggle = t.excludeFromBalance === true || t.addToSavings === true;
 
                 // 3) Döviz/altın/gram/çeyrek gibi FX varlıkları mı?
                 const isFx = isInvestmentKeyword(cat);
@@ -56699,6 +56955,29 @@ KULLANICI NOTU
 
                 return byCategory || byToggle;
             }
+
+            // Tek ve güncel sınıflandırma fonksiyonunu global erişime sabitle.
+            window.isSavingsTransaction = isSavingsTransaction;
+
+            function isDualSavingsTransaction(t) {
+                if (!t) return false;
+                return String(t.type || "").toLowerCase() === 'expense' && t.addToSavings === true;
+            }
+
+            window.isDualSavingsTransaction = isDualSavingsTransaction;
+
+            window.isExpenseFlowTransaction = function (t) {
+                if (!t) return false;
+                if (String(t.type || "").toLowerCase() !== 'expense') return false;
+                if (isDualSavingsTransaction(t)) return true;
+                return !isSavingsTransaction(t);
+            };
+
+            window.isSavingsFlowTransaction = function (t) {
+                if (!t) return false;
+                if (String(t.type || "").toLowerCase() !== 'expense') return false;
+                return isSavingsTransaction(t) || isDualSavingsTransaction(t);
+            };
 
             // ═══════════════════════════════════════════════════════════════════════════════════
             // FINGO BRAIN SMART LAYER - Kategori Algılama ve Akıllı Öneri Sistemi
@@ -56824,9 +57103,18 @@ KULLANICI NOTU
                         if (t.type === 'income') {
                             ctx.incomeTotal += amount;
                         } else if (t.type === 'expense') {
-                            if (typeof isSavingsTransaction === 'function' && isSavingsTransaction(t)) {
+                            const isExpenseFlow = window.isExpenseFlowTransaction
+                                ? window.isExpenseFlowTransaction(t)
+                                : !(typeof isSavingsTransaction === 'function' && isSavingsTransaction(t));
+                            const isSavingsFlow = window.isSavingsFlowTransaction
+                                ? window.isSavingsFlowTransaction(t)
+                                : (typeof isSavingsTransaction === 'function' && isSavingsTransaction(t));
+
+                            if (isSavingsFlow) {
                                 ctx.savingsTotal += amount;
-                            } else {
+                            }
+
+                            if (isExpenseFlow) {
                                 ctx.expenseTotal += amount;
                                 const catKey = inferred.categoryKey;
                                 ctx.totalsByCategory[catKey] = (ctx.totalsByCategory[catKey] || 0) + amount;
@@ -57716,7 +58004,7 @@ KULLANICI NOTU
                     transactions.forEach(t => {
                         const amount = parseFloat(t.amount) || 0;
                         if (t.type === 'income') totalIncome += amount;
-                        else if (t.type === 'expense' && !isSavingsTransaction(t)) totalExpense += amount;
+                        else if (window.isExpenseFlowTransaction ? window.isExpenseFlowTransaction(t) : (t.type === 'expense' && !isSavingsTransaction(t))) totalExpense += amount;
                     });
 
                     const ratio = totalIncome > 0 ? totalExpense / totalIncome : 1;
@@ -58010,13 +58298,18 @@ KULLANICI NOTU
                         if (t.type === 'income') {
                             totalIncome += amount;
                         } else if (t.type === 'expense') {
-                            if (isSavingsTransaction(t)) {
-                                totalSavings += amount;
-                            } else {
+                            const isExpenseFlow = window.isExpenseFlowTransaction
+                                ? window.isExpenseFlowTransaction(t)
+                                : !isSavingsTransaction(t);
+                            const isSavingsFlow = window.isSavingsFlowTransaction
+                                ? window.isSavingsFlowTransaction(t)
+                                : isSavingsTransaction(t);
+                            if (isExpenseFlow) {
                                 totalExpense += amount;
                                 const cat = t.category || 'Diğer';
                                 categoryTotals[cat] = (categoryTotals[cat] || 0) + amount;
                             }
+                            if (isSavingsFlow) totalSavings += amount;
                         }
                     });
 
@@ -58185,11 +58478,14 @@ KULLANICI NOTU
                         if (t.type === 'income') {
                             totalIncome += amount;
                         } else if (t.type === 'expense') {
-                            if (isSavingsTransaction(t)) {
-                                totalSavings += amount;
-                            } else {
-                                totalSpending += amount;
-                            }
+                            const isExpenseFlow = window.isExpenseFlowTransaction
+                                ? window.isExpenseFlowTransaction(t)
+                                : !isSavingsTransaction(t);
+                            const isSavingsFlow = window.isSavingsFlowTransaction
+                                ? window.isSavingsFlowTransaction(t)
+                                : isSavingsTransaction(t);
+                            if (isExpenseFlow) totalSpending += amount;
+                            if (isSavingsFlow) totalSavings += amount;
                         }
                     });
 
@@ -58230,8 +58526,9 @@ KULLANICI NOTU
 
                     // Kategori eşleştirme (fuzzy match)
                     const expenses = transactions.filter(t => {
-                        if (t.type !== 'expense') return false;
-                        if (isSavingsTransaction(t)) return false;
+                        if (!(window.isExpenseFlowTransaction
+                            ? window.isExpenseFlowTransaction(t)
+                            : (t.type === 'expense' && !isSavingsTransaction(t)))) return false;
                         const cat = (t.category || '').toLocaleLowerCase('tr-TR');
                         const desc = (t.description || '').toLocaleLowerCase('tr-TR');
                         const search = categoryName.toLocaleLowerCase('tr-TR');
@@ -58260,7 +58557,9 @@ KULLANICI NOTU
                     const transactions = this.getCurrentMonthTransactions();
                     const greeting = this.getGreeting();
 
-                    const expenses = transactions.filter(t => t.type === 'expense' && !isSavingsTransaction(t));
+                    const expenses = transactions.filter(t => window.isExpenseFlowTransaction
+                        ? window.isExpenseFlowTransaction(t)
+                        : (t.type === 'expense' && !isSavingsTransaction(t)));
 
                     if (expenses.length === 0) {
                         return `📊 ${greeting}, bu ay henüz gider kaydın yok. Harcama verisi olmadan analiz yapamıyorum! 🧐`;
@@ -58464,14 +58763,19 @@ KULLANICI NOTU
                         const amt = parseFloat(t.amount) || 0;
                         if (t.type === 'income') income += amt;
                         else if (t.type === 'expense') {
-                            if (isSavingsTransaction(t)) {
-                                savings += amt;
-                            } else {
+                            const isExpenseFlow = window.isExpenseFlowTransaction
+                                ? window.isExpenseFlowTransaction(t)
+                                : !isSavingsTransaction(t);
+                            const isSavingsFlow = window.isSavingsFlowTransaction
+                                ? window.isSavingsFlowTransaction(t)
+                                : isSavingsTransaction(t);
+                            if (isExpenseFlow) {
                                 expense += amt;
                                 // Günlük harcama takibi
                                 const day = new Date(t.date).getDate();
                                 dailySpends[day] = (dailySpends[day] || 0) + amt;
                             }
+                            if (isSavingsFlow) savings += amt;
                         }
                     });
 
@@ -58530,7 +58834,7 @@ KULLANICI NOTU
                     let totalExp = 0;
 
                     transactions.forEach(t => {
-                        if (t.type === 'expense' && !isSavingsTransaction(t)) {
+                        if (window.isExpenseFlowTransaction ? window.isExpenseFlowTransaction(t) : (t.type === 'expense' && !isSavingsTransaction(t))) {
                             const amt = parseFloat(t.amount) || 0;
                             const cat = t.category || 'Diğer';
                             categories[cat] = (categories[cat] || 0) + amt;
@@ -58572,7 +58876,7 @@ KULLANICI NOTU
 
                     let totalExp = 0;
                     transactions.forEach(t => {
-                        if (t.type === 'expense' && !isSavingsTransaction(t)) {
+                        if (window.isExpenseFlowTransaction ? window.isExpenseFlowTransaction(t) : (t.type === 'expense' && !isSavingsTransaction(t))) {
                             totalExp += parseFloat(t.amount) || 0;
                         }
                     });
@@ -59298,7 +59602,9 @@ KULLANICI NOTU
                         return "📋 Henüz bu ay işlem kaydın yok, bütçe analizi yapamıyorum.\n\nİlk işlemini ekledikten sonra tekrar sor!";
                     }
 
-                    const expenses = transactions.filter(t => t.type === 'expense' && !isSavingsTransaction(t));
+                    const expenses = transactions.filter(t => window.isExpenseFlowTransaction
+                        ? window.isExpenseFlowTransaction(t)
+                        : (t.type === 'expense' && !isSavingsTransaction(t)));
                     const incomes = transactions.filter(t => t.type === 'income');
                     const totalExpense = expenses.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
                     const totalIncome = incomes.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
@@ -59332,7 +59638,9 @@ KULLANICI NOTU
                         return "🔮 Tahmin yapabilmem için işlem verisi gerekiyor.\n\nBirkaç işlem ekledikten sonra tekrar dene!";
                     }
 
-                    const expenses = transactions.filter(t => t.type === 'expense' && !isSavingsTransaction(t));
+                    const expenses = transactions.filter(t => window.isExpenseFlowTransaction
+                        ? window.isExpenseFlowTransaction(t)
+                        : (t.type === 'expense' && !isSavingsTransaction(t)));
                     const totalExpense = expenses.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
                     const dailyAvg = totalExpense / Math.max(daysPassed, 1);
                     const projectedTotal = dailyAvg * daysInMonth;
@@ -59369,9 +59677,13 @@ KULLANICI NOTU
                         return d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear;
                     });
 
-                    const thisExpense = thisMonthTx.filter(t => t.type === 'expense' && !isSavingsTransaction(t))
+                    const thisExpense = thisMonthTx.filter(t => window.isExpenseFlowTransaction
+                        ? window.isExpenseFlowTransaction(t)
+                        : (t.type === 'expense' && !isSavingsTransaction(t)))
                         .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-                    const lastExpense = lastMonthTx.filter(t => t.type === 'expense' && !isSavingsTransaction(t))
+                    const lastExpense = lastMonthTx.filter(t => window.isExpenseFlowTransaction
+                        ? window.isExpenseFlowTransaction(t)
+                        : (t.type === 'expense' && !isSavingsTransaction(t)))
                         .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
 
                     if (lastExpense === 0) {
@@ -59404,7 +59716,9 @@ KULLANICI NOTU
                         }
 
                         // Basit skor hesaplama
-                        const expenses = transactions.filter(t => t.type === 'expense' && !isSavingsTransaction(t));
+                        const expenses = transactions.filter(t => window.isExpenseFlowTransaction
+                            ? window.isExpenseFlowTransaction(t)
+                            : (t.type === 'expense' && !isSavingsTransaction(t)));
                         const incomes = transactions.filter(t => t.type === 'income');
                         const totalExpense = expenses.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
                         const totalIncome = incomes.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
@@ -70500,7 +70814,9 @@ html.perf: blur(8px) fallback
             const snap = window.getFinanceSnapshot ? window.getFinanceSnapshot('month') : { filtered: [] };
             // Calculate top categories manually
             const catTotals = {};
-            snap.filtered.filter(t => t.type === 'expense' && !window.isSavingsTransaction(t)).forEach(t => {
+            snap.filtered.filter(t => window.isExpenseFlowTransaction
+                ? window.isExpenseFlowTransaction(t)
+                : (t.type === 'expense' && !window.isSavingsTransaction(t))).forEach(t => {
                 const cat = t.category || 'Diğer';
                 catTotals[cat] = (catTotals[cat] || 0) + parseFloat(t.amount);
             });
@@ -88500,89 +88816,81 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
 
     #screen-add #savings-options:not(.hidden) {
         display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        gap: 16px !important;
+        flex-direction: column !important;
+        gap: 10px !important;
         width: 100% !important;
-        min-height: 58px !important;
         margin-top: 10px !important;
-        padding: 13px 18px !important;
-        border: 1px solid rgba(148, 163, 184, 0.2) !important;
-        border-radius: 20px !important;
-        background:
-            linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(241, 245, 249, 0.88)) !important;
-        box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.9),
-            0 12px 28px -26px rgba(15, 23, 42, 0.32) !important;
+        padding: 12px !important;
+        border: 1px solid rgba(148, 163, 184, 0.25) !important;
+        border-radius: 18px !important;
+        background: linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(241, 245, 249, 0.9)) !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 12px 26px -24px rgba(15, 23, 42, 0.35) !important;
         overflow: hidden !important;
         isolation: isolate !important;
     }
 
     html.dark #screen-add #savings-options:not(.hidden) {
-        border-color: rgba(255, 255, 255, 0.1) !important;
-        background:
-            linear-gradient(180deg, rgba(30, 41, 59, 0.86), rgba(15, 23, 42, 0.82)) !important;
-        box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.08),
-            0 14px 30px -26px rgba(0, 0, 0, 0.76) !important;
+        border-color: rgba(255, 255, 255, 0.12) !important;
+        background: linear-gradient(180deg, rgba(30, 41, 59, 0.86), rgba(15, 23, 42, 0.84)) !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 16px 30px -26px rgba(0, 0, 0, 0.75) !important;
     }
 
-    #screen-add #savings-options>div:first-child {
+    #screen-add #savings-options .savings-option-row {
         display: flex !important;
         align-items: center !important;
-        gap: 0 !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        min-width: 0 !important;
+        padding: 10px 12px !important;
+        border-radius: 14px !important;
+        background: rgba(255, 255, 255, 0.78) !important;
+        border: 1px solid rgba(148, 163, 184, 0.16) !important;
+    }
+
+    html.dark #screen-add #savings-options .savings-option-row {
+        background: rgba(15, 23, 42, 0.5) !important;
+        border-color: rgba(148, 163, 184, 0.22) !important;
+    }
+
+    #screen-add #savings-options .savings-option-copy {
         min-width: 0 !important;
     }
 
-    #screen-add #savings-options>div:first-child>div:first-child {
-        display: none !important;
-    }
-
-    html.dark #screen-add #savings-options>div:first-child>div:first-child {
-        display: none !important;
-    }
-
-    #screen-add #savings-options>div:first-child>div:nth-child(2) {
-        display: flex !important;
-        flex-direction: column !important;
-        min-width: 0 !important;
+    #screen-add #savings-options .savings-option-text {
         gap: 1px !important;
+        min-width: 0 !important;
     }
 
-    #screen-add #savings-options label[for="input-exclude-balance"] {
-        color: #334155 !important;
-        font-size: 14px !important;
+    #screen-add #savings-options .savings-option-label {
+        font-size: 13px !important;
         font-weight: 800 !important;
-        line-height: 1.1 !important;
-        letter-spacing: 0.08em !important;
-        text-shadow: none !important;
-        white-space: nowrap !important;
+        line-height: 1.2 !important;
+        letter-spacing: 0.01em !important;
+        color: #334155 !important;
     }
 
-    html.dark #screen-add #savings-options label[for="input-exclude-balance"] {
+    html.dark #screen-add #savings-options .savings-option-label {
         color: #f8fafc !important;
     }
 
-    #screen-add #savings-options span[data-i18n="installment.excludeBalanceDesc"] {
-        display: none !important;
+    #screen-add #savings-options .savings-option-desc {
+        font-size: 10px !important;
+        line-height: 1.25 !important;
+        color: #64748b !important;
+        opacity: 0.95 !important;
     }
 
-    html.dark #screen-add #savings-options span[data-i18n="installment.excludeBalanceDesc"] {
-        display: none !important;
+    html.dark #screen-add #savings-options .savings-option-desc {
+        color: #cbd5e1 !important;
+        opacity: 0.85 !important;
     }
 
-    #screen-add #savings-options>label {
+    #screen-add #savings-options .savings-option-switch {
         flex: 0 0 auto !important;
-        width: 54px !important;
-        height: 32px !important;
-        justify-content: center !important;
-        justify-self: end !important;
-        border-radius: 999px !important;
-        padding: 0 !important;
-        margin-left: 0 !important;
+        margin-left: 8px !important;
     }
 
-    #screen-add #input-exclude-balance {
+    #screen-add #savings-options .savings-option-switch input {
         position: absolute !important;
         width: 1px !important;
         height: 1px !important;
@@ -88596,78 +88904,69 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         pointer-events: none !important;
     }
 
-    #screen-add #input-exclude-balance+div {
+    #screen-add #savings-options .savings-option-switch input+div {
         position: relative !important;
         width: 52px !important;
         height: 30px !important;
         border-radius: 999px !important;
         background: #cfd5de !important;
-        border: 0 !important;
-        box-shadow:
-            inset 0 1px 2px rgba(15, 23, 42, 0.12),
-            inset 0 1px 0 rgba(255, 255, 255, 0.74) !important;
-        transition:
-            background 180ms ease,
-            box-shadow 180ms ease !important;
+        box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.74) !important;
+        transition: background 180ms ease, box-shadow 180ms ease !important;
     }
 
-    html.dark #screen-add #input-exclude-balance+div {
+    html.dark #screen-add #savings-options .savings-option-switch input+div {
         background: #475569 !important;
-        box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.08),
-            inset 0 -1px 0 rgba(0, 0, 0, 0.28) !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.28) !important;
     }
 
-    #screen-add #input-exclude-balance+div::before {
-        content: none !important;
-        display: none !important;
-    }
-
-    #screen-add #input-exclude-balance+div::after {
+    #screen-add #savings-options .savings-option-switch input+div::after {
         content: '' !important;
         position: absolute !important;
         top: 3px !important;
         left: 3px !important;
         width: 24px !important;
         height: 24px !important;
-        border: 0 !important;
         border-radius: 999px !important;
         background: #f8fafc !important;
-        box-shadow:
-            0 4px 10px -6px rgba(15, 23, 42, 0.72),
-            0 1px 1px rgba(15, 23, 42, 0.18) !important;
-        transition:
-            transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
-            box-shadow 180ms ease !important;
+        box-shadow: 0 4px 10px -6px rgba(15, 23, 42, 0.72), 0 1px 1px rgba(15, 23, 42, 0.18) !important;
+        transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 180ms ease !important;
+    }
+
+    #screen-add #savings-options .savings-option-switch input:checked+div::after {
+        transform: translateX(22px) !important;
     }
 
     #screen-add #input-exclude-balance:checked+div {
         background: #111827 !important;
-        box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.1),
-            0 6px 16px -14px rgba(15, 23, 42, 0.8) !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 16px -14px rgba(15, 23, 42, 0.8) !important;
     }
 
     html.dark #screen-add #input-exclude-balance:checked+div {
         background: linear-gradient(135deg, #2563eb, #7c3aed) !important;
-        box-shadow:
-            0 10px 22px -15px rgba(99, 102, 241, 0.92),
-            inset 0 1px 0 rgba(255, 255, 255, 0.24) !important;
     }
 
-    #screen-add #input-exclude-balance:checked+div::after {
-        transform: translateX(22px) !important;
+    #screen-add #input-add-to-savings:checked+div {
+        background: linear-gradient(135deg, #059669, #10b981) !important;
+        box-shadow: 0 8px 18px -14px rgba(16, 185, 129, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
     }
 
-    #screen-add #input-exclude-balance:focus-visible+div {
-        outline: 3px solid rgba(255, 255, 255, 0.22) !important;
-        outline-offset: 3px !important;
+    html.dark #screen-add #input-add-to-savings:checked+div {
+        background: linear-gradient(135deg, #10b981, #34d399) !important;
+    }
+
+    #screen-add #savings-options .savings-option-switch input:focus-visible+div {
+        outline: 3px solid rgba(99, 102, 241, 0.28) !important;
+        outline-offset: 2px !important;
     }
 
     @media (max-width: 380px) {
         #screen-add #savings-options:not(.hidden) {
-            gap: 12px !important;
-            padding: 12px 15px !important;
+            padding: 10px !important;
+        }
+
+        #screen-add #savings-options .savings-option-row {
+            padding: 9px 10px !important;
+            gap: 10px !important;
         }
     }
 </style>
