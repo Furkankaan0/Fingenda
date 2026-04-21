@@ -10984,6 +10984,83 @@
                 background: rgba(255, 255, 255, 0.1);
             }
 
+            .profile-bio-switch {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                user-select: none;
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            .profile-bio-switch__track {
+                position: relative;
+                width: 56px;
+                height: 32px;
+                border-radius: 999px;
+                background: linear-gradient(180deg, rgba(226, 232, 240, 0.95) 0%, rgba(203, 213, 225, 0.92) 100%);
+                border: 1px solid rgba(148, 163, 184, 0.4);
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+                    0 6px 14px -10px rgba(15, 23, 42, 0.45);
+                transition: background 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
+            }
+
+            .profile-bio-switch__thumb {
+                position: absolute;
+                top: 3px;
+                left: 3px;
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+                border: 1px solid rgba(148, 163, 184, 0.38);
+                box-shadow:
+                    0 5px 10px -6px rgba(15, 23, 42, 0.55),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.92);
+                transition: transform 0.24s cubic-bezier(0.25, 0.8, 0.3, 1);
+            }
+
+            #bio-enabled-toggle:checked+.profile-bio-switch__track {
+                background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+                border-color: rgba(99, 102, 241, 0.75);
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.26),
+                    0 10px 20px -14px rgba(79, 70, 229, 0.72);
+            }
+
+            #bio-enabled-toggle:checked+.profile-bio-switch__track .profile-bio-switch__thumb {
+                transform: translateX(24px);
+                background: #ffffff;
+                border-color: rgba(255, 255, 255, 0.55);
+            }
+
+            #bio-enabled-toggle:focus-visible+.profile-bio-switch__track {
+                outline: 2px solid rgba(99, 102, 241, 0.48);
+                outline-offset: 2px;
+            }
+
+            html.dark .profile-bio-switch__track {
+                background: linear-gradient(180deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.92) 100%);
+                border-color: rgba(100, 116, 139, 0.45);
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+                    0 8px 16px -12px rgba(2, 6, 23, 0.9);
+            }
+
+            html.dark .profile-bio-switch__thumb {
+                background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+                border-color: rgba(203, 213, 225, 0.52);
+                box-shadow:
+                    0 6px 12px -8px rgba(2, 6, 23, 0.9),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+            }
+
+            html.dark #bio-enabled-toggle:checked+.profile-bio-switch__track {
+                background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+                border-color: rgba(129, 140, 248, 0.7);
+            }
+
             .glass-card {
                 background: var(--bg-surface);
                 border: 1px solid var(--border-subtle);
@@ -34467,12 +34544,12 @@
                                                     giriş</span>
                                             </div>
                                         </div>
-                                        <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" id="bio-enabled-toggle" class="sr-only peer"
+                                        <label class="profile-bio-switch">
+                                            <input type="checkbox" id="bio-enabled-toggle" class="sr-only"
                                                 onchange="window.toggleBioEnabled(this.checked)">
-                                            <div
-                                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
-                                            </div>
+                                            <span class="profile-bio-switch__track" aria-hidden="true">
+                                                <span class="profile-bio-switch__thumb"></span>
+                                            </span>
                                         </label>
                                     </div>
                                 </div>
