@@ -54925,8 +54925,36 @@ KULLANICI NOTU
             }
 
             #pin-lock-screen .pin-dots-shell {
+                width: min(264px, 100%) !important;
+                min-height: 56px !important;
+                padding: 0 22px !important;
+                border-radius: 18px !important;
+                border: 1px solid var(--pin-v5-aux-border) !important;
+                background: linear-gradient(180deg, var(--pin-v5-aux-top), var(--pin-v5-aux-bottom)) !important;
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, .42),
+                    0 10px 20px rgba(15, 23, 42, .08) !important;
                 margin-bottom: clamp(12px, 2vh, 20px) !important;
                 flex-shrink: 0;
+            }
+
+            html.dark #pin-lock-screen .pin-dots-shell {
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, .05),
+                    0 12px 22px rgba(0, 0, 0, .24) !important;
+            }
+
+            #pin-lock-screen .pin-dots-container {
+                width: 100%;
+                margin: 0 !important;
+                padding: 0 !important;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0 !important;
+                background: transparent !important;
+                border: 0 !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
             }
 
             #pin-lock-screen .pin-keypad-shell {
@@ -54988,8 +55016,9 @@ KULLANICI NOTU
 
                 #pin-lock-screen .pin-dots-shell {
                     min-height: 44px !important;
-                    width: 172px !important;
+                    width: min(220px, 100%) !important;
                     padding: 0 16px !important;
+                    border-radius: 14px !important;
                 }
             }
 
