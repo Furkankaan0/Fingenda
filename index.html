@@ -5022,6 +5022,7 @@
                     const action = String(actionRaw || '').trim().toLowerCase();
                     let tab = normalizeWidgetTab(tabRaw);
                     let transactionType = null;
+                    let triggerVoice = false;
 
                     if (!tabRaw) {
                         if (action === 'quick-expense') {
@@ -5036,20 +5037,26 @@
                             tab = 'notes';
                         } else if (action === 'open-wallet' || action === 'open-brain') {
                             tab = 'wallet';
+                        } else if (action === 'voice-add') {
+                            tab = 'add';
+                            transactionType = 'expense';
+                            triggerVoice = true;
                         }
-                    } else if (tab === 'add' && (action === 'quick-expense' || action === 'quick-income')) {
+                    } else if (tab === 'add' && (action === 'quick-expense' || action === 'quick-income' || action === 'voice-add')) {
                         transactionType = action === 'quick-income' ? 'income' : 'expense';
+                        if (action === 'voice-add') triggerVoice = true;
                     }
 
-                    return { tab, transactionType, action };
+                    return { tab, transactionType, action, triggerVoice };
                 };
 
                 const applyWidgetRoute = (route, attempt = 0) => {
                     const maxAttempts = 18;
                     const switchReady = typeof window.switchTab === 'function';
                     const typeReady = !route.transactionType || typeof window.setTransactionType === 'function';
+                    const voiceReady = !route.triggerVoice || typeof window.triggerVoiceInput === 'function';
 
-                    if (!switchReady || !typeReady) {
+                    if (!switchReady || !typeReady || !voiceReady) {
                         if (attempt >= maxAttempts) return false;
                         setTimeout(() => applyWidgetRoute(route, attempt + 1), 120);
                         return false;
@@ -5061,6 +5068,11 @@
                             setTimeout(() => {
                                 try { window.setTransactionType(route.transactionType); } catch (_) { }
                             }, 90);
+                        }
+                        if (route.triggerVoice) {
+                            setTimeout(() => {
+                                try { window.triggerVoiceInput(); } catch (_) { }
+                            }, 220);
                         }
                         return true;
                     } catch (_) {

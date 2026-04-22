@@ -55,43 +55,113 @@ function buildWidgetSwiftContent() {
   return `import WidgetKit
 import SwiftUI
 
+private enum SharedData {
+    static let appGroupCandidates = [
+        "group.com.fingenda.app",
+        "group.com.fingenda"
+    ]
+
+    static let incomeKeys = ["widget_income_total", "income_total", "dashboard_income"]
+    static let expenseKeys = ["widget_expense_total", "expense_total", "dashboard_expense"]
+    static let usdKeys = ["widget_fx_usd_try", "fx_usd_try", "usd_try"]
+    static let eurKeys = ["widget_fx_eur_try", "fx_eur_try", "eur_try"]
+
+    static func currentSnapshot() -> FingendaSnapshot {
+        let store = appGroupCandidates
+            .compactMap { UserDefaults(suiteName: $0) }
+            .first ?? UserDefaults.standard
+
+        return FingendaSnapshot(
+            income: readNumber(store, keys: incomeKeys),
+            expense: readNumber(store, keys: expenseKeys),
+            usdTry: readNumber(store, keys: usdKeys),
+            eurTry: readNumber(store, keys: eurKeys)
+        )
+    }
+
+    private static func readNumber(_ defaults: UserDefaults, keys: [String]) -> Double {
+        for key in keys {
+            if let number = defaults.object(forKey: key) as? NSNumber {
+                return number.doubleValue
+            }
+            if let value = defaults.string(forKey: key)?
+                .replacingOccurrences(of: ",", with: "."),
+               let parsed = Double(value) {
+                return parsed
+            }
+        }
+        return 0
+    }
+}
+
+private struct FingendaSnapshot {
+    let income: Double
+    let expense: Double
+    let usdTry: Double
+    let eurTry: Double
+
+    var hasCashFlow: Bool { income > 0 || expense > 0 }
+    var hasFx: Bool { usdTry > 0 || eurTry > 0 }
+}
+
 private struct FingendaWidgetEntry: TimelineEntry {
     let date: Date
+    let snapshot: FingendaSnapshot
 }
 
 private struct FingendaWidgetProvider: TimelineProvider {
     func placeholder(in context: Context) -> FingendaWidgetEntry {
-        FingendaWidgetEntry(date: Date())
+        FingendaWidgetEntry(
+            date: Date(),
+            snapshot: FingendaSnapshot(income: 12500, expense: 8300, usdTry: 39.24, eurTry: 42.33)
+        )
     }
 
     func getSnapshot(in context: Context, completion: @escaping (FingendaWidgetEntry) -> Void) {
-        completion(FingendaWidgetEntry(date: Date()))
+        completion(FingendaWidgetEntry(date: Date(), snapshot: SharedData.currentSnapshot()))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<FingendaWidgetEntry>) -> Void) {
         let now = Date()
-        let refresh = Calendar.current.date(byAdding: .minute, value: 30, to: now) ?? now.addingTimeInterval(1800)
-        let timeline = Timeline(entries: [FingendaWidgetEntry(date: now)], policy: .after(refresh))
-        completion(timeline)
+        let entry = FingendaWidgetEntry(date: now, snapshot: SharedData.currentSnapshot())
+        let refresh = Calendar.current.date(byAdding: .minute, value: 15, to: now) ?? now.addingTimeInterval(900)
+        completion(Timeline(entries: [entry], policy: .after(refresh)))
     }
 }
 
 private struct QuickAction: Identifiable {
-    let id = UUID()
+    let id: String
     let title: String
-    let subtitle: String
     let icon: String
     let url: String
 }
 
 private struct FingendaWidgetView: View {
     @Environment(\\.widgetFamily) private var family
+    let entry: FingendaWidgetEntry
+
+    private let formatter: NumberFormatter = {
+        let f = NumberFormatter()
+        f.numberStyle = .currency
+        f.locale = Locale(identifier: "tr_TR")
+        f.maximumFractionDigits = 0
+        return f
+    }()
+
+    private let fxFormatter: NumberFormatter = {
+        let f = NumberFormatter()
+        f.numberStyle = .decimal
+        f.locale = Locale(identifier: "tr_TR")
+        f.minimumFractionDigits = 2
+        f.maximumFractionDigits = 2
+        return f
+    }()
 
     private let actions = [
-        QuickAction(title: "Gider Ekle", subtitle: "Hızlı kayıt", icon: "minus.circle.fill", url: "fingenda://widget?action=quick-expense"),
-        QuickAction(title: "Gelir Ekle", subtitle: "Hızlı kayıt", icon: "plus.circle.fill", url: "fingenda://widget?action=quick-income"),
-        QuickAction(title: "Piyasayı Aç", subtitle: "Altın / Döviz", icon: "chart.line.uptrend.xyaxis", url: "fingenda://widget?action=open-market"),
-        QuickAction(title: "Notlara Git", subtitle: "Hızlı plan", icon: "note.text", url: "fingenda://widget?action=open-notes")
+        QuickAction(id: "expense", title: "Gider", icon: "minus.circle.fill", url: "fingenda://widget?action=quick-expense"),
+        QuickAction(id: "income", title: "Gelir", icon: "plus.circle.fill", url: "fingenda://widget?action=quick-income"),
+        QuickAction(id: "voice", title: "Sesle Ekle", icon: "waveform.badge.mic", url: "fingenda://widget?action=voice-add"),
+        QuickAction(id: "market", title: "Doviz", icon: "chart.line.uptrend.xyaxis", url: "fingenda://widget?action=open-market")
     ]
 
     var body: some View {
@@ -104,84 +174,206 @@ private struct FingendaWidgetView: View {
     }
 
     private var smallWidget: some View {
-        ZStack {
-            LinearGradient(
-                colors: [Color(red: 0.09, green: 0.13, blue: 0.27), Color(red: 0.20, green: 0.19, blue: 0.51)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-
-            VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 6) {
                 Text("Fingenda")
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.95))
-
-                Text("Hızlı İşlem")
-                    .font(.system(size: 18, weight: .black, design: .rounded))
-                    .foregroundStyle(.white)
-
                 Spacer(minLength: 0)
-
-                Link(destination: URL(string: "fingenda://widget?action=quick-expense")!) {
-                    Label("Gider Ekle", systemImage: "minus.circle.fill")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white)
-                }
+                Text("Bugun")
+                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.72))
             }
-            .padding(14)
+
+            if entry.snapshot.hasCashFlow {
+                metricCard(title: "Gelir", value: formatCurrency(entry.snapshot.income), accent: .mint.opacity(0.9))
+                metricCard(title: "Gider", value: formatCurrency(entry.snapshot.expense), accent: .red.opacity(0.92))
+            } else if entry.snapshot.hasFx {
+                metricCard(title: "USD/TRY", value: formatFx(entry.snapshot.usdTry), accent: .cyan.opacity(0.95))
+                metricCard(title: "EUR/TRY", value: formatFx(entry.snapshot.eurTry), accent: .indigo.opacity(0.95))
+            } else {
+                Text("Veri geldikce burada gorunecek")
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.8))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            Spacer(minLength: 0)
+
+            HStack(spacing: 8) {
+                miniAction(url: "fingenda://widget?action=quick-expense", icon: "minus.circle.fill", title: "Gider")
+                miniAction(url: "fingenda://widget?action=voice-add", icon: "waveform.badge.mic", title: "Ses")
+            }
         }
+        .padding(12)
         .containerBackground(for: .widget) {
-            Color.clear
+            backgroundGradient
         }
     }
 
     private var mediumWidget: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Fingenda • Gunluk Durum")
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.96))
+                Spacer(minLength: 0)
+            }
+
+            HStack(spacing: 8) {
+                statTile(
+                    title: "Gelir",
+                    value: entry.snapshot.hasCashFlow ? formatCurrency(entry.snapshot.income) : "--",
+                    icon: "arrow.up.right.circle.fill",
+                    accent: .mint.opacity(0.9)
+                )
+                statTile(
+                    title: "Gider",
+                    value: entry.snapshot.hasCashFlow ? formatCurrency(entry.snapshot.expense) : "--",
+                    icon: "arrow.down.right.circle.fill",
+                    accent: .red.opacity(0.9)
+                )
+                statTile(
+                    title: "Doviz",
+                    value: entry.snapshot.hasFx ? "USD \(formatFx(entry.snapshot.usdTry))" : "Veri Yok",
+                    icon: "dollarsign.arrow.circlepath",
+                    accent: .cyan.opacity(0.92)
+                )
+            }
+
+            HStack(spacing: 8) {
+                ForEach(actions) { action in
+                    Link(destination: URL(string: action.url)!) {
+                        HStack(spacing: 4) {
+                            Image(systemName: action.icon)
+                                .font(.system(size: 11, weight: .semibold))
+                            Text(action.title)
+                                .font(.system(size: 11, weight: .bold, design: .rounded))
+                                .lineLimit(1)
+                        }
+                        .foregroundStyle(.white.opacity(0.96))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .background(
+                            Capsule(style: .continuous)
+                                .fill(.white.opacity(0.14))
+                                .overlay(
+                                    Capsule(style: .continuous)
+                                        .stroke(.white.opacity(0.12), lineWidth: 0.5)
+                                )
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(12)
+        .containerBackground(for: .widget) {
+            backgroundGradient
+        }
+    }
+
+    private var backgroundGradient: some View {
         ZStack {
             LinearGradient(
-                colors: [Color(red: 0.07, green: 0.11, blue: 0.24), Color(red: 0.13, green: 0.16, blue: 0.34)],
+                colors: [
+                    Color(red: 0.05, green: 0.09, blue: 0.20),
+                    Color(red: 0.11, green: 0.14, blue: 0.30)
+                ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
 
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Fingenda • Bugün")
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.92))
+            RadialGradient(
+                colors: [
+                    Color(red: 0.38, green: 0.42, blue: 1.0).opacity(0.35),
+                    .clear
+                ],
+                center: .bottomTrailing,
+                startRadius: 10,
+                endRadius: 180
+            )
+        }
+    }
 
-                HStack(spacing: 8) {
-                    ForEach(actions.prefix(3)) { action in
-                        Link(destination: URL(string: action.url)!) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Image(systemName: action.icon)
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundStyle(.white)
+    private func metricCard(title: String, value: String, accent: Color) -> some View {
+        HStack(spacing: 8) {
+            Circle()
+                .fill(accent)
+                .frame(width: 7, height: 7)
+            Text(title)
+                .font(.system(size: 11, weight: .bold, design: .rounded))
+                .foregroundStyle(.white.opacity(0.86))
+            Spacer(minLength: 0)
+            Text(value)
+                .font(.system(size: 11, weight: .heavy, design: .rounded))
+                .foregroundStyle(.white)
+        }
+        .padding(.horizontal, 9)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(.white.opacity(0.1))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(.white.opacity(0.09), lineWidth: 0.6)
+                )
+        )
+    }
 
-                                Text(action.title)
-                                    .font(.system(size: 12, weight: .bold, design: .rounded))
-                                    .lineLimit(1)
-                                    .foregroundStyle(.white)
-
-                                Text(action.subtitle)
-                                    .font(.system(size: 10, weight: .medium, design: .rounded))
-                                    .lineLimit(1)
-                                    .foregroundStyle(.white.opacity(0.72))
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(10)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .fill(.white.opacity(0.13))
-                            )
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
+    private func statTile(title: String, value: String, icon: String, accent: Color) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 5) {
+                Image(systemName: icon)
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(accent)
+                Text(title)
+                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.76))
             }
-            .padding(14)
+            Text(value)
+                .font(.system(size: 12, weight: .heavy, design: .rounded))
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .foregroundStyle(.white.opacity(0.96))
         }
-        .containerBackground(for: .widget) {
-            Color.clear
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(9)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(.white.opacity(0.12))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(.white.opacity(0.09), lineWidth: 0.6)
+                )
+        )
+    }
+
+    private func miniAction(url: String, icon: String, title: String) -> some View {
+        Link(destination: URL(string: url)!) {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 11, weight: .semibold))
+                Text(title)
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+            }
+            .foregroundStyle(.white.opacity(0.95))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 7)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(.white.opacity(0.12))
+            )
         }
+        .buttonStyle(.plain)
+    }
+
+    private func formatCurrency(_ value: Double) -> String {
+        formatter.string(from: NSNumber(value: value)) ?? "0 ₺"
+    }
+
+    private func formatFx(_ value: Double) -> String {
+        fxFormatter.string(from: NSNumber(value: value)) ?? "0,00"
     }
 }
 
@@ -189,12 +381,13 @@ struct FingendaQuickActionsWidget: Widget {
     let kind: String = "FingendaQuickActionsWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: FingendaWidgetProvider()) { _ in
-            FingendaWidgetView()
+        StaticConfiguration(kind: kind, provider: FingendaWidgetProvider()) { entry in
+            FingendaWidgetView(entry: entry)
         }
-        .configurationDisplayName("Fingenda Hızlı İşlemler")
-        .description("Gelir, gider ve piyasa ekranlarına ana ekrandan hızlıca geçin.")
+        .configurationDisplayName("Fingenda Hizli Islemler")
+        .description("Gelir, gider, sesli ekleme ve doviz kisayollarina aninda ulasin.")
         .supportedFamilies([.systemSmall, .systemMedium])
+        .contentMarginsDisabled()
     }
 }
 
@@ -283,11 +476,9 @@ widget_group.set_source_tree('<group>')
 widget_group.path = widget_name
 
 expected_swift_relpath = "#{widget_name}/#{widget_name}.swift"
+expected_plist_relpath = "#{widget_name}/Info.plist"
 
-swift_ref = project.files.find { |f|
-  f.path == expected_swift_relpath && f.source_tree == 'SOURCE_ROOT'
-}
-
+swift_ref = project.files.find { |f| f.path == expected_swift_relpath && f.source_tree == 'SOURCE_ROOT' }
 unless swift_ref
   stale_group_ref = widget_group.files.find { |f| f.path == "#{widget_name}.swift" }
   if stale_group_ref
@@ -297,6 +488,19 @@ unless swift_ref
   else
     swift_ref = project.new_file(expected_swift_relpath)
     swift_ref.source_tree = 'SOURCE_ROOT'
+  end
+end
+
+plist_ref = project.files.find { |f| f.path == expected_plist_relpath && f.source_tree == 'SOURCE_ROOT' }
+unless plist_ref
+  stale_plist_ref = widget_group.files.find { |f| f.path == "Info.plist" }
+  if stale_plist_ref
+    stale_plist_ref.path = expected_plist_relpath
+    stale_plist_ref.source_tree = 'SOURCE_ROOT'
+    plist_ref = stale_plist_ref
+  else
+    plist_ref = project.new_file(expected_plist_relpath)
+    plist_ref.source_tree = 'SOURCE_ROOT'
   end
 end
 
@@ -332,7 +536,7 @@ widget_target.build_configurations.each do |config|
   config.build_settings['WRAPPER_EXTENSION'] = 'appex'
   config.build_settings['MACH_O_TYPE'] = 'mh_execute'
   config.build_settings['PRODUCT_BUNDLE_IDENTIFIER'] = widget_bundle_id
-  config.build_settings['INFOPLIST_FILE'] = "#{widget_name}/Info.plist"
+  config.build_settings['INFOPLIST_FILE'] = expected_plist_relpath
   config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
   config.build_settings['SWIFT_VERSION'] = '5.0'
   config.build_settings['TARGETED_DEVICE_FAMILY'] = '1,2'
@@ -395,7 +599,7 @@ function main() {
   if (swiftChanged || plistChanged) {
     log('Widget dosyalari olusturuldu/guncellendi.');
   } else {
-    log('Widget dosyalari zaten gunceldi.');
+    log('Widget dosyalari zaten guncel.');
   }
 
   log('Widget extension kurulumu tamamlandi.');
