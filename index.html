@@ -91418,5 +91418,162 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         inset: 0 !important;
     }
 </style>
+<script id="factory-reset-hardclear-fix-v1">
+    (function () {
+        'use strict';
+
+        const yearsToClear = () => {
+            const y = (window.APP_YEAR || new Date().getFullYear());
+            return [y - 2, y - 1, y, y + 1];
+        };
+
+        const yearlyPrefixes = [
+            'my_expenses_',
+            'my_goals_',
+            'my_tasks_',
+            'my_installments_',
+            'my_recurring_rules_',
+            'my_budgets_',
+            'my_categories_',
+            'my_badges_',
+            'my_badges_meta_',
+            'cache_transactions_',
+            'cache_goals_',
+            'cache_tasks_',
+            'cache_installments_',
+            'cache_budgets_',
+            'cache_categories_'
+        ];
+
+        const staticKeys = [
+            'transactions',
+            'recurringTransactions',
+            'fingo_notes',
+            'fingo_intro_seen',
+            'intro_shown_v3',
+            'user_name',
+            'user_title',
+            'user_avatar',
+            'user_status',
+            'user_membership_status',
+            'premium',
+            'premium_cache',
+            'premium_entitlement',
+            'app_pin',
+            'pin_enabled',
+            'bio_enabled',
+            'pin_verified',
+            'pending_queue',
+            'net_status',
+            'last_sync_ts',
+            'my_cards_v1',
+            'wallet_cards',
+            'my_credit_cards',
+            'custom_categories',
+            'widget_order',
+            'ignored_subscriptions',
+            'fingo_category_budgets',
+            'privacy_mode',
+            'fb_daily_challenge',
+            'fb_total_xp',
+            'fb_last_xp_date',
+            'prev_market_rates'
+        ];
+
+        const getStorageApi = () => {
+            if (window.AppStorage) return window.AppStorage;
+            if (typeof AppStorage !== 'undefined') return AppStorage;
+            return null;
+        };
+
+        async function hardFactoryReset() {
+            const storageApi = getStorageApi();
+
+            const dynamicKeys = [];
+            yearsToClear().forEach((year) => {
+                yearlyPrefixes.forEach((prefix) => dynamicKeys.push(`${prefix}${year}`));
+            });
+            const allKeys = [...new Set([...staticKeys, ...dynamicKeys])];
+
+            // 1) In-memory reset (reload oncesi eski veri flash olmasin)
+            try { window.transactions = []; } catch (_) { }
+            try { if (typeof transactions !== 'undefined') transactions = []; } catch (_) { }
+            try { if (typeof goals !== 'undefined') goals = []; } catch (_) { }
+            try { if (typeof notes !== 'undefined') notes = []; } catch (_) { }
+            try { if (typeof installments !== 'undefined') installments = []; } catch (_) { }
+            try { if (typeof recurringRules !== 'undefined') recurringRules = []; } catch (_) { }
+            try { if (typeof categoryBudgets !== 'undefined') categoryBudgets = {}; } catch (_) { }
+            try { window.cards = []; } catch (_) { }
+
+            // 2) Bilinen anahtarlari iki storage katmanindan da sil
+            for (const key of allKeys) {
+                try { if (storageApi?.remove) await storageApi.remove(key); } catch (_) { }
+                try { localStorage.removeItem(key); } catch (_) { }
+            }
+
+            // 3) Hard clear
+            try { if (storageApi?.clear) await storageApi.clear(); } catch (e) { console.warn('[Reset] AppStorage clear failed:', e); }
+            try { localStorage.clear(); } catch (e) { console.warn('[Reset] localStorage clear failed:', e); }
+            try { sessionStorage.clear(); } catch (e) { console.warn('[Reset] sessionStorage clear failed:', e); }
+
+            // 4) SW cache temizligi (best effort)
+            if (window.caches && typeof window.caches.keys === 'function') {
+                try {
+                    const cacheKeys = await window.caches.keys();
+                    await Promise.all(cacheKeys.map((cacheKey) => window.caches.delete(cacheKey)));
+                } catch (_) { }
+            }
+        }
+
+        window.performFactoryReset = hardFactoryReset;
+
+        window.requestResetApp = function () {
+            const t = (key, fallback) => {
+                try {
+                    const value = (typeof window.t === 'function') ? window.t(key) : null;
+                    return value || fallback;
+                } catch (_) {
+                    return fallback;
+                }
+            };
+
+            const title = t('msg.resetConfirmTitle', 'Tum verileri sifirla');
+            const message = t('msg.resetConfirmBody', 'Bu islem geri alinamaz. Tum verileriniz silinecek.');
+            const confirmText = t('common.reset', 'Sifirla');
+            const cancelText = t('common.cancel', 'Vazgec');
+
+            const runReset = async () => {
+                try {
+                    await hardFactoryReset();
+                    window.alertMessage('Sifirlandi', 'Tum veriler silindi. Uygulama yeniden baslatiliyor...', 'green');
+                    setTimeout(() => {
+                        window.location.replace(window.location.pathname);
+                    }, 900);
+                } catch (e) {
+                    console.error('Factory reset failed:', e);
+                    window.alertMessage('Hata', 'Sifirlama basarisiz oldu.', 'red');
+                }
+            };
+
+            if (typeof window.openConfirmModal === 'function') {
+                window.openConfirmModal({
+                    title,
+                    message,
+                    confirmText,
+                    cancelText,
+                    variant: 'red',
+                    onConfirm: runReset
+                });
+                if (typeof window.toggleProfileModal === 'function') {
+                    window.toggleProfileModal(false);
+                }
+                return;
+            }
+
+            // Fallback
+            if (window.confirm(message)) runReset();
+        };
+    })();
+</script>
 </body>
 </html>
