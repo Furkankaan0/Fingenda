@@ -91868,5 +91868,230 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         };
     })();
 </script>
+<script id="ios-widget-shared-data-sync-v1">
+    (function () {
+        'use strict';
+
+        const capacitor = window.Capacitor || null;
+        const isNativeIOS = !!(capacitor && typeof capacitor.isNativePlatform === 'function' && capacitor.isNativePlatform() && capacitor.getPlatform && capacitor.getPlatform() === 'ios');
+        if (!isNativeIOS) return;
+
+        const preferences = capacitor?.Plugins?.Preferences || null;
+        if (!preferences || typeof preferences.set !== 'function') return;
+
+        const APP_GROUPS = ['group.com.fingenda.app', 'group.com.fingenda'];
+        const DEFAULT_PREF_GROUP = 'NativeStorage';
+        const SYNC_INTERVAL_MS = 60000;
+
+        let syncTimer = null;
+        let syncInFlight = false;
+        let queuedSync = false;
+        let lastSerializedPayload = '';
+
+        const toNumber = (value) => {
+            const n = Number(value);
+            return Number.isFinite(n) ? n : 0;
+        };
+
+        const safeJsonParse = (raw, fallback) => {
+            try {
+                const parsed = JSON.parse(raw);
+                return parsed == null ? fallback : parsed;
+            } catch (_) {
+                return fallback;
+            }
+        };
+
+        const getRates = () => {
+            const live = (window.liveRates && typeof window.liveRates === 'object') ? window.liveRates : {};
+            const cached = safeJsonParse(
+                localStorage.getItem('fingenda_live_rates')
+                || localStorage.getItem('market_rates')
+                || localStorage.getItem('prev_market_rates')
+                || '{}',
+                {}
+            );
+
+            return {
+                usdTry: toNumber(live.USD ?? live.usd ?? cached.USD ?? cached.usd),
+                eurTry: toNumber(live.EUR ?? live.eur ?? cached.EUR ?? cached.eur)
+            };
+        };
+
+        const getGoalProgress = () => {
+            const goals = safeJsonParse(localStorage.getItem('fingo_savings_goals') || '[]', []);
+            if (!Array.isArray(goals) || goals.length === 0) return 0;
+
+            const selectedGoalId = localStorage.getItem('fingo_selected_goal_id');
+            const selectedGoal = goals.find((goal) => String(goal?.id || '') === String(selectedGoalId || '')) || goals[0];
+            if (!selectedGoal || typeof selectedGoal !== 'object') return 0;
+
+            const target = toNumber(selectedGoal.target ?? selectedGoal.goal ?? 0);
+            const current = toNumber(selectedGoal.current ?? selectedGoal.saved ?? selectedGoal.amount ?? 0);
+            if (target <= 0) return 0;
+            return Math.min(Math.max(current / target, 0), 1);
+        };
+
+        const getStreakDays = () => {
+            const streakState = safeJsonParse(localStorage.getItem('fingo_streak') || '{}', {});
+            return Math.max(0, Math.round(toNumber(streakState?.count ?? streakState?.days ?? 0)));
+        };
+
+        const buildWidgetSnapshot = () => {
+            const finance = (typeof window.getFinanceSnapshot === 'function')
+                ? (window.getFinanceSnapshot('month') || {})
+                : {};
+            const rates = getRates();
+
+            const income = Math.max(0, toNumber(finance.income));
+            const expense = Math.max(0, toNumber(finance.expense));
+            const savings = Math.max(0, toNumber(finance.indexedSavingsTL ?? finance.savings));
+            const goalProgress = getGoalProgress();
+            const streakDays = getStreakDays();
+
+            return {
+                income,
+                expense,
+                savings,
+                usdTry: rates.usdTry,
+                eurTry: rates.eurTry,
+                streakDays,
+                goalProgress,
+                updatedAt: new Date().toISOString()
+            };
+        };
+
+        const writeToGroup = async (group, keyValuePairs) => {
+            if (typeof preferences.configure === 'function') {
+                await preferences.configure({ group });
+            }
+            for (const [key, value] of keyValuePairs) {
+                await preferences.set({ key, value: String(value) });
+            }
+        };
+
+        const writeWidgetSnapshot = async (payload) => {
+            const keyValuePairs = [
+                ['widget_income_total', payload.income],
+                ['widget_expense_total', payload.expense],
+                ['widget_savings_total', payload.savings],
+                ['widget_fx_usd_try', payload.usdTry],
+                ['widget_fx_eur_try', payload.eurTry],
+                ['widget_streak_days', payload.streakDays],
+                ['widget_goal_progress', payload.goalProgress],
+                ['income_total', payload.income],
+                ['expense_total', payload.expense],
+                ['savings_total', payload.savings],
+                ['fx_usd_try', payload.usdTry],
+                ['fx_eur_try', payload.eurTry],
+                ['streak_days', payload.streakDays],
+                ['goal_progress', payload.goalProgress],
+                ['widget_snapshot_v1', JSON.stringify(payload)],
+                ['fingenda_widget_snapshot', JSON.stringify(payload)],
+                ['widget_last_updated', payload.updatedAt]
+            ];
+
+            let wrote = false;
+            for (const group of APP_GROUPS) {
+                try {
+                    await writeToGroup(group, keyValuePairs);
+                    wrote = true;
+                } catch (_) {
+                    // Bir sonraki aday group ile devam et.
+                }
+            }
+
+            if (typeof preferences.configure === 'function') {
+                try {
+                    await preferences.configure({ group: DEFAULT_PREF_GROUP });
+                } catch (_) {
+                    // no-op
+                }
+            }
+
+            return wrote;
+        };
+
+        const runSync = async (force = false) => {
+            if (syncInFlight) {
+                queuedSync = true;
+                return false;
+            }
+
+            const payload = buildWidgetSnapshot();
+            const serialized = JSON.stringify(payload);
+            if (!force && serialized === lastSerializedPayload) {
+                return false;
+            }
+
+            syncInFlight = true;
+            try {
+                const wrote = await writeWidgetSnapshot(payload);
+                if (wrote) {
+                    lastSerializedPayload = serialized;
+                }
+                return wrote;
+            } catch (error) {
+                console.warn('[WidgetSync] Snapshot senkronizasyonu basarisiz:', error);
+                return false;
+            } finally {
+                syncInFlight = false;
+                if (queuedSync) {
+                    queuedSync = false;
+                    setTimeout(() => {
+                        runSync(true).catch(() => { });
+                    }, 160);
+                }
+            }
+        };
+
+        const scheduleSync = (delayMs = 200) => {
+            if (syncTimer) clearTimeout(syncTimer);
+            syncTimer = setTimeout(() => {
+                runSync(false).catch(() => { });
+            }, Math.max(0, Number(delayMs) || 0));
+        };
+
+        const wrapSyncTriggers = () => {
+            const candidates = [
+                'saveExpense',
+                'saveIncome',
+                'saveTransaction',
+                'addTransaction',
+                'deleteTransaction',
+                'saveGoal',
+                'saveGoalDraft',
+                'saveNotes',
+                'renderDashboard'
+            ];
+
+            candidates.forEach((name) => {
+                const original = window[name];
+                if (typeof original !== 'function' || original.__widgetSyncWrapped) return;
+
+                const wrapped = function (...args) {
+                    const result = original.apply(this, args);
+                    Promise.resolve(result).finally(() => scheduleSync(120));
+                    return result;
+                };
+                wrapped.__widgetSyncWrapped = true;
+                window[name] = wrapped;
+            });
+        };
+
+        window.syncWidgetSharedData = (force = false) => runSync(!!force);
+
+        wrapSyncTriggers();
+        setInterval(() => scheduleSync(0), SYNC_INTERVAL_MS);
+        window.addEventListener('fingenda:data-changed', () => scheduleSync(80));
+        window.addEventListener('focus', () => scheduleSync(120));
+        window.addEventListener('languageChanged', () => scheduleSync(120));
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) scheduleSync(120);
+        });
+        window.addEventListener('load', () => scheduleSync(900));
+        setTimeout(() => scheduleSync(1200), 1200);
+    })();
+</script>
 </body>
 </html>

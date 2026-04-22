@@ -61,6 +61,7 @@ private enum SharedData {
         "group.com.fingenda"
     ]
 
+    static let snapshotKeyCandidates = ["widget_snapshot_v1", "fingenda_widget_snapshot"]
     static let incomeKeys = ["widget_income_total", "income_total", "dashboard_income"]
     static let expenseKeys = ["widget_expense_total", "expense_total", "dashboard_expense"]
     static let usdKeys = ["widget_fx_usd_try", "fx_usd_try", "usd_try"]
@@ -73,6 +74,10 @@ private enum SharedData {
         let store = appGroupCandidates
             .compactMap { UserDefaults(suiteName: $0) }
             .first ?? UserDefaults.standard
+
+        if let payload = readSnapshotPayload(store) {
+            return payload
+        }
 
         return FingendaSnapshot(
             income: readNumber(store, keys: incomeKeys),
@@ -101,6 +106,41 @@ private enum SharedData {
 
     private static func readInt(_ defaults: UserDefaults, keys: [String]) -> Int {
         Int(readNumber(defaults, keys: keys))
+    }
+
+    private static func readSnapshotPayload(_ defaults: UserDefaults) -> FingendaSnapshot? {
+        for key in snapshotKeyCandidates {
+            guard let raw = defaults.string(forKey: key), !raw.isEmpty else { continue }
+            guard let data = raw.data(using: .utf8) else { continue }
+            guard let json = try? JSONSerialization.jsonObject(with: data, options: []),
+                  let dict = json as? [String: Any] else { continue }
+
+            return FingendaSnapshot(
+                income: number(dict["income"]),
+                expense: number(dict["expense"]),
+                usdTry: number(dict["usdTry"]),
+                eurTry: number(dict["eurTry"]),
+                savings: number(dict["savings"]),
+                streakDays: intValue(dict["streakDays"]),
+                goalProgress: number(dict["goalProgress"])
+            )
+        }
+        return nil
+    }
+
+    private static func number(_ value: Any?) -> Double {
+        if let n = value as? NSNumber {
+            return n.doubleValue
+        }
+        if let s = value as? String {
+            let normalized = s.replacingOccurrences(of: ",", with: ".")
+            return Double(normalized) ?? 0
+        }
+        return 0
+    }
+
+    private static func intValue(_ value: Any?) -> Int {
+        Int(number(value))
     }
 }
 
@@ -159,7 +199,7 @@ private struct FingendaWidgetProvider: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping (Timeline<FingendaWidgetEntry>) -> Void) {
         let now = Date()
         let entry = FingendaWidgetEntry(date: now, snapshot: SharedData.currentSnapshot())
-        let refresh = Calendar.current.date(byAdding: .minute, value: 15, to: now) ?? now.addingTimeInterval(900)
+        let refresh = Calendar.current.date(byAdding: .minute, value: 5, to: now) ?? now.addingTimeInterval(300)
         completion(Timeline(entries: [entry], policy: .after(refresh)))
     }
 }
@@ -320,7 +360,7 @@ private struct FingendaQuickBoardView: View {
         QuickAction(id: "expense", title: "Gider", icon: "minus.circle.fill", url: WidgetLinks.quickExpense),
         QuickAction(id: "income", title: "Gelir", icon: "plus.circle.fill", url: WidgetLinks.quickIncome),
         QuickAction(id: "voice", title: "Ses", icon: "waveform.badge.mic", url: WidgetLinks.voiceAdd),
-        QuickAction(id: "market", title: "Doviz", icon: "chart.line.uptrend.xyaxis", url: WidgetLinks.market)
+        QuickAction(id: "market", title: "Döviz", icon: "chart.line.uptrend.xyaxis", url: WidgetLinks.market)
     ]
 
     var body: some View {
@@ -365,11 +405,11 @@ private struct FingendaQuickBoardView: View {
     private var mediumWidget: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Fingenda • Hizli Islem")
+                Text("Fingenda • Hızlı İşlem")
                     .font(.system(size: 14, weight: .bold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.96))
                 Spacer(minLength: 0)
-                Text("Bugun")
+                    Text("Bugün")
                     .font(.system(size: 10, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.72))
             }
@@ -388,8 +428,8 @@ private struct FingendaQuickBoardView: View {
                     accent: .red.opacity(0.92)
                 )
                 statTile(
-                    title: "Doviz",
-                    value: entry.snapshot.hasFx ? "USD \(formatFx(entry.snapshot.usdTry))" : "Veri Yok",
+                    title: "Döviz",
+                    value: entry.snapshot.hasFx ? "USD \\(formatFx(entry.snapshot.usdTry))" : "Veri Yok",
                     icon: "dollarsign.arrow.circlepath",
                     accent: .cyan.opacity(0.95)
                 )
@@ -478,7 +518,7 @@ private struct FingendaCashFlowView: View {
                 .font(.system(size: 14, weight: .bold, design: .rounded))
                 .foregroundStyle(.white.opacity(0.96))
             Spacer(minLength: 0)
-            Text(entry.snapshot.hasCashFlow ? "Canli" : "Hazir")
+            Text(entry.snapshot.hasCashFlow ? "Canlı" : "Hazır")
                 .font(.system(size: 10, weight: .bold, design: .rounded))
                 .foregroundStyle(.white.opacity(0.75))
                 .padding(.horizontal, 8)
@@ -509,7 +549,7 @@ private struct FingendaCashFlowView: View {
                 Text("Birikim")
                     .font(.system(size: 10, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.72))
-                Text(entry.snapshot.hasSavings ? formatCurrency(entry.snapshot.savings) : "%\(entry.snapshot.savingsRatePercent)")
+                Text(entry.snapshot.hasSavings ? formatCurrency(entry.snapshot.savings) : "%\\(entry.snapshot.savingsRatePercent)")
                     .font(.system(size: 16, weight: .heavy, design: .rounded))
                     .lineLimit(1)
                     .minimumScaleFactor(0.72)
@@ -525,7 +565,7 @@ private struct FingendaCashFlowView: View {
                 Text("Seri")
                     .font(.system(size: 10, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.72))
-                Text("\(max(entry.snapshot.streakDays, 0)) gun")
+                    Text("\\(max(entry.snapshot.streakDays, 0)) gün")
                     .font(.system(size: 16, weight: .heavy, design: .rounded))
                     .foregroundStyle(.white)
             }
@@ -541,7 +581,7 @@ private struct FingendaCashFlowView: View {
                         .font(.system(size: 11, weight: .bold, design: .rounded))
                         .foregroundStyle(.white.opacity(0.84))
                     Spacer(minLength: 0)
-                    Text("%\(Int(min(entry.snapshot.spendRatio * 100, 999)))")
+                Text("%\\(Int(min(entry.snapshot.spendRatio * 100, 999)))")
                         .font(.system(size: 11, weight: .heavy, design: .rounded))
                         .foregroundStyle(.white)
                 }
@@ -589,7 +629,7 @@ private struct FingendaMarketWatchView: View {
     private var smallWidget: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Doviz")
+                Text("Döviz")
                     .font(.system(size: 14, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                 Spacer(minLength: 0)
@@ -602,18 +642,18 @@ private struct FingendaMarketWatchView: View {
             fxPairTile(code: "EUR/TRY", value: entry.snapshot.eurTry, accent: .indigo.opacity(0.95))
 
             Spacer(minLength: 0)
-            ActionChip(title: "Piyasayi Ac", icon: "arrow.up.right.square", url: WidgetLinks.market)
+            ActionChip(title: "Piyasayı Aç", icon: "arrow.up.right.square", url: WidgetLinks.market)
         }
     }
 
     private var mediumWidget: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Fingenda • Piyasa Ozeti")
+                Text("Fingenda • Piyasa Özeti")
                     .font(.system(size: 14, weight: .bold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.96))
                 Spacer(minLength: 0)
-                Text("Canli")
+                Text("Canlı")
                     .font(.system(size: 10, weight: .bold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.72))
             }
@@ -699,7 +739,7 @@ private struct FingendaVoiceCoachView: View {
                     Image(systemName: "waveform.badge.mic")
                         .font(.system(size: 24, weight: .bold))
                         .foregroundStyle(.white.opacity(0.96))
-                    Text("Hizli Sesli Kayit")
+                    Text("Hızlı Sesli Kayıt")
                         .font(.system(size: 11, weight: .bold, design: .rounded))
                         .foregroundStyle(.white.opacity(0.86))
                 }
@@ -718,7 +758,7 @@ private struct FingendaVoiceCoachView: View {
                     .font(.system(size: 14, weight: .bold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.96))
                 Spacer(minLength: 0)
-                Text("\(max(entry.snapshot.streakDays, 0)) gun seri")
+                Text("\\(max(entry.snapshot.streakDays, 0)) gün seri")
                     .font(.system(size: 10, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.74))
             }
@@ -726,10 +766,10 @@ private struct FingendaVoiceCoachView: View {
             HStack(spacing: 10) {
                 GlassTile(cornerRadius: 14) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Hedef Ilerleme")
+                        Text("Hedef İlerleme")
                             .font(.system(size: 10, weight: .semibold, design: .rounded))
                             .foregroundStyle(.white.opacity(0.74))
-                        Text("%\(Int(entry.snapshot.normalizedGoalProgress * 100))")
+                        Text("%\\(Int(entry.snapshot.normalizedGoalProgress * 100))")
                             .font(.system(size: 18, weight: .heavy, design: .rounded))
                             .foregroundStyle(.white)
                     }
@@ -767,8 +807,8 @@ struct FingendaQuickBoardWidget: Widget {
         StaticConfiguration(kind: kind, provider: FingendaWidgetProvider()) { entry in
             FingendaQuickBoardView(entry: entry)
         }
-        .configurationDisplayName("Fingenda Hizli Islem")
-        .description("Gelir, gider, sesli ekleme ve doviz kisayollarini tek bakista kullan.")
+        .configurationDisplayName("Fingenda Hızlı İşlem")
+        .description("Gelir, gider, sesli ekleme ve döviz kısayollarını tek bakışta kullan.")
         .supportedFamilies([.systemSmall, .systemMedium])
         .contentMarginsDisabled()
     }
@@ -782,7 +822,7 @@ struct FingendaCashFlowWidget: Widget {
             FingendaCashFlowView(entry: entry)
         }
         .configurationDisplayName("Fingenda Nakit Takibi")
-        .description("Net bakiye, birikim ve harcama baskisini premium panelde gor.")
+        .description("Net bakiye, birikim ve harcama baskısını premium panelde gör.")
         .supportedFamilies([.systemMedium, .systemLarge])
         .contentMarginsDisabled()
     }
@@ -795,8 +835,8 @@ struct FingendaMarketWatchWidget: Widget {
         StaticConfiguration(kind: kind, provider: FingendaWidgetProvider()) { entry in
             FingendaMarketWatchView(entry: entry)
         }
-        .configurationDisplayName("Fingenda Doviz Radari")
-        .description("USD ve EUR kurunu izleyip tek dokunusla piyasa ekranina gec.")
+        .configurationDisplayName("Fingenda Döviz Radarı")
+        .description("USD ve EUR kurunu izleyip tek dokunuşla piyasa ekranına geç.")
         .supportedFamilies([.systemSmall, .systemMedium])
         .contentMarginsDisabled()
     }
@@ -810,7 +850,7 @@ struct FingendaVoiceCoachWidget: Widget {
             FingendaVoiceCoachView(entry: entry)
         }
         .configurationDisplayName("Fingenda Sesli Asistan")
-        .description("Sesle hizli islem ac, hedef ilerlemeni ve birikimini takip et.")
+        .description("Sesle hızlı işlem aç, hedef ilerlemeni ve birikimini takip et.")
         .supportedFamilies([.systemSmall, .systemMedium])
         .contentMarginsDisabled()
     }
