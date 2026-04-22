@@ -72664,7 +72664,7 @@ html.perf: blur(8px) fallback
     /* === DYNAMIC ISLAND TOAST CONTAINER === */
     #dynamic-island-toast-container {
         position: fixed;
-        top: calc(44px + env(safe-area-inset-top, 0px));
+        top: calc(12px + env(safe-area-inset-top, 0px));
         left: 50%;
         transform: translateX(-50%);
         z-index: 10100;
@@ -72673,6 +72673,10 @@ html.perf: blur(8px) fallback
         justify-content: center;
         width: auto;
         max-width: calc(100% - 32px);
+    }
+
+    html.dynamic-island-supported #dynamic-island-toast-container {
+        top: calc(6px + env(safe-area-inset-top, 0px));
     }
 
     /* === DYNAMIC ISLAND TOAST === */
@@ -72839,7 +72843,11 @@ html.perf: blur(8px) fallback
     /* === RESPONSIVE === */
     @media (max-width: 420px) {
         #dynamic-island-toast-container {
-            top: calc(40px + env(safe-area-inset-top, 0px));
+            top: calc(10px + env(safe-area-inset-top, 0px));
+        }
+
+        html.dynamic-island-supported #dynamic-island-toast-container {
+            top: calc(4px + env(safe-area-inset-top, 0px));
         }
 
         .dynamic-island-toast {
@@ -72887,8 +72895,48 @@ html.perf: blur(8px) fallback
 
         // Store reference to header
         const header = document.getElementById('main-header');
+        const dynamicIslandContainer = document.getElementById('dynamic-island-toast-container');
         let activeToastCount = 0;
         let toastHideTimeout = null;
+
+        const originalShowToast = typeof window.showToast === 'function' ? window.showToast.bind(window) : null;
+        const originalShowMicroFeedback = typeof window.showMicroFeedback === 'function' ? window.showMicroFeedback.bind(window) : null;
+        const originalShowNeumorphicToast = typeof window.showNeumorphicToast === 'function' ? window.showNeumorphicToast.bind(window) : null;
+
+        const DYNAMIC_ISLAND_POINT_SIZES = new Set(['393x852', '402x874', '430x932', '440x956']);
+
+        function isNativeIOSRuntime() {
+            try {
+                return !!(window.Capacitor?.isNativePlatform?.() && window.Capacitor?.getPlatform?.() === 'ios');
+            } catch (_) {
+                return false;
+            }
+        }
+
+        function normalizeSizePair(width, height) {
+            const w = Math.max(0, Math.round(Number(width) || 0));
+            const h = Math.max(0, Math.round(Number(height) || 0));
+            return `${Math.min(w, h)}x${Math.max(w, h)}`;
+        }
+
+        function detectDynamicIslandSupport() {
+            if (!isNativeIOSRuntime()) return false;
+            if (!/iPhone/i.test(navigator.userAgent || '')) return false;
+
+            const candidates = [
+                normalizeSizePair(window.screen?.width, window.screen?.height),
+                normalizeSizePair(window.innerWidth, window.innerHeight),
+                normalizeSizePair(window.visualViewport?.width, window.visualViewport?.height)
+            ];
+
+            return candidates.some(pair => DYNAMIC_ISLAND_POINT_SIZES.has(pair));
+        }
+
+        const useDynamicIslandToast = detectDynamicIslandSupport();
+        document.documentElement.classList.toggle('dynamic-island-supported', useDynamicIslandToast);
+        if (dynamicIslandContainer) {
+            dynamicIslandContainer.style.display = useDynamicIslandToast ? 'flex' : 'none';
+        }
 
         // === KEEP HEADER STABLE DURING TOASTS ===
         function syncHeaderToastState(isActive) {
@@ -72899,8 +72947,18 @@ html.perf: blur(8px) fallback
         // === DYNAMIC ISLAND TOAST ===
         window.showDynamicIslandToast = function (title, message, type = 'success', duration = 3500) {
             const container = document.getElementById('dynamic-island-toast-container');
-            if (!container) {
-                console.warn('[DynamicIslandToast] Container not found');
+            if (!container || !useDynamicIslandToast) {
+                if (originalShowToast) {
+                    try {
+                        originalShowToast(message, type, duration);
+                        return;
+                    } catch (_) { }
+                }
+                if (originalShowMicroFeedback) {
+                    originalShowMicroFeedback({ message, type, duration });
+                    return;
+                }
+                console.warn('[DynamicIslandToast] Fallback toast used');
                 return;
             }
 
@@ -72986,9 +73044,9 @@ html.perf: blur(8px) fallback
 
         // === OVERRIDE GLOBAL showToast ===
         // Store original if exists
-        window._originalShowToast = window.showToast;
+        window._originalShowToast = originalShowToast || window._originalShowToast || null;
 
-        window.showToast = function (messageOrType, typeOrUndefined) {
+        window.showToast = function (messageOrType, typeOrUndefined, durationOrUndefined) {
             // Handle both calling conventions:
             // showToast(message, type) - old style
             // showToast(type, message) - some places use this
@@ -73076,7 +73134,19 @@ html.perf: blur(8px) fallback
                     title = 'Bilgi';
             }
 
-            window.showDynamicIslandToast(title, message, type);
+            if (!useDynamicIslandToast) {
+                if (window._originalShowToast && window._originalShowToast !== window.showToast) {
+                    try {
+                        return window._originalShowToast(message, type, durationOrUndefined ?? null);
+                    } catch (_) { }
+                }
+
+                if (originalShowMicroFeedback) {
+                    return originalShowMicroFeedback({ message, type, duration: durationOrUndefined ?? null });
+                }
+            }
+
+            window.showDynamicIslandToast(title, message, type, typeof durationOrUndefined === 'number' ? durationOrUndefined : 3500);
         };
 
         // === OVERRIDE showMicroFeedback ===
@@ -73099,6 +73169,15 @@ html.perf: blur(8px) fallback
             };
             const title = titles[type] || 'Başarılı!';
 
+            if (!useDynamicIslandToast) {
+                if (originalShowMicroFeedback) {
+                    return originalShowMicroFeedback({ message: msg, type, duration: 2500 });
+                }
+                if (window._originalShowToast && window._originalShowToast !== window.showToast) {
+                    return window._originalShowToast(msg, type, 2500);
+                }
+            }
+
             window.showDynamicIslandToast(title, msg, type, 2500);
         };
 
@@ -73111,10 +73190,20 @@ html.perf: blur(8px) fallback
                 warning: 'Uyarı'
             };
             const finalTitle = title || defaultTitles[type] || 'Bilgi';
+
+            if (!useDynamicIslandToast) {
+                if (originalShowNeumorphicToast) {
+                    return originalShowNeumorphicToast(message, type, title);
+                }
+                if (window._originalShowToast && window._originalShowToast !== window.showToast) {
+                    return window._originalShowToast(message, type, 3000);
+                }
+            }
+
             window.showDynamicIslandToast(finalTitle, message, type);
         };
 
-        console.log('[DynamicIslandToast] ✅ Toast system initialized with header coordination');
+        console.log(`[DynamicIslandToast] initialized | dynamicIsland=${useDynamicIslandToast}`);
     })();
 </script>
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
