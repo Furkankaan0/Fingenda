@@ -251,10 +251,32 @@ project = Xcodeproj::Project.open(project_path)
 app_target = project.targets.find { |t| t.name == 'App' }
 raise "App target bulunamadi" unless app_target
 
-widget_target = project.targets.find { |t| t.name == widget_name }
-unless widget_target
-  widget_target = project.new_target(:app_extension, widget_name, :ios, '17.0')
+widget_targets = project.targets.select { |t| t.name == widget_name }
+if widget_targets.length > 1
+  widget_target = widget_targets.first
+  widget_targets.drop(1).each do |dup_target|
+    begin
+      app_target.dependencies.select { |d| d.target == dup_target }.each(&:remove_from_project)
+    rescue
+    end
+    dup_target.remove_from_project
+  end
+else
+  widget_target = widget_targets.first
 end
+
+widget_target ||= project.new_target(:app_extension, widget_name, :ios, '17.0')
+
+products_group = project.main_group['Products'] || project.main_group.new_group('Products')
+product_ref = widget_target.product_reference
+if product_ref.nil?
+  product_ref = products_group.new_file("#{widget_name}.appex")
+  widget_target.product_reference = product_ref
+end
+product_ref.path = "#{widget_name}.appex"
+product_ref.name = "#{widget_name}.appex"
+product_ref.source_tree = 'BUILT_PRODUCTS_DIR'
+products_group.children << product_ref unless products_group.children.include?(product_ref)
 
 widget_group = project.main_group.find_subpath(widget_name, true)
 widget_group.set_source_tree('<group>')
@@ -265,9 +287,23 @@ unless widget_target.source_build_phase.files_references.include?(swift_ref)
   widget_target.source_build_phase.add_file_reference(swift_ref)
 end
 
+seen_swift = false
+widget_target.source_build_phase.files.each do |build_file|
+  next unless build_file.file_ref == swift_ref
+  if seen_swift
+    build_file.remove_from_project
+  else
+    seen_swift = true
+  end
+end
+
 widget_bundle_id = "#{app_bundle_id}.widget"
 
 widget_target.build_configurations.each do |config|
+  config.build_settings['PRODUCT_NAME'] = widget_name
+  config.build_settings['EXECUTABLE_NAME'] = '$(PRODUCT_NAME)'
+  config.build_settings['WRAPPER_EXTENSION'] = 'appex'
+  config.build_settings['MACH_O_TYPE'] = 'mh_execute'
   config.build_settings['PRODUCT_BUNDLE_IDENTIFIER'] = widget_bundle_id
   config.build_settings['INFOPLIST_FILE'] = "#{widget_name}/Info.plist"
   config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
@@ -286,9 +322,19 @@ embed_phase = app_target.copy_files_build_phases.find { |bp| bp.name == 'Embed A
 embed_phase ||= app_target.new_copy_files_build_phase('Embed App Extensions')
 embed_phase.dst_subfolder_spec = '13'
 
-product_ref = widget_target.product_reference
-unless embed_phase.files_references.include?(product_ref)
+embed_phase.files.each do |build_file|
+  ref = build_file.file_ref
+  next unless ref
+  if ref.path.to_s.strip == '.appex'
+    build_file.remove_from_project
+  end
+end
+
+matching_refs = embed_phase.files.select { |build_file| build_file.file_ref == product_ref }
+if matching_refs.empty?
   embed_phase.add_file_reference(product_ref, true)
+else
+  matching_refs.drop(1).each(&:remove_from_project)
 end
 
 project.save
