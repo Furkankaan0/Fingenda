@@ -64709,6 +64709,194 @@ KULLANICI NOTU
         // ═══════════════════════════════════════════════════════════════
         // 11. AKILLI HATIRLATICILAR
         // ═══════════════════════════════════════════════════════════════
+        window.BackgroundNotificationManager = {
+            permissionKey: 'fingenda_bg_notif_permission_v1',
+            lastSyncKey: 'fingenda_bg_notif_last_sync_v1',
+            baseNotificationId: 93000,
+            horizonDays: 30,
+            defaultHour: 20,
+            defaultMinute: 30,
+            _lifecycleBound: false,
+
+            getPlugin: function () {
+                return window.Capacitor?.Plugins?.LocalNotifications || null;
+            },
+
+            getLang: function () {
+                return localStorage.getItem('fingenda_lang') || 'tr';
+            },
+
+            getCopy: function (index) {
+                const lang = this.getLang();
+                const trBodies = [
+                    'Bugünkü gelir ve giderlerini 1 dakikada kaydet. 📊',
+                    'Fingenda kontrol zamanı: bütçene hızlı bir göz at. 👀',
+                    'Kısa bir finans check-in yapmayı unutma. ✨',
+                    'Hedeflerine yaklaşmak için bugünü de işaretle. 🎯'
+                ];
+                const enBodies = [
+                    'Log today\'s income and expenses in 1 minute. 📊',
+                    'Fingenda check-in time: take a quick look at your budget. 👀',
+                    'Don\'t forget your quick finance check-in. ✨',
+                    'Mark today and move one step closer to your goals. 🎯'
+                ];
+
+                if (lang === 'en') {
+                    return {
+                        title: 'Daily Fingenda Reminder',
+                        body: enBodies[index % enBodies.length]
+                    };
+                }
+
+                return {
+                    title: 'Günlük Fingenda Hatırlatması',
+                    body: trBodies[index % trBodies.length]
+                };
+            },
+
+            shouldResync: function (force = false) {
+                if (force) return true;
+                const last = Number(localStorage.getItem(this.lastSyncKey) || 0);
+                if (!last) return true;
+                return (Date.now() - last) > (6 * 60 * 60 * 1000);
+            },
+
+            buildScheduleWindow: function () {
+                const now = new Date();
+                const notifications = [];
+
+                for (let day = 0; day < this.horizonDays; day++) {
+                    const at = new Date(now);
+                    at.setDate(now.getDate() + day);
+                    at.setHours(this.defaultHour, this.defaultMinute, 0, 0);
+                    if (at <= now) continue;
+
+                    const copy = this.getCopy(day);
+                    notifications.push({
+                        id: this.baseNotificationId + day,
+                        title: copy.title,
+                        body: copy.body,
+                        schedule: { at: at },
+                        sound: 'default'
+                    });
+                }
+
+                return notifications;
+            },
+
+            clearReservedNotifications: async function (plugin) {
+                const reserved = [];
+                for (let i = 0; i <= this.horizonDays + 2; i++) {
+                    reserved.push({ id: this.baseNotificationId + i });
+                }
+                try { await plugin.cancel({ notifications: reserved }); } catch (_) { }
+                try {
+                    if (typeof plugin.removeDeliveredNotifications === 'function') {
+                        await plugin.removeDeliveredNotifications({ notifications: reserved });
+                    }
+                } catch (_) { }
+            },
+
+            ensurePermission: async function () {
+                const plugin = this.getPlugin();
+                if (!plugin) return false;
+
+                let status = 'prompt';
+                try {
+                    if (typeof plugin.checkPermissions === 'function') {
+                        const check = await plugin.checkPermissions();
+                        status = check?.display || check?.receive || check?.status || status;
+                    }
+                } catch (_) { }
+
+                if (status !== 'granted') {
+                    try {
+                        const req = await plugin.requestPermissions();
+                        status = req?.display || req?.receive || req?.status || status;
+                    } catch (e) {
+                        console.warn('[BackgroundNotificationManager] Permission request failed:', e);
+                    }
+                }
+
+                localStorage.setItem(this.permissionKey, status);
+                return status === 'granted';
+            },
+
+            syncSchedule: async function (force = false) {
+                const plugin = this.getPlugin();
+                if (!plugin) return false;
+                if (!this.shouldResync(force)) return true;
+
+                const notifications = this.buildScheduleWindow();
+                await this.clearReservedNotifications(plugin);
+                if (notifications.length > 0) {
+                    await plugin.schedule({ notifications: notifications });
+                    localStorage.setItem(this.lastSyncKey, String(Date.now()));
+                    console.log(`[BackgroundNotificationManager] ✅ ${notifications.length} bildirim zamanlandı`);
+                }
+                return true;
+            },
+
+            bindLifecycle: function () {
+                if (this._lifecycleBound) return;
+                this._lifecycleBound = true;
+
+                const reSync = () => {
+                    this.syncSchedule(false).catch((e) => {
+                        console.warn('[BackgroundNotificationManager] Foreground re-sync failed:', e);
+                    });
+                };
+
+                if (window.FingoAppState?.onForeground) {
+                    window.FingoAppState.onForeground(reSync);
+                } else {
+                    document.addEventListener('visibilitychange', () => {
+                        if (!document.hidden) reSync();
+                    });
+                }
+
+                window.addEventListener('languageChanged', () => {
+                    this.syncSchedule(true).catch((e) => {
+                        console.warn('[BackgroundNotificationManager] Language re-sync failed:', e);
+                    });
+                });
+            },
+
+            initialize: async function (options = {}) {
+                const plugin = this.getPlugin();
+                if (!plugin) return false;
+                const granted = await this.ensurePermission();
+                if (!granted) return false;
+                await this.syncSchedule(!!options.force);
+                this.bindLifecycle();
+                return true;
+            },
+
+            testNow: async function (seconds = 8) {
+                const plugin = this.getPlugin();
+                if (!plugin) return false;
+                const granted = await this.ensurePermission();
+                if (!granted) return false;
+
+                const fireAt = new Date(Date.now() + Math.max(5, Number(seconds) || 8) * 1000);
+                const lang = this.getLang();
+                await plugin.schedule({
+                    notifications: [{
+                        id: this.baseNotificationId + 777,
+                        title: lang === 'en' ? 'Test Notification' : 'Test Bildirimi',
+                        body: lang === 'en' ? 'Background reminder is working. ✅' : 'Arka plan bildirimi çalışıyor. ✅',
+                        schedule: { at: fireAt },
+                        sound: 'default'
+                    }]
+                });
+                return true;
+            }
+        };
+
+        window.testBackgroundReminderNotification = function (seconds = 8) {
+            return window.BackgroundNotificationManager?.testNow(seconds);
+        };
+
         window.SmartReminders = {
             patterns: [],
 
@@ -64845,6 +65033,9 @@ KULLANICI NOTU
                 window.StreakSystem.initialize();
                 window.SessionTimeout.initialize();
                 window.ExtendedBadges.register();
+                window.BackgroundNotificationManager?.initialize().catch((e) => {
+                    console.warn('[BackgroundNotificationManager] initialize failed:', e);
+                });
                 // window.NotificationSystem.initialize(); // Bell icon disabled
 
                 console.log('[AdvancedFeatures] ✅ Tüm gelişmiş özellikler yüklendi!');
@@ -64862,6 +65053,7 @@ KULLANICI NOTU
             DataImporter: window.DataImporter,
             ReceiptScanner: window.ReceiptScanner,
             NotificationSystem: window.NotificationSystem,
+            BackgroundNotificationManager: window.BackgroundNotificationManager,
             SmartReminders: window.SmartReminders
         };
 
