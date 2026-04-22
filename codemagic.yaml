@@ -13,9 +13,7 @@ workflows:
         - appstore_credentials
       ios_signing:
         distribution_type: app_store
-        bundle_identifier:
-          - com.fingenda.app
-          - com.fingenda.app.widget
+        bundle_identifier: com.fingenda.app
       node: 20
       xcode: latest
       cocoapods: default
@@ -125,6 +123,10 @@ workflows:
         script: |
           xcode-project use-profiles
 
+      - name: Apply widget provisioning profile
+        script: |
+          node scripts/apply-ios-widget-signing.js
+
       - name: Build signed IPA
         script: |
           xcode-project build-ipa \
@@ -159,9 +161,7 @@ workflows:
         - appstore_credentials
       ios_signing:
         distribution_type: app_store
-        bundle_identifier:
-          - com.fingenda.app
-          - com.fingenda.app.widget
+        bundle_identifier: com.fingenda.app
       node: 20
       xcode: latest
       cocoapods: default
@@ -279,6 +279,10 @@ workflows:
       - name: Set up code signing for TestFlight
         script: |
           xcode-project use-profiles
+
+      - name: Apply widget provisioning profile
+        script: |
+          node scripts/apply-ios-widget-signing.js
 
       - name: Build signed IPA
         script: |
