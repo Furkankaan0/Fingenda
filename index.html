@@ -4983,12 +4983,112 @@
                     }
                 });
 
+                const normalizeWidgetTab = (rawTab) => {
+                    const map = {
+                        home: 'dashboard',
+                        dashboard: 'dashboard',
+                        add: 'add',
+                        transaction: 'add',
+                        transactions: 'add',
+                        market: 'doviz',
+                        doviz: 'doviz',
+                        notes: 'notes',
+                        wallet: 'wallet',
+                        brain: 'wallet',
+                        history: 'history',
+                        goals: 'goals'
+                    };
+                    const key = String(rawTab || '').trim().toLowerCase();
+                    return map[key] || 'dashboard';
+                };
+
+                const resolveWidgetRoute = (actionRaw, tabRaw) => {
+                    const action = String(actionRaw || '').trim().toLowerCase();
+                    let tab = normalizeWidgetTab(tabRaw);
+                    let transactionType = null;
+
+                    if (!tabRaw) {
+                        if (action === 'quick-expense') {
+                            tab = 'add';
+                            transactionType = 'expense';
+                        } else if (action === 'quick-income') {
+                            tab = 'add';
+                            transactionType = 'income';
+                        } else if (action === 'open-market') {
+                            tab = 'doviz';
+                        } else if (action === 'open-notes') {
+                            tab = 'notes';
+                        } else if (action === 'open-wallet' || action === 'open-brain') {
+                            tab = 'wallet';
+                        }
+                    } else if (tab === 'add' && (action === 'quick-expense' || action === 'quick-income')) {
+                        transactionType = action === 'quick-income' ? 'income' : 'expense';
+                    }
+
+                    return { tab, transactionType, action };
+                };
+
+                const applyWidgetRoute = (route, attempt = 0) => {
+                    const maxAttempts = 18;
+                    const switchReady = typeof window.switchTab === 'function';
+                    const typeReady = !route.transactionType || typeof window.setTransactionType === 'function';
+
+                    if (!switchReady || !typeReady) {
+                        if (attempt >= maxAttempts) return false;
+                        setTimeout(() => applyWidgetRoute(route, attempt + 1), 120);
+                        return false;
+                    }
+
+                    try {
+                        window.switchTab(route.tab);
+                        if (route.transactionType) {
+                            setTimeout(() => {
+                                try { window.setTransactionType(route.transactionType); } catch (_) { }
+                            }, 90);
+                        }
+                        return true;
+                    } catch (_) {
+                        return false;
+                    }
+                };
+
+                const handleFingendaDeepLink = (incomingUrl) => {
+                    if (!incomingUrl || typeof incomingUrl !== 'string') return false;
+                    const normalized = incomingUrl.trim();
+                    if (!/^fingenda:/i.test(normalized)) return false;
+
+                    let parsed;
+                    try {
+                        parsed = new URL(normalized);
+                    } catch (_) {
+                        return false;
+                    }
+
+                    const host = String(parsed.hostname || '').toLowerCase();
+                    const actionRaw = parsed.searchParams.get('action') || parsed.searchParams.get('entry') || '';
+                    const tabRaw = parsed.searchParams.get('tab') || (host === 'widget' ? '' : host);
+                    const route = resolveWidgetRoute(actionRaw, tabRaw);
+                    return applyWidgetRoute(route);
+                };
+
+                window.handleFingendaDeepLink = handleFingendaDeepLink;
+
                 // Deep link handler
                 App.addListener('appUrlOpen', ({ url }) => {
                     if (window.FingoLogger) {
                         window.FingoLogger.info('DEEPLINK', 'Received', url);
                     }
+                    handleFingendaDeepLink(url);
                 });
+
+                if (typeof App.getLaunchUrl === 'function') {
+                    App.getLaunchUrl().then((result) => {
+                        const launchUrl = result && result.url ? result.url : '';
+                        if (launchUrl) {
+                            setTimeout(() => handleFingendaDeepLink(launchUrl), 220);
+                        }
+                    }).catch(() => { /* silent */ });
+                }
 
                 // Splash screen'i kapat
                 if (window.FingoSplash) {

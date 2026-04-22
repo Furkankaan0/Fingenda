@@ -54,6 +54,10 @@ workflows:
         script: |
           node scripts/install-ios-speech-plugin.js
 
+      - name: Install iOS widget extension
+        script: |
+          node scripts/install-ios-widget.js
+
       - name: Generate iOS app icons
         script: |
           node scripts/generate-ios-appicon.js
@@ -87,6 +91,13 @@ workflows:
           add_or_set_plist_value NSFaceIDUsageDescription string "Fingenda, finansal verilerinizi korumak icin biyometrik kimlik dogrulama kullaniyor."
           add_or_set_plist_value UIViewControllerBasedStatusBarAppearance bool true
           add_or_set_plist_value UILaunchStoryboardName string "LaunchScreen"
+
+          /usr/libexec/PlistBuddy -c "Delete :CFBundleURLTypes" "$APP_PLIST" || true
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes array" "$APP_PLIST"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0 dict" "$APP_PLIST"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLName string com.fingenda.app" "$APP_PLIST"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes array" "$APP_PLIST"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string fingenda" "$APP_PLIST"
 
           /usr/libexec/PlistBuddy -c "Delete :NSAppTransportSecurity" "$APP_PLIST" || true
           /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity dict" "$APP_PLIST"
@@ -189,6 +200,10 @@ workflows:
         script: |
           node scripts/install-ios-speech-plugin.js
 
+      - name: Install iOS widget extension
+        script: |
+          node scripts/install-ios-widget.js
+
       - name: Generate iOS app icons
         script: |
           node scripts/generate-ios-appicon.js
@@ -222,6 +237,13 @@ workflows:
           add_or_set_plist_value NSFaceIDUsageDescription string "Fingenda, finansal verilerinizi korumak icin biyometrik kimlik dogrulama kullaniyor."
           add_or_set_plist_value UIViewControllerBasedStatusBarAppearance bool true
           add_or_set_plist_value UILaunchStoryboardName string "LaunchScreen"
+
+          /usr/libexec/PlistBuddy -c "Delete :CFBundleURLTypes" "$APP_PLIST" || true
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes array" "$APP_PLIST"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0 dict" "$APP_PLIST"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLName string com.fingenda.app" "$APP_PLIST"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes array" "$APP_PLIST"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string fingenda" "$APP_PLIST"
 
           /usr/libexec/PlistBuddy -c "Delete :NSAppTransportSecurity" "$APP_PLIST" || true
           /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity dict" "$APP_PLIST"
