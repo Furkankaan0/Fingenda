@@ -82463,6 +82463,28 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         white-space: nowrap;
     }
 
+    html:not(.dark) #screen-goals button.goal-hero__cta,
+    html:not(.dark) #screen-goals button.goal-focus__action,
+    html:not(.dark) #screen-goals button.goal-empty__action {
+        color: #ffffff !important;
+        opacity: 1 !important;
+        text-shadow: 0 1px 3px rgba(15, 23, 42, 0.42), 0 0 1px rgba(15, 23, 42, 0.3);
+    }
+
+    html:not(.dark) #screen-goals .goal-hero__cta-text,
+    html:not(.dark) #screen-goals #goals-spotlight-action-text,
+    html:not(.dark) #screen-goals button.goal-empty__action span {
+        color: #ffffff !important;
+        opacity: 1 !important;
+    }
+
+    html:not(.dark) #screen-goals .goal-hero__cta-icon,
+    html:not(.dark) #screen-goals .goal-focus__action-icon {
+        color: #ffffff !important;
+        background: rgba(15, 23, 42, 0.24);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.28) inset, 0 4px 12px rgba(15, 23, 42, 0.22);
+    }
+
     #screen-goals .goal-hero__panels {
         position: relative;
         z-index: 1;
@@ -84524,6 +84546,25 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         border-color: var(--inst-primary-border) !important;
         box-shadow: var(--inst-primary-shadow) !important;
         text-shadow: 0 1px 2px rgba(15, 23, 42, 0.18);
+    }
+
+    html:not(.dark) #autopilot-tab-installments button.installment-action--primary,
+    html:not(.dark) #autopilot-tab-installments button.installment-empty__action {
+        color: #ffffff !important;
+        opacity: 1 !important;
+        text-shadow: 0 1px 3px rgba(15, 23, 42, 0.42), 0 0 1px rgba(15, 23, 42, 0.3);
+    }
+
+    html:not(.dark) #autopilot-tab-installments button.installment-action--primary span,
+    html:not(.dark) #autopilot-tab-installments button.installment-empty__action span {
+        color: #ffffff !important;
+        opacity: 1 !important;
+    }
+
+    html:not(.dark) #autopilot-tab-installments button.installment-action--primary .installment-action__icon {
+        color: #ffffff !important;
+        background: rgba(15, 23, 42, 0.24);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.28) inset, 0 4px 12px rgba(15, 23, 42, 0.22);
     }
 
     #autopilot-tab-installments button.installment-action--secondary {
