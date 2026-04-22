@@ -2262,6 +2262,14 @@
                     'profile.createPIN': 'PIN Oluştur',
                     'profile.appLock': 'Uygulama kilidi',
                     'profile.biometricLogin': 'Biyometrik ile hızlı giriş',
+                    'profile.notifications': '🔔 Bildirimler',
+                    'profile.notificationPermission': 'Bildirim İznini Etkinleştir',
+                    'profile.notificationStatusChecking': 'Durum kontrol ediliyor...',
+                    'profile.notificationStatusEnabled': 'Bildirimler aktif',
+                    'profile.notificationStatusPrompt': 'İzin bekleniyor',
+                    'profile.notificationStatusDenied': 'İzin kapalı (Ayarlar’dan açın)',
+                    'profile.sendTestNotification': 'Test Bildirimi Gönder',
+                    'profile.sendTestNotificationDesc': '7 saniye içinde test bildirimi gönderir',
                     'profile.premium': '👑 Premium',
                     'profile.restorePurchases': 'Satın Alımları Geri Yükle',
                     'profile.restoreDesc': 'Önceki satın alımlarınızı kurtarın',
@@ -3059,6 +3067,14 @@
                     'profile.createPIN': 'Create PIN',
                     'profile.appLock': 'App lock',
                     'profile.biometricLogin': 'Quick login with biometrics',
+                    'profile.notifications': '🔔 Notifications',
+                    'profile.notificationPermission': 'Enable Notification Permission',
+                    'profile.notificationStatusChecking': 'Checking permission status...',
+                    'profile.notificationStatusEnabled': 'Notifications are enabled',
+                    'profile.notificationStatusPrompt': 'Permission required',
+                    'profile.notificationStatusDenied': 'Permission denied (enable in Settings)',
+                    'profile.sendTestNotification': 'Send Test Notification',
+                    'profile.sendTestNotificationDesc': 'Sends a test notification in 7 seconds',
                     'profile.premium': '👑 Premium',
                     'profile.restorePurchases': 'Restore Purchases',
                     'profile.restoreDesc': 'Recover your previous purchases',
@@ -34734,6 +34750,44 @@
                                 </div>
                             </div>
 
+                            <!-- Bildirimler Section -->
+                            <div class="profile-section">
+                                <h4 class="profile-section-title" data-i18n="profile.notifications">🔔 Bildirimler</h4>
+                                <div class="space-y-3">
+                                    <button id="btn-notification-permissions"
+                                        onclick="window.openNotificationPermissionFlow()"
+                                        class="profile-action-btn" style="color: var(--text-secondary);">
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-lg">🔔</span>
+                                            <div class="flex flex-col items-start">
+                                                <span data-i18n="profile.notificationPermission">Bildirim İznini
+                                                    Etkinleştir</span>
+                                                <span id="lbl-notification-permission-status"
+                                                    class="text-[9px] font-normal opacity-70"
+                                                    data-i18n="profile.notificationStatusChecking">Durum kontrol
+                                                    ediliyor...</span>
+                                            </div>
+                                        </div>
+                                        <span class="text-gray-400">›</span>
+                                    </button>
+                                    <button id="btn-notification-test"
+                                        onclick="window.testBackgroundReminderNotification(7)"
+                                        class="profile-action-btn" style="color: var(--accent-primary);">
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-lg">🧪</span>
+                                            <div class="flex flex-col items-start">
+                                                <span data-i18n="profile.sendTestNotification">Test Bildirimi
+                                                    Gönder</span>
+                                                <span class="text-[9px] font-normal opacity-70"
+                                                    data-i18n="profile.sendTestNotificationDesc">7 saniye içinde test
+                                                    bildirimi gönderir</span>
+                                            </div>
+                                        </div>
+                                        <span class="text-gray-400">›</span>
+                                    </button>
+                                </div>
+                            </div>
+
                             <!-- Premium Section (Restore) -->
                             <div class="profile-section">
                                 <h4 class="profile-section-title" data-i18n="profile.premium">👑 Premium</h4>
@@ -38598,6 +38652,11 @@
                 const targetButton = document.getElementById(`tab-${tabName}`);
                 if (targetContent) targetContent.classList.remove('hidden');
                 if (targetButton) targetButton.classList.add('active');
+                if (tabName === 'settings') {
+                    setTimeout(() => {
+                        window.BackgroundNotificationManager?.updatePermissionStatusUI?.().catch(() => { });
+                    }, 50);
+                }
             };
 
             // ═══════════════════════════════════════════════════════════════
@@ -64812,6 +64871,7 @@ KULLANICI NOTU
         window.BackgroundNotificationManager = {
             permissionKey: 'fingenda_bg_notif_permission_v1',
             lastSyncKey: 'fingenda_bg_notif_last_sync_v1',
+            permissionPromptedKey: 'fingenda_bg_notif_prompted_v1',
             baseNotificationId: 93000,
             horizonDays: 30,
             defaultHour: 20,
@@ -64820,6 +64880,17 @@ KULLANICI NOTU
 
             getPlugin: function () {
                 return window.Capacitor?.Plugins?.LocalNotifications || null;
+            },
+
+            getAppPlugin: function () {
+                return window.Capacitor?.Plugins?.App || null;
+            },
+
+            resolvePermissionStatus: function (value) {
+                const raw = String(value || '').toLowerCase();
+                if (raw === 'granted') return 'granted';
+                if (raw === 'denied') return 'denied';
+                return 'prompt';
             },
 
             getLang: function () {
@@ -65070,29 +65141,99 @@ KULLANICI NOTU
                 } catch (_) { }
             },
 
-            ensurePermission: async function () {
+            checkPermissionStatus: async function () {
                 const plugin = this.getPlugin();
-                if (!plugin) return false;
-
+                if (!plugin) return 'unavailable';
                 let status = 'prompt';
                 try {
                     if (typeof plugin.checkPermissions === 'function') {
                         const check = await plugin.checkPermissions();
-                        status = check?.display || check?.receive || check?.status || status;
+                        status = this.resolvePermissionStatus(check?.display || check?.receive || check?.status || status);
                     }
                 } catch (_) { }
+                return status;
+            },
 
-                if (status !== 'granted') {
+            getPermissionStatusLabel: function (status) {
+                if (status === 'granted') {
+                    return window.t?.('profile.notificationStatusEnabled') || 'Bildirimler aktif';
+                }
+                if (status === 'denied') {
+                    return window.t?.('profile.notificationStatusDenied') || 'İzin kapalı (Ayarlar’dan açın)';
+                }
+                if (status === 'prompt') {
+                    return window.t?.('profile.notificationStatusPrompt') || 'İzin bekleniyor';
+                }
+                return window.t?.('profile.notificationStatusChecking') || 'Durum kontrol ediliyor...';
+            },
+
+            updatePermissionStatusUI: async function () {
+                const status = await this.checkPermissionStatus();
+                const statusLabel = document.getElementById('lbl-notification-permission-status');
+                if (statusLabel) {
+                    statusLabel.textContent = this.getPermissionStatusLabel(status);
+                }
+                const testButton = document.getElementById('btn-notification-test');
+                if (testButton) {
+                    testButton.disabled = status !== 'granted';
+                    testButton.style.opacity = status === 'granted' ? '1' : '0.55';
+                    testButton.style.pointerEvents = status === 'granted' ? 'auto' : 'none';
+                }
+                return status;
+            },
+
+            openSystemSettings: async function () {
+                try {
+                    const appPlugin = this.getAppPlugin();
+                    if (appPlugin && typeof appPlugin.openSettings === 'function') {
+                        await appPlugin.openSettings();
+                        return true;
+                    }
+                } catch (_) { }
+                return false;
+            },
+
+            ensurePermission: async function (options = {}) {
+                const plugin = this.getPlugin();
+                if (!plugin) {
+                    await this.updatePermissionStatusUI();
+                    return { granted: false, status: 'unavailable' };
+                }
+
+                let status = await this.checkPermissionStatus();
+                const shouldPrompt = options.forcePrompt === true || status === 'prompt';
+
+                if (shouldPrompt && status !== 'granted') {
                     try {
                         const req = await plugin.requestPermissions();
-                        status = req?.display || req?.receive || req?.status || status;
+                        status = this.resolvePermissionStatus(req?.display || req?.receive || req?.status || status);
                     } catch (e) {
                         console.warn('[BackgroundNotificationManager] Permission request failed:', e);
                     }
                 }
 
                 localStorage.setItem(this.permissionKey, status);
-                return status === 'granted';
+                if (status !== 'prompt') {
+                    localStorage.setItem(this.permissionPromptedKey, 'true');
+                }
+
+                await this.updatePermissionStatusUI();
+
+                if (status === 'denied' && options.openSettingsOnDenied) {
+                    const opened = await this.openSystemSettings();
+                    if (!opened) {
+                        const fallbackMessage = this.getLang() === 'en'
+                            ? 'Please enable notifications from iOS Settings > Fingenda.'
+                            : 'Lütfen iOS Ayarlar > Fingenda üzerinden bildirim iznini açın.';
+                        window.alertMessage?.(
+                            this.getLang() === 'en' ? 'Notification Permission' : 'Bildirim İzni',
+                            fallbackMessage,
+                            'yellow'
+                        );
+                    }
+                }
+
+                return { granted: status === 'granted', status: status };
             },
 
             syncSchedule: async function (force = false) {
@@ -65118,6 +65259,7 @@ KULLANICI NOTU
                     this.syncSchedule(false).catch((e) => {
                         console.warn('[BackgroundNotificationManager] Foreground re-sync failed:', e);
                     });
+                    this.updatePermissionStatusUI().catch(() => { });
                 };
 
                 if (window.FingoAppState?.onForeground) {
@@ -65132,24 +65274,26 @@ KULLANICI NOTU
                     this.syncSchedule(true).catch((e) => {
                         console.warn('[BackgroundNotificationManager] Language re-sync failed:', e);
                     });
+                    this.updatePermissionStatusUI().catch(() => { });
                 });
             },
 
             initialize: async function (options = {}) {
                 const plugin = this.getPlugin();
                 if (!plugin) return false;
-                const granted = await this.ensurePermission();
-                if (!granted) return false;
+                const permission = await this.ensurePermission({ forcePrompt: !!options.forcePrompt });
+                if (!permission.granted) return false;
                 await this.syncSchedule(!!options.force);
                 this.bindLifecycle();
+                await this.updatePermissionStatusUI();
                 return true;
             },
 
             testNow: async function (seconds = 8) {
                 const plugin = this.getPlugin();
                 if (!plugin) return false;
-                const granted = await this.ensurePermission();
-                if (!granted) return false;
+                const permission = await this.ensurePermission();
+                if (!permission.granted) return false;
 
                 const fireAt = new Date(Date.now() + Math.max(5, Number(seconds) || 8) * 1000);
                 const lang = this.getLang();
@@ -65163,7 +65307,55 @@ KULLANICI NOTU
                     }]
                 });
                 return true;
+            },
+
+            requestFromSettings: async function () {
+                const lang = this.getLang();
+                const permission = await this.ensurePermission({ forcePrompt: true });
+
+                if (permission.granted) {
+                    await this.syncSchedule(true);
+                    window.showMicroFeedback?.({
+                        message: lang === 'en'
+                            ? '🔔 Notifications are enabled'
+                            : '🔔 Bildirimler aktif edildi',
+                        type: 'success'
+                    });
+                    await this.testNow(7);
+                    return true;
+                }
+
+                if (permission.status === 'denied') {
+                    const openNow = typeof window.confirmDialog === 'function'
+                        ? await window.confirmDialog({
+                            title: lang === 'en' ? 'Notification Permission' : 'Bildirim İzni',
+                            message: lang === 'en'
+                                ? 'Notifications are turned off for Fingenda. Open iOS Settings now?'
+                                : 'Fingenda için bildirim izni kapalı. Şimdi iOS Ayarlar ekranı açılsın mı?',
+                            confirmText: lang === 'en' ? 'Open Settings' : 'Ayarları Aç',
+                            cancelText: lang === 'en' ? 'Later' : 'Sonra',
+                            variant: 'warning'
+                        })
+                        : window.confirm(lang === 'en'
+                            ? 'Notifications are turned off for Fingenda. Open iOS Settings now?'
+                            : 'Fingenda için bildirim izni kapalı. Şimdi iOS Ayarlar ekranı açılsın mı?');
+                    if (openNow) {
+                        await this.openSystemSettings();
+                    }
+                } else {
+                    window.showMicroFeedback?.({
+                        message: lang === 'en'
+                            ? 'Notification permission is required'
+                            : 'Bildirim izni gerekli',
+                        type: 'warning'
+                    });
+                }
+                return false;
             }
+        };
+
+        window.openNotificationPermissionFlow = function () {
+            return window.BackgroundNotificationManager?.requestFromSettings();
         };
 
         window.testBackgroundReminderNotification = function (seconds = 8) {
@@ -65309,6 +65501,7 @@ KULLANICI NOTU
                 window.BackgroundNotificationManager?.initialize().catch((e) => {
                     console.warn('[BackgroundNotificationManager] initialize failed:', e);
                 });
+                window.BackgroundNotificationManager?.updatePermissionStatusUI().catch(() => { });
                 // window.NotificationSystem.initialize(); // Bell icon disabled
 
                 console.log('[AdvancedFeatures] ✅ Tüm gelişmiş özellikler yüklendi!');
