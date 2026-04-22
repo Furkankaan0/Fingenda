@@ -64726,7 +64726,7 @@ KULLANICI NOTU
                 return localStorage.getItem('fingenda_lang') || 'tr';
             },
 
-            getCopy: function (index) {
+            getLegacyCopy: function (index) {
                 const lang = this.getLang();
                 const trBodies = [
                     'Bugünkü gelir ve giderlerini 1 dakikada kaydet. 📊',
@@ -64754,6 +64754,178 @@ KULLANICI NOTU
                 };
             },
 
+            normalizeNumber: function (value) {
+                const n = Number(value);
+                return Number.isFinite(n) ? n : 0;
+            },
+
+            getTodayKey: function (baseDate = new Date()) {
+                const y = baseDate.getFullYear();
+                const m = String(baseDate.getMonth() + 1).padStart(2, '0');
+                const d = String(baseDate.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            },
+
+            getTransactionsSnapshot: function () {
+                try {
+                    const year = window.APP_YEAR || new Date().getFullYear();
+                    const key = `my_expenses_${year}`;
+                    const parsed = JSON.parse(localStorage.getItem(key) || '[]');
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch (_) {
+                    return [];
+                }
+            },
+
+            formatPercent: function (value, lang) {
+                const fixed = Math.abs(this.normalizeNumber(value)).toFixed(2);
+                return lang === 'tr' ? fixed.replace('.', ',') : fixed;
+            },
+
+            buildReminderContext: function () {
+                const lang = this.getLang();
+                const todayKey = this.getTodayKey();
+                const transactions = this.getTransactionsSnapshot();
+                const todayTransactions = transactions.filter((t) =>
+                    t && typeof t.date === 'string' && t.date.startsWith(todayKey)
+                );
+
+                const incomeTodayCount = todayTransactions.filter((t) => t.type === 'income').length;
+                const expenseTodayCount = todayTransactions.filter((t) => t.type === 'expense').length;
+
+                const rates = window.liveRates || {};
+                let previousRates = {};
+                try {
+                    previousRates = JSON.parse(localStorage.getItem('prev_market_rates') || '{}') || {};
+                } catch (_) {
+                    previousRates = {};
+                }
+
+                const calcChangePercent = (current, previous) => {
+                    const c = this.normalizeNumber(current);
+                    const p = this.normalizeNumber(previous);
+                    if (c <= 0 || p <= 0) return 0;
+                    return ((c - p) / p) * 100;
+                };
+
+                const marketCandidates = [
+                    {
+                        key: 'GRAM',
+                        labelTr: 'Gram altın',
+                        labelEn: 'Gold (gram)',
+                        changePct: calcChangePercent(rates.GRAM, previousRates.GRAM)
+                    },
+                    {
+                        key: 'USD',
+                        labelTr: 'Dolar',
+                        labelEn: 'USD',
+                        changePct: calcChangePercent(rates.USD, previousRates.USD)
+                    },
+                    {
+                        key: 'EUR',
+                        labelTr: 'Euro',
+                        labelEn: 'EUR',
+                        changePct: calcChangePercent(rates.EUR, previousRates.EUR)
+                    }
+                ].filter((item) => Math.abs(item.changePct) >= 0.12);
+
+                marketCandidates.sort((a, b) => Math.abs(b.changePct) - Math.abs(a.changePct));
+
+                return {
+                    lang: lang,
+                    hasIncomeToday: incomeTodayCount > 0,
+                    hasExpenseToday: expenseTodayCount > 0,
+                    dominantMarket: marketCandidates[0] || null
+                };
+            },
+
+            buildNotificationPool: function (context) {
+                const lang = context?.lang || this.getLang();
+                const market = context?.dominantMarket || null;
+                const hasIncomeToday = !!context?.hasIncomeToday;
+                const hasExpenseToday = !!context?.hasExpenseToday;
+
+                const poolTr = [];
+                if (!hasExpenseToday) {
+                    poolTr.push({
+                        title: 'Giderlerini Eklemeyi Unutma',
+                        body: 'Bugünün giderlerini henüz eklemedin. 1 dakikada kaydedip bütçeni netleştirelim. 🧾'
+                    });
+                }
+                if (!hasIncomeToday) {
+                    poolTr.push({
+                        title: 'Gelir Hatırlatması',
+                        body: 'Gelir kaydını da ekleyelim ki ay sonu tahmini daha doğru çalışsın. 💸'
+                    });
+                }
+                if (market) {
+                    const isUp = market.changePct >= 0;
+                    poolTr.push({
+                        title: 'Piyasayı Takip Et',
+                        body: `${market.labelTr} bugün %${this.formatPercent(market.changePct, 'tr')} ${isUp ? 'yükseldi' : 'geriledi'}. Hızlıca kontrol edelim. 📈`
+                    });
+                }
+                poolTr.push(
+                    {
+                        title: 'Günlük Fingenda Check-in',
+                        body: 'Bugünün finans özetine kısa bir göz atıp kontrolü elinde tut. 👀'
+                    },
+                    {
+                        title: 'Hedefine Bir Adım Daha',
+                        body: 'Küçük bir kayıt bile büyük fark yaratır. Bugünü de işaretleyelim. 🎯'
+                    },
+                    {
+                        title: 'Finans Rutinini Kaçırma',
+                        body: 'Gelir, gider ve birikim dengesini güncellemek için doğru zaman. ✨'
+                    }
+                );
+
+                const poolEn = [];
+                if (!hasExpenseToday) {
+                    poolEn.push({
+                        title: 'Don\'t Forget Your Expenses',
+                        body: 'You haven\'t logged today\'s expenses yet. Let\'s update them in a minute. 🧾'
+                    });
+                }
+                if (!hasIncomeToday) {
+                    poolEn.push({
+                        title: 'Income Reminder',
+                        body: 'Add today\'s income to keep your monthly forecast accurate. 💸'
+                    });
+                }
+                if (market) {
+                    const isUp = market.changePct >= 0;
+                    poolEn.push({
+                        title: 'Check the Market',
+                        body: `${market.labelEn} is ${isUp ? 'up' : 'down'} ${this.formatPercent(market.changePct, 'en')}% today. Quick market check? 📈`
+                    });
+                }
+                poolEn.push(
+                    {
+                        title: 'Daily Fingenda Check-in',
+                        body: 'Take a quick look at your financial summary and stay in control. 👀'
+                    },
+                    {
+                        title: 'One More Step to Your Goal',
+                        body: 'A tiny update today can make a big difference tomorrow. 🎯'
+                    },
+                    {
+                        title: 'Keep Your Finance Routine',
+                        body: 'Update your income, expenses, and savings flow in one quick pass. ✨'
+                    }
+                );
+
+                const selected = lang === 'en' ? poolEn : poolTr;
+                return selected.length ? selected : (lang === 'en'
+                    ? [{ title: 'Daily Fingenda Reminder', body: 'Keep your budget in sync today. ✨' }]
+                    : [{ title: 'Günlük Fingenda Hatırlatması', body: 'Bugün bütçeni güncellemeyi unutma. ✨' }]);
+            },
+
+            getCopy: function (index, context) {
+                const pool = this.buildNotificationPool(context || this.buildReminderContext());
+                return pool[index % pool.length];
+            },
+
             shouldResync: function (force = false) {
                 if (force) return true;
                 const last = Number(localStorage.getItem(this.lastSyncKey) || 0);
@@ -64764,6 +64936,7 @@ KULLANICI NOTU
             buildScheduleWindow: function () {
                 const now = new Date();
                 const notifications = [];
+                const context = this.buildReminderContext();
 
                 for (let day = 0; day < this.horizonDays; day++) {
                     const at = new Date(now);
@@ -64771,7 +64944,7 @@ KULLANICI NOTU
                     at.setHours(this.defaultHour, this.defaultMinute, 0, 0);
                     if (at <= now) continue;
 
-                    const copy = this.getCopy(day);
+                    const copy = this.getCopy(day, context);
                     notifications.push({
                         id: this.baseNotificationId + day,
                         title: copy.title,
