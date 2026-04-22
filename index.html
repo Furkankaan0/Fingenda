@@ -8313,6 +8313,26 @@
                         0 0 0 3px rgba(192, 132, 252, 0.12) !important;
                 }
 
+                #screen-add #input-investment-qty {
+                    color: #1f2937 !important;
+                }
+
+                #screen-add #input-investment-qty::placeholder {
+                    color: #94a3b8 !important;
+                }
+
+                html.dark #screen-add #input-investment-qty {
+                    color: #f8fafc !important;
+                    -webkit-text-fill-color: #f8fafc !important;
+                    caret-color: #facc15 !important;
+                }
+
+                html.dark #screen-add #input-investment-qty::placeholder {
+                    color: #cbd5e1 !important;
+                    -webkit-text-fill-color: #cbd5e1 !important;
+                    opacity: 1 !important;
+                }
+
                 /* ────────────────────────────────────────────────────────────────────────────
                9. TEKRARLAMA OPSIYONLARI KARTI
                ──────────────────────────────────────────────────────────────────────────── */
@@ -33550,7 +33570,7 @@
                                     <input type="number" inputmode="decimal" id="input-investment-qty"
                                         placeholder="Örn: 5 Gram, 100 Dolar..."
                                         data-i18n-placeholder="gold.investPlaceholder"
-                                        class="w-full bg-white dark:bg-black/20 border border-yellow-200 dark:border-yellow-800 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-yellow-500/20 outline-none">
+                                        class="w-full bg-white dark:bg-black/20 border border-yellow-200 dark:border-yellow-800 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-300 focus:ring-2 focus:ring-yellow-500/20 outline-none">
                                 </div>
                             </div>
 
