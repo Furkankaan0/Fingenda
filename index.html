@@ -48731,6 +48731,34 @@ KULLANICI NOTU
                 const bgLayer = card.querySelector('.layer-bg');
                 const specularOrb = card.querySelector('#badge-specular-orb');
 
+                // iOS/TestFlight güvenlik reseti:
+                // Önceki patch katmanlarından kalabilecek oval maske/clip artefact'larını runtime'da temizle.
+                if (container) {
+                    container.style.overflow = 'visible';
+                    container.style.clipPath = 'none';
+                    container.style.webkitClipPath = 'none';
+                    container.style.maskImage = 'none';
+                    container.style.webkitMaskImage = 'none';
+                }
+                if (stage) {
+                    stage.classList.remove('badge-holo-ultra-stage', 'ios-badge-stage');
+                    stage.style.overflow = 'visible';
+                    stage.style.clipPath = 'none';
+                    stage.style.webkitClipPath = 'none';
+                    stage.style.maskImage = 'none';
+                    stage.style.webkitMaskImage = 'none';
+                }
+                if (card) {
+                    card.style.borderRadius = '30px';
+                    card.style.overflow = 'hidden';
+                    card.style.clipPath = 'inset(0 round 30px)';
+                    card.style.webkitClipPath = 'inset(0 round 30px)';
+                    card.style.mask = 'none';
+                    card.style.webkitMask = 'none';
+                    card.style.maskImage = 'none';
+                    card.style.webkitMaskImage = 'none';
+                }
+
                 // Durum Değişkenleri
                 const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
                 const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -90623,5 +90651,50 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         }
     })();
 </script>
+<style id="badge-detail-anti-cutline-fix-v3">
+    /* Rozet detay modalında iOS/WebKit kaynaklı oval hayalet katmanı
+       ve üst-alt kesilme artefact'larını kalıcı olarak kapatır. */
+    #nft-detail-modal #3d-card-container,
+    #nft-detail-modal #badge-detail-stage {
+        overflow: visible !important;
+        clip-path: none !important;
+        -webkit-clip-path: none !important;
+        mask: none !important;
+        -webkit-mask: none !important;
+        mask-image: none !important;
+        -webkit-mask-image: none !important;
+    }
+
+    #nft-detail-modal #badge-detail-stage::before,
+    #nft-detail-modal #badge-detail-stage::after,
+    #nft-detail-modal .premium-3d-card.badge-rarity-card::before,
+    #nft-detail-modal .premium-3d-card.badge-rarity-card::after {
+        content: none !important;
+        display: none !important;
+        opacity: 0 !important;
+        filter: none !important;
+        background: none !important;
+    }
+
+    #nft-detail-modal #tilt-card,
+    #nft-detail-modal .premium-3d-card.badge-rarity-card {
+        position: relative !important;
+        z-index: 8 !important;
+        overflow: hidden !important;
+        border-radius: 30px !important;
+        clip-path: inset(0 round 30px) !important;
+        -webkit-clip-path: inset(0 round 30px) !important;
+        background-clip: padding-box !important;
+        isolation: isolate !important;
+    }
+
+    #nft-detail-modal #tilt-card .holo-foil,
+    #nft-detail-modal #tilt-card .holo-glare,
+    #nft-detail-modal #tilt-card .noise-texture,
+    #nft-detail-modal #tilt-card .badge-depth-rim {
+        border-radius: inherit !important;
+        inset: 0 !important;
+    }
+</style>
 </body>
 </html>
