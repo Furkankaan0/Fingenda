@@ -7172,20 +7172,24 @@
             }
 
             /* Light Mode Chip/Pill Enhancement */
-            :root .month-pill,
-            :root [class*="chip"],
-            :root .subchip {
+            html:not(.dark) .month-pill,
+            html:not(.dark) [class*="chip"],
+            html:not(.dark) .subchip {
                 background: rgba(255, 255, 255, 0.9) !important;
                 border: 1px solid rgba(220, 225, 235, 0.7) !important;
                 box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03) !important;
             }
 
             /* Dark Mode Override for Subchips */
-            html.dark .subchip {
-                background: rgba(30, 41, 59, 0.8) !important;
-                border: 1px solid rgba(255, 255, 255, 0.1) !important;
-                color: rgba(255, 255, 255, 0.9) !important;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
+            html.dark #sub-category-chips .subchip {
+                background: linear-gradient(150deg,
+                        rgba(54, 70, 102, 0.92),
+                        rgba(40, 54, 83, 0.92)) !important;
+                border: 1px solid rgba(148, 163, 184, 0.36) !important;
+                color: rgba(248, 250, 252, 0.96) !important;
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+                    0 8px 20px rgba(2, 6, 23, 0.38) !important;
             }
 
             /* Light Mode Active States */
@@ -8252,19 +8256,26 @@
 
                 html.dark #screen-add input[type="month"],
                 html.dark #screen-add #input-category {
-                    background: #252545 !important;
-                    border: 1.5px solid #3d3d6b !important;
-                    color: #e2e8f0 !important;
+                    background: linear-gradient(145deg, rgba(48, 54, 96, 0.96), rgba(36, 43, 79, 0.96)) !important;
+                    border: 1.5px solid rgba(129, 140, 248, 0.34) !important;
+                    color: #f8fbff !important;
                     box-shadow:
-                        inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+                        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+                        0 10px 24px rgba(2, 6, 23, 0.3) !important;
                 }
 
                 html.dark #screen-add input[type="month"]:focus,
                 html.dark #screen-add #input-category:focus {
-                    background: #2a2a50 !important;
-                    border-color: #818cf8 !important;
+                    background: linear-gradient(145deg, rgba(58, 66, 114, 0.98), rgba(44, 53, 96, 0.98)) !important;
+                    border-color: rgba(129, 140, 248, 0.76) !important;
                     box-shadow:
-                        0 0 0 3px rgba(129, 140, 248, 0.12) !important;
+                        0 0 0 3px rgba(129, 140, 248, 0.2),
+                        0 12px 30px rgba(37, 99, 235, 0.22) !important;
+                }
+
+                html.dark #screen-add #input-category option {
+                    background: #1e2a4a !important;
+                    color: #f8fbff !important;
                 }
 
                 /* ────────────────────────────────────────────────────────────────────────────
@@ -11239,17 +11250,21 @@
 
             /* dark mode rail */
             html.dark #sub-category-chips.subchip-rail {
-                background: rgba(2, 6, 23, .35);
-                border: 1px solid rgba(148, 163, 184, .18);
-                box-shadow: 0 18px 60px rgba(0, 0, 0, .55);
+                background: linear-gradient(145deg,
+                        rgba(31, 42, 70, 0.94),
+                        rgba(24, 34, 59, 0.94)) !important;
+                border: 1px solid rgba(129, 140, 248, 0.28) !important;
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+                    0 20px 46px rgba(2, 6, 23, 0.46) !important;
             }
 
             html.dark #sub-category-chips.subchip-rail::before {
-                background: linear-gradient(90deg, rgba(2, 6, 23, .92), rgba(2, 6, 23, 0));
+                background: linear-gradient(90deg, rgba(33, 45, 74, .96), rgba(33, 45, 74, 0)) !important;
             }
 
             html.dark #sub-category-chips.subchip-rail::after {
-                background: linear-gradient(270deg, rgba(2, 6, 23, .92), rgba(2, 6, 23, 0));
+                background: linear-gradient(270deg, rgba(33, 45, 74, .96), rgba(33, 45, 74, 0)) !important;
             }
 
             /* --- Chip Button --- */
@@ -11281,11 +11296,24 @@
                 box-shadow: 0 14px 26px rgba(0, 0, 0, .12);
             }
 
-            html.dark .subchip {
-                background: rgba(2, 6, 23, .40);
-                border: 1px solid rgba(148, 163, 184, .22);
-                color: rgba(226, 232, 240, .86);
-                box-shadow: 0 16px 40px rgba(0, 0, 0, .55);
+            html.dark #sub-category-chips .subchip {
+                background: linear-gradient(150deg,
+                        rgba(60, 76, 108, 0.96),
+                        rgba(45, 60, 90, 0.96)) !important;
+                border: 1px solid rgba(148, 163, 184, 0.34) !important;
+                color: #f8fbff !important;
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+                    0 14px 30px rgba(2, 6, 23, 0.4) !important;
+            }
+
+            html.dark #sub-category-chips .subchip:hover {
+                background: linear-gradient(150deg,
+                        rgba(71, 89, 124, 0.98),
+                        rgba(55, 72, 107, 0.98)) !important;
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+                    0 18px 34px rgba(2, 6, 23, 0.46) !important;
             }
 
             /* Active state: premium gradient + glow */
@@ -11296,9 +11324,13 @@
                 box-shadow: 0 18px 44px rgba(99, 102, 241, .28);
             }
 
-            html.dark .subchip.is-active {
-                background: linear-gradient(135deg, rgba(79, 70, 229, 1), rgba(168, 85, 247, 1));
-                box-shadow: 0 20px 60px rgba(168, 85, 247, .22);
+            html.dark #sub-category-chips .subchip.is-active {
+                color: #ffffff !important;
+                background: linear-gradient(135deg, #3b82f6 0%, #6366f1 52%, #8b5cf6 100%) !important;
+                border-color: rgba(255, 255, 255, 0.38) !important;
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+                    0 20px 46px rgba(79, 70, 229, .36) !important;
             }
 
             /* === NAVİGASYON - DEEp DARK === */
