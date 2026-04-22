@@ -280,11 +280,38 @@ products_group.children << product_ref unless products_group.children.include?(p
 
 widget_group = project.main_group.find_subpath(widget_name, true)
 widget_group.set_source_tree('<group>')
+widget_group.path = widget_name
 
-swift_ref = widget_group.files.find { |f| f.path == "#{widget_name}.swift" } || widget_group.new_file("#{widget_name}.swift")
+expected_swift_relpath = "#{widget_name}/#{widget_name}.swift"
+
+swift_ref = project.files.find { |f|
+  f.path == expected_swift_relpath && f.source_tree == 'SOURCE_ROOT'
+}
+
+unless swift_ref
+  stale_group_ref = widget_group.files.find { |f| f.path == "#{widget_name}.swift" }
+  if stale_group_ref
+    stale_group_ref.path = expected_swift_relpath
+    stale_group_ref.source_tree = 'SOURCE_ROOT'
+    swift_ref = stale_group_ref
+  else
+    swift_ref = project.new_file(expected_swift_relpath)
+    swift_ref.source_tree = 'SOURCE_ROOT'
+  end
+end
 
 unless widget_target.source_build_phase.files_references.include?(swift_ref)
   widget_target.source_build_phase.add_file_reference(swift_ref)
+end
+
+widget_target.source_build_phase.files.each do |build_file|
+  ref = build_file.file_ref
+  next unless ref
+  ref_path = ref.path.to_s
+  next unless ref_path.end_with?("#{widget_name}.swift")
+  if ref_path != expected_swift_relpath || ref.source_tree != 'SOURCE_ROOT'
+    build_file.remove_from_project
+  end
 end
 
 seen_swift = false
