@@ -64294,6 +64294,7 @@ KULLANICI NOTU
             isEnabled: false,
             notifications: [],
             unreadCount: 0,
+            dedupeWindowMs: 12 * 60 * 60 * 1000,
 
             initialize: async function () {
                 // Load saved notifications
@@ -64662,8 +64663,21 @@ KULLANICI NOTU
 
             // Add in-app notification
             addNotification: function (title, body, icon = '🔔', type = 'info') {
+                const nowTs = Date.now();
+                const normalizedTitle = String(title || '').trim().toLowerCase();
+                const normalizedBody = String(body || '').trim().toLowerCase();
+                const duplicate = this.notifications.find((n) => {
+                    if (!n) return false;
+                    const sameTitle = String(n.title || '').trim().toLowerCase() === normalizedTitle;
+                    const sameBody = String(n.body || '').trim().toLowerCase() === normalizedBody;
+                    if (!sameTitle || !sameBody) return false;
+                    const age = nowTs - new Date(n.date || nowTs).getTime();
+                    return Number.isFinite(age) && age >= 0 && age < this.dedupeWindowMs;
+                });
+                if (duplicate) return duplicate;
+
                 const notif = {
-                    id: 'notif_' + Date.now(),
+                    id: 'notif_' + nowTs,
                     title,
                     body,
                     icon,
@@ -64888,7 +64902,11 @@ KULLANICI NOTU
             horizonDays: 30,
             defaultHour: 20,
             defaultMinute: 30,
+            warmupDelayMinutes: 65,
+            scheduleVersion: 2,
+            scheduleVersionKey: 'fingenda_bg_notif_schedule_version_v2',
             _lifecycleBound: false,
+            _notificationTapBound: false,
 
             getPlugin: function () {
                 return window.Capacitor?.Plugins?.LocalNotifications || null;
@@ -64912,28 +64930,34 @@ KULLANICI NOTU
             getLegacyCopy: function (index) {
                 const lang = this.getLang();
                 const trBodies = [
-                    'Bugünkü gelir ve giderlerini 1 dakikada kaydet. 📊',
-                    'Fingenda kontrol zamanı: bütçene hızlı bir göz at. 👀',
-                    'Kısa bir finans check-in yapmayı unutma. ✨',
-                    'Hedeflerine yaklaşmak için bugünü de işaretle. 🎯'
+                    'Bugünün gelir ve giderlerini 1 dakikada kaydet. 📊',
+                    'Fingenda check-in zamanı: bütçene hızlı bir göz at. 👀',
+                    'Kısa bir finans kontrolüyle günü kapatalım. ✨',
+                    'Hedeflerine yaklaşmak için bugünü de işaretleyelim. 🎯'
                 ];
                 const enBodies = [
-                    'Log today\'s income and expenses in 1 minute. 📊',
-                    'Fingenda check-in time: take a quick look at your budget. 👀',
-                    'Don\'t forget your quick finance check-in. ✨',
-                    'Mark today and move one step closer to your goals. 🎯'
+                    'Log today’s income and expenses in one minute. 📊',
+                    'Fingenda check-in time: take a quick budget look. 👀',
+                    'Let’s close the day with a quick finance check. ✨',
+                    'Mark today and move one step closer to your goal. 🎯'
                 ];
 
                 if (lang === 'en') {
                     return {
+                        id: 'legacy-daily',
                         title: 'Daily Fingenda Reminder',
-                        body: enBodies[index % enBodies.length]
+                        body: enBodies[index % enBodies.length],
+                        deepLink: 'fingenda://widget?tab=dashboard',
+                        icon: '🔔'
                     };
                 }
 
                 return {
+                    id: 'legacy-daily',
                     title: 'Günlük Fingenda Hatırlatması',
-                    body: trBodies[index % trBodies.length]
+                    body: trBodies[index % trBodies.length],
+                    deepLink: 'fingenda://widget?tab=dashboard',
+                    icon: '🔔'
                 };
             },
 
@@ -64967,14 +64991,25 @@ KULLANICI NOTU
 
             buildReminderContext: function () {
                 const lang = this.getLang();
-                const todayKey = this.getTodayKey();
+                const now = new Date();
+                const todayKey = this.getTodayKey(now);
                 const transactions = this.getTransactionsSnapshot();
-                const todayTransactions = transactions.filter((t) =>
-                    t && typeof t.date === 'string' && t.date.startsWith(todayKey)
+                const transactionsWithDate = transactions
+                    .map((t) => {
+                        const d = new Date(t?.date || '');
+                        if (!t || Number.isNaN(d.getTime())) return null;
+                        return { ...t, __date: d };
+                    })
+                    .filter(Boolean);
+                const todayTransactions = transactionsWithDate.filter((t) =>
+                    typeof t.date === 'string' && t.date.startsWith(todayKey)
                 );
 
                 const incomeTodayCount = todayTransactions.filter((t) => t.type === 'income').length;
                 const expenseTodayCount = todayTransactions.filter((t) => t.type === 'expense').length;
+                const streakCount = this.normalizeNumber(
+                    JSON.parse(localStorage.getItem('fingo_streak') || '{}')?.count || 0
+                );
 
                 const rates = window.liveRates || {};
                 let previousRates = {};
@@ -65010,139 +65045,331 @@ KULLANICI NOTU
                         labelEn: 'EUR',
                         changePct: calcChangePercent(rates.EUR, previousRates.EUR)
                     }
-                ].filter((item) => Math.abs(item.changePct) >= 0.12);
+                ].filter((item) => Math.abs(item.changePct) >= 0.25);
 
                 marketCandidates.sort((a, b) => Math.abs(b.changePct) - Math.abs(a.changePct));
+
+                let budgetAlert = null;
+                try {
+                    const budgets = JSON.parse(localStorage.getItem('fingo_category_budgets') || '{}') || {};
+                    const month = now.getMonth();
+                    const monthlyExpenses = {};
+                    transactionsWithDate.forEach((t) => {
+                        if (t.type !== 'expense') return;
+                        if (t.__date.getMonth() !== month || t.__date.getFullYear() !== now.getFullYear()) return;
+                        const cat = String(t.category || 'Diğer');
+                        monthlyExpenses[cat] = (monthlyExpenses[cat] || 0) + Math.abs(this.normalizeNumber(t.amount));
+                    });
+
+                    Object.keys(budgets).forEach((cat) => {
+                        const limit = this.normalizeNumber(budgets[cat]);
+                        if (limit <= 0) return;
+                        const spent = this.normalizeNumber(monthlyExpenses[cat] || 0);
+                        const percent = (spent / limit) * 100;
+                        if (percent < 75) return;
+                        if (!budgetAlert || percent > budgetAlert.percent) {
+                            budgetAlert = { category: cat, percent: percent };
+                        }
+                    });
+                } catch (_) { /* no-op */ }
+
+                let goalMomentum = null;
+                try {
+                    const goals = JSON.parse(localStorage.getItem('fingo_savings_goals') || '[]') || [];
+                    goals.forEach((goal) => {
+                        const target = this.normalizeNumber(goal?.target);
+                        const current = this.normalizeNumber(goal?.current);
+                        if (target <= 0) return;
+                        const percent = (current / target) * 100;
+                        if (percent < 40 || percent > 140) return;
+                        if (!goalMomentum || percent > goalMomentum.percent) {
+                            goalMomentum = {
+                                name: String(goal?.name || (lang === 'en' ? 'Savings Goal' : 'Birikim Hedefi')),
+                                percent: percent
+                            };
+                        }
+                    });
+                } catch (_) { /* no-op */ }
+
+                const lastTxTime = transactionsWithDate.reduce((max, t) => {
+                    const ts = t.__date.getTime();
+                    return ts > max ? ts : max;
+                }, 0);
+                const lastForegroundRaw = localStorage.getItem('fingenda_last_foreground_at') || '';
+                const lastForeground = new Date(lastForegroundRaw).getTime();
+                const lastActivityTs = Math.max(lastTxTime || 0, Number.isFinite(lastForeground) ? lastForeground : 0);
+                const inactiveDays = lastActivityTs > 0
+                    ? Math.floor((Date.now() - lastActivityTs) / 86400000)
+                    : 999;
 
                 return {
                     lang: lang,
                     hasIncomeToday: incomeTodayCount > 0,
                     hasExpenseToday: expenseTodayCount > 0,
-                    dominantMarket: marketCandidates[0] || null
+                    incomeTodayCount: incomeTodayCount,
+                    expenseTodayCount: expenseTodayCount,
+                    todayTransactionsCount: todayTransactions.length,
+                    streakCount: streakCount,
+                    dominantMarket: marketCandidates[0] || null,
+                    budgetAlert: budgetAlert,
+                    goalMomentum: goalMomentum,
+                    inactiveDays: inactiveDays
                 };
             },
 
-            buildNotificationPool: function (context) {
+            buildNotificationPool: function (context, dayOffset = 0) {
                 const lang = context?.lang || this.getLang();
                 const market = context?.dominantMarket || null;
                 const hasIncomeToday = !!context?.hasIncomeToday;
                 const hasExpenseToday = !!context?.hasExpenseToday;
+                const inactiveDays = this.normalizeNumber(context?.inactiveDays || 0);
+                const streakCount = this.normalizeNumber(context?.streakCount || 0);
+                const budgetAlert = context?.budgetAlert || null;
+                const goalMomentum = context?.goalMomentum || null;
+                const copy = (tr, en) => (lang === 'en' ? en : tr);
 
-                const poolTr = [];
+                const templates = [];
+
                 if (!hasExpenseToday) {
-                    poolTr.push({
-                        title: 'Giderlerini Eklemeyi Unutma',
-                        body: 'Bugünün giderlerini henüz eklemedin. 1 dakikada kaydedip bütçeni netleştirelim. 🧾'
+                    templates.push({
+                        id: 'missing-expense',
+                        icon: '🧾',
+                        type: 'warning',
+                        deepLink: 'fingenda://widget?action=quick-expense',
+                        title: copy('Giderlerini Eklemeyi Unutma', 'Don’t Forget to Log Expenses'),
+                        body: copy(
+                            'Bugünün giderleri henüz eksik. 1 dakikada tamamlayıp bütçe kontrolünü koruyalım.',
+                            'Today’s expense log is still incomplete. Let’s finish it in one minute and keep control.'
+                        )
                     });
                 }
+
                 if (!hasIncomeToday) {
-                    poolTr.push({
-                        title: 'Gelir Hatırlatması',
-                        body: 'Gelir kaydını da ekleyelim ki ay sonu tahmini daha doğru çalışsın. 💸'
+                    templates.push({
+                        id: 'missing-income',
+                        icon: '💸',
+                        type: 'info',
+                        deepLink: 'fingenda://widget?action=quick-income',
+                        title: copy('Gelir Kaydı Eksik', 'Income Entry Missing'),
+                        body: copy(
+                            'Bugünkü geliri de ekleyelim ki ay sonu tahmini daha net olsun.',
+                            'Add today’s income so your month-end forecast stays accurate.'
+                        )
                     });
                 }
+
+                if (budgetAlert) {
+                    templates.push({
+                        id: 'budget-alert',
+                        icon: '⚠️',
+                        type: 'warning',
+                        deepLink: 'fingenda://widget?tab=dashboard',
+                        title: copy('Bütçe Sınırına Yaklaştın', 'Budget Limit Alert'),
+                        body: copy(
+                            `${budgetAlert.category} bütçesinde kullanım oranı %${Math.round(budgetAlert.percent)} seviyesinde. Küçük ayarlarla dengeyi koruyabiliriz.`,
+                            `${budgetAlert.category} budget usage reached ${Math.round(budgetAlert.percent)}%. A small adjustment can keep you on track.`
+                        )
+                    });
+                }
+
                 if (market) {
                     const isUp = market.changePct >= 0;
-                    poolTr.push({
-                        title: 'Piyasayı Takip Et',
-                        body: `${market.labelTr} bugün %${this.formatPercent(market.changePct, 'tr')} ${isUp ? 'yükseldi' : 'geriledi'}. Hızlıca kontrol edelim. 📈`
+                    templates.push({
+                        id: 'market-watch',
+                        icon: isUp ? '📈' : '📉',
+                        type: 'info',
+                        deepLink: 'fingenda://widget?action=open-market',
+                        title: copy('Piyasa Güncellemesi', 'Market Pulse'),
+                        body: copy(
+                            `${market.labelTr} bugün %${this.formatPercent(market.changePct, 'tr')} ${isUp ? 'yukarı' : 'aşağı'} yönlü. Piyasaya göz atalım mı?`,
+                            `${market.labelEn} is ${isUp ? 'up' : 'down'} ${this.formatPercent(market.changePct, 'en')}% today. Want a quick market check?`
+                        )
                     });
                 }
-                poolTr.push(
+
+                if (goalMomentum && goalMomentum.percent >= 60) {
+                    templates.push({
+                        id: 'goal-progress',
+                        icon: '🎯',
+                        type: 'success',
+                        deepLink: 'fingenda://widget?tab=goals',
+                        title: copy('Hedefe Çok Yaklaştın', 'Goal Momentum'),
+                        body: copy(
+                            `${goalMomentum.name} hedefinde %${Math.round(goalMomentum.percent)} seviyesindesin. Böyle devam!`,
+                            `You’re at ${Math.round(goalMomentum.percent)}% on “${goalMomentum.name}”. Keep going!`
+                        )
+                    });
+                }
+
+                if (streakCount >= 3) {
+                    templates.push({
+                        id: 'streak-gamification',
+                        icon: '🔥',
+                        type: 'success',
+                        deepLink: 'fingenda://widget?tab=dashboard',
+                        title: copy('Serin Güçleniyor', 'Streak Is Growing'),
+                        body: copy(
+                            `${streakCount} günlük düzenli kayıt serin var. Bugünü de tamamlayıp ritmi koruyalım.`,
+                            `You’re on a ${streakCount}-day logging streak. Let’s keep the momentum today.`
+                        )
+                    });
+                }
+
+                if (inactiveDays >= 2) {
+                    templates.push(
+                        {
+                            id: 'reengagement-soft',
+                            icon: '🤝',
+                            type: 'info',
+                            deepLink: 'fingenda://widget?tab=dashboard',
+                            title: copy('Finansal Planın Seni Bekliyor', 'Your Plan Is Waiting'),
+                            body: copy(
+                                'Kısa bir Fingenda kontrolüyle kaldığın yerden devam edebilirsin.',
+                                'A quick Fingenda check-in gets you back on track.'
+                            )
+                        },
+                        {
+                            id: 'reengagement-weekly',
+                            icon: '📊',
+                            type: 'info',
+                            deepLink: 'fingenda://widget?tab=history',
+                            title: copy('Özetin Hazır', 'Your Summary Is Ready'),
+                            body: copy(
+                                'Son hareketleri senin için toparladık. 30 saniyede genel görünümü yakalayabilirsin.',
+                                'We prepared your latest activity summary. Catch up in 30 seconds.'
+                            )
+                        }
+                    );
+                }
+
+                templates.push(
                     {
-                        title: 'Günlük Fingenda Check-in',
-                        body: 'Bugünün finans özetine kısa bir göz atıp kontrolü elinde tut. 👀'
+                        id: 'motivation-balance',
+                        icon: '👏',
+                        type: 'success',
+                        deepLink: 'fingenda://widget?tab=dashboard',
+                        title: copy('Dengeyi Koruyorsun', 'Great Financial Rhythm'),
+                        body: copy(
+                            'Küçük ama düzenli kayıtlar, ay sonunda büyük fark yaratır. Harika gidiyorsun.',
+                            'Small and consistent updates make a big month-end difference. You’re doing great.'
+                        )
                     },
                     {
-                        title: 'Hedefine Bir Adım Daha',
-                        body: 'Küçük bir kayıt bile büyük fark yaratır. Bugünü de işaretleyelim. 🎯'
+                        id: 'coach-routine',
+                        icon: '✨',
+                        type: 'info',
+                        deepLink: 'fingenda://widget?tab=add',
+                        title: copy('Günün Mini Finans Kontrolü', 'Your Daily Finance Check'),
+                        body: copy(
+                            'Gelir, gider ve birikimi tek ekranda hızlıca güncelleyip günü net kapatalım.',
+                            'Update income, expenses, and savings in one pass to close the day clearly.'
+                        )
                     },
                     {
-                        title: 'Finans Rutinini Kaçırma',
-                        body: 'Gelir, gider ve birikim dengesini güncellemek için doğru zaman. ✨'
+                        id: 'voice-fast-entry',
+                        icon: '🎙️',
+                        type: 'info',
+                        deepLink: 'fingenda://widget?action=voice-add',
+                        title: copy('Hızlı Kayıt Hazır', 'Fast Entry Is Ready'),
+                        body: copy(
+                            'Bugün yoğunsan sesle ekleme ile işlemleri birkaç saniyede tamamlayabilirsin.',
+                            'Busy day? Use voice add to finish logging in seconds.'
+                        )
                     }
                 );
 
-                const poolEn = [];
-                if (!hasExpenseToday) {
-                    poolEn.push({
-                        title: 'Don\'t Forget Your Expenses',
-                        body: 'You haven\'t logged today\'s expenses yet. Let\'s update them in a minute. 🧾'
-                    });
-                }
-                if (!hasIncomeToday) {
-                    poolEn.push({
-                        title: 'Income Reminder',
-                        body: 'Add today\'s income to keep your monthly forecast accurate. 💸'
-                    });
-                }
-                if (market) {
-                    const isUp = market.changePct >= 0;
-                    poolEn.push({
-                        title: 'Check the Market',
-                        body: `${market.labelEn} is ${isUp ? 'up' : 'down'} ${this.formatPercent(market.changePct, 'en')}% today. Quick market check? 📈`
-                    });
-                }
-                poolEn.push(
-                    {
-                        title: 'Daily Fingenda Check-in',
-                        body: 'Take a quick look at your financial summary and stay in control. 👀'
-                    },
-                    {
-                        title: 'One More Step to Your Goal',
-                        body: 'A tiny update today can make a big difference tomorrow. 🎯'
-                    },
-                    {
-                        title: 'Keep Your Finance Routine',
-                        body: 'Update your income, expenses, and savings flow in one quick pass. ✨'
-                    }
-                );
+                if (!templates.length) return [this.getLegacyCopy(dayOffset)];
 
-                const selected = lang === 'en' ? poolEn : poolTr;
-                return selected.length ? selected : (lang === 'en'
-                    ? [{ title: 'Daily Fingenda Reminder', body: 'Keep your budget in sync today. ✨' }]
-                    : [{ title: 'Günlük Fingenda Hatırlatması', body: 'Bugün bütçeni güncellemeyi unutma. ✨' }]);
+                const rotationSeed = Math.abs(dayOffset + streakCount + (hasIncomeToday ? 3 : 0) + (hasExpenseToday ? 1 : 0));
+                const pivot = rotationSeed % templates.length;
+                return templates.slice(pivot).concat(templates.slice(0, pivot));
             },
 
             getCopy: function (index, context) {
-                const pool = this.buildNotificationPool(context || this.buildReminderContext());
-                return pool[index % pool.length];
+                const pool = this.buildNotificationPool(context || this.buildReminderContext(), index);
+                const selected = pool[index % pool.length] || this.getLegacyCopy(index);
+                return {
+                    id: selected.id || `daily-${index}`,
+                    title: selected.title,
+                    body: selected.body,
+                    deepLink: selected.deepLink || 'fingenda://widget?tab=dashboard',
+                    icon: selected.icon || '🔔',
+                    type: selected.type || 'info'
+                };
             },
 
             shouldResync: function (force = false) {
                 if (force) return true;
+                const version = Number(localStorage.getItem(this.scheduleVersionKey) || 0);
+                if (version !== this.scheduleVersion) return true;
                 const last = Number(localStorage.getItem(this.lastSyncKey) || 0);
                 if (!last) return true;
-                return (Date.now() - last) > (6 * 60 * 60 * 1000);
+                return (Date.now() - last) > (4 * 60 * 60 * 1000);
             },
 
             buildScheduleWindow: function () {
                 const now = new Date();
                 const notifications = [];
                 const context = this.buildReminderContext();
+                const safeTime = (sourceDate) => {
+                    const at = new Date(sourceDate);
+                    const hour = at.getHours();
+                    if (hour >= 22 || hour < 9) {
+                        at.setHours(9, 15, 0, 0);
+                        if (at <= now) at.setDate(at.getDate() + 1);
+                    }
+                    return at;
+                };
+
+                const warmupAt = safeTime(new Date(now.getTime() + Math.max(35, this.warmupDelayMinutes) * 60000));
+                let warmupDayKey = '';
+                if (warmupAt > now) {
+                    const warmCopy = this.getCopy(0, context);
+                    notifications.push({
+                        id: this.baseNotificationId + 1,
+                        title: warmCopy.title,
+                        body: warmCopy.body,
+                        schedule: { at: warmupAt },
+                        sound: 'default',
+                        extra: {
+                            deepLink: warmCopy.deepLink,
+                            templateId: warmCopy.id,
+                            source: 'warmup'
+                        }
+                    });
+                    warmupDayKey = this.getTodayKey(warmupAt);
+                }
 
                 for (let day = 0; day < this.horizonDays; day++) {
                     const at = new Date(now);
                     at.setDate(now.getDate() + day);
-                    at.setHours(this.defaultHour, this.defaultMinute, 0, 0);
-                    if (at <= now) continue;
+                    const minuteShift = day % 2 === 0 ? this.defaultMinute : Math.min(55, this.defaultMinute + 10);
+                    at.setHours(this.defaultHour, minuteShift, 0, 0);
+                    const safeAt = safeTime(at);
+                    if (safeAt <= now) continue;
+                    if (warmupDayKey && this.getTodayKey(safeAt) === warmupDayKey) continue;
 
-                    const copy = this.getCopy(day, context);
+                    const copy = this.getCopy(day + 1, context);
                     notifications.push({
-                        id: this.baseNotificationId + day,
+                        id: this.baseNotificationId + 10 + day,
                         title: copy.title,
                         body: copy.body,
-                        schedule: { at: at },
-                        sound: 'default'
+                        schedule: { at: safeAt },
+                        sound: 'default',
+                        extra: {
+                            deepLink: copy.deepLink,
+                            templateId: copy.id,
+                            source: 'daily'
+                        }
                     });
                 }
 
-                return notifications;
+                return notifications.slice(0, this.horizonDays + 1);
             },
 
             clearReservedNotifications: async function (plugin) {
                 const reserved = [];
-                for (let i = 0; i <= this.horizonDays + 2; i++) {
+                for (let i = 0; i <= this.horizonDays + 120; i++) {
                     reserved.push({ id: this.baseNotificationId + i });
                 }
                 try { await plugin.cancel({ notifications: reserved }); } catch (_) { }
@@ -65258,6 +65485,7 @@ KULLANICI NOTU
                 if (notifications.length > 0) {
                     await plugin.schedule({ notifications: notifications });
                     localStorage.setItem(this.lastSyncKey, String(Date.now()));
+                    localStorage.setItem(this.scheduleVersionKey, String(this.scheduleVersion));
                     console.log(`[BackgroundNotificationManager] ✅ ${notifications.length} bildirim zamanlandı`);
                 }
                 return true;
@@ -65268,6 +65496,7 @@ KULLANICI NOTU
                 this._lifecycleBound = true;
 
                 const reSync = () => {
+                    localStorage.setItem('fingenda_last_foreground_at', new Date().toISOString());
                     this.syncSchedule(false).catch((e) => {
                         console.warn('[BackgroundNotificationManager] Foreground re-sync failed:', e);
                     });
@@ -65288,11 +65517,30 @@ KULLANICI NOTU
                     });
                     this.updatePermissionStatusUI().catch(() => { });
                 });
+
+                const plugin = this.getPlugin();
+                if (!this._notificationTapBound && plugin && typeof plugin.addListener === 'function') {
+                    this._notificationTapBound = true;
+                    try {
+                        plugin.addListener('localNotificationActionPerformed', (event) => {
+                            const deepLink = String(event?.notification?.extra?.deepLink || '').trim();
+                            if (!deepLink) return;
+                            setTimeout(() => {
+                                if (typeof window.handleFingendaDeepLink === 'function') {
+                                    window.handleFingendaDeepLink(deepLink);
+                                }
+                            }, 120);
+                        });
+                    } catch (e) {
+                        console.warn('[BackgroundNotificationManager] Notification tap listener failed:', e);
+                    }
+                }
             },
 
             initialize: async function (options = {}) {
                 const plugin = this.getPlugin();
                 if (!plugin) return false;
+                localStorage.setItem('fingenda_last_foreground_at', new Date().toISOString());
                 const permission = await this.ensurePermission({ forcePrompt: !!options.forcePrompt });
                 if (!permission.granted) return false;
                 await this.syncSchedule(!!options.force);
@@ -65315,7 +65563,11 @@ KULLANICI NOTU
                         title: lang === 'en' ? 'Test Notification' : 'Test Bildirimi',
                         body: lang === 'en' ? 'Background reminder is working. ✅' : 'Arka plan bildirimi çalışıyor. ✅',
                         schedule: { at: fireAt },
-                        sound: 'default'
+                        sound: 'default',
+                        extra: {
+                            deepLink: 'fingenda://widget?tab=dashboard',
+                            source: 'test'
+                        }
                     }]
                 });
                 return true;
