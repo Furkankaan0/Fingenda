@@ -19,6 +19,7 @@ workflows:
       cocoapods: default
       vars:
         APP_DISPLAY_NAME: "Fingenda"
+        APP_BUNDLE_ID: "com.fingenda.app"
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
         FINGENDA_BUILD_CHANNEL: "release"
@@ -112,6 +113,12 @@ workflows:
           cd ios/App
           pod install
 
+      - name: Fetch signing files for app and widget
+        script: |
+          app-store-connect fetch-signing-files "$APP_BUNDLE_ID" --type IOS_APP_STORE --create
+          app-store-connect fetch-signing-files "$APP_BUNDLE_ID.widget" --type IOS_APP_STORE --create
+          keychain add-certificates
+
       - name: Set up code signing
         script: |
           xcode-project use-profiles
@@ -156,6 +163,7 @@ workflows:
       cocoapods: default
       vars:
         APP_DISPLAY_NAME: "Fingenda"
+        APP_BUNDLE_ID: "com.fingenda.app"
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
         FINGENDA_BUILD_CHANNEL: "testflight"
@@ -257,6 +265,12 @@ workflows:
         script: |
           cd ios/App
           pod install
+
+      - name: Fetch signing files for app and widget
+        script: |
+          app-store-connect fetch-signing-files "$APP_BUNDLE_ID" --type IOS_APP_STORE --create
+          app-store-connect fetch-signing-files "$APP_BUNDLE_ID.widget" --type IOS_APP_STORE --create
+          keychain add-certificates
 
       - name: Set up code signing for TestFlight
         script: |
