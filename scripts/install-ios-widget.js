@@ -285,7 +285,6 @@ end
 embed_phase = app_target.copy_files_build_phases.find { |bp| bp.name == 'Embed App Extensions' }
 embed_phase ||= app_target.new_copy_files_build_phase('Embed App Extensions')
 embed_phase.dst_subfolder_spec = '13'
-embed_phase.symbol_dst_subfolder_spec = :plugins
 
 product_ref = widget_target.product_reference
 unless embed_phase.files_references.include?(product_ref)
