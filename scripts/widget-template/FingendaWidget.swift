@@ -586,7 +586,8 @@ private struct FingendaWidgetProvider: TimelineProvider {
         let now = Date()
         let result = FingendaWidgetDataSource.load()
         let entry = FingendaWidgetEntry(date: now, snapshot: result.snapshot, state: result.state)
-        let refresh = Calendar.current.date(byAdding: .minute, value: 30, to: now) ?? now.addingTimeInterval(1800)
+        let minuteInterval = result.state == .empty ? 2 : 5
+        let refresh = Calendar.current.date(byAdding: .minute, value: minuteInterval, to: now) ?? now.addingTimeInterval(Double(minuteInterval * 60))
         completion(Timeline(entries: [entry], policy: .after(refresh)))
     }
 }

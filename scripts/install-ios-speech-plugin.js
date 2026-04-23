@@ -13,6 +13,7 @@ import Speech
 import AVFoundation
 import LocalAuthentication
 import UIKit
+import WidgetKit
 
 @objc(FingendaSpeechRecognitionPlugin)
 public class FingendaSpeechRecognitionPlugin: CAPPlugin, CAPBridgedPlugin, SFSpeechRecognizerDelegate {
@@ -508,11 +509,44 @@ public class FingendaFileExporterPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 }
 
+@objc(FingendaWidgetRefreshPlugin)
+public class FingendaWidgetRefreshPlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "FingendaWidgetRefreshPlugin"
+    public let jsName = "FingendaWidgetRefresh"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "reloadTimelines", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "reloadTimelineKind", returnType: CAPPluginReturnPromise)
+    ]
+
+    @objc func reloadTimelines(_ call: CAPPluginCall) {
+        if #available(iOS 14.0, *) {
+            DispatchQueue.main.async {
+                WidgetCenter.shared.reloadAllTimelines()
+            }
+        }
+        call.resolve(["reloaded": true])
+    }
+
+    @objc func reloadTimelineKind(_ call: CAPPluginCall) {
+        let kind = call.getString("kind") ?? "FingendaWidgetBundle"
+        if #available(iOS 14.0, *) {
+            DispatchQueue.main.async {
+                WidgetCenter.shared.reloadTimelines(ofKind: kind)
+            }
+        }
+        call.resolve([
+            "reloaded": true,
+            "kind": kind
+        ])
+    }
+}
+
 class FingendaBridgeViewController: CAPBridgeViewController {
     override open func capacitorDidLoad() {
         bridge?.registerPluginInstance(FingendaSpeechRecognitionPlugin())
         bridge?.registerPluginInstance(FingendaBiometricAuthPlugin())
         bridge?.registerPluginInstance(FingendaFileExporterPlugin())
+        bridge?.registerPluginInstance(FingendaWidgetRefreshPlugin())
     }
 }
 // FINGENDA_NATIVE_SPEECH_PLUGIN_END
@@ -557,7 +591,7 @@ function patchAppDelegate() {
         throw new Error('AppDelegate.swift beklenen Capacitor importunu icermiyor.');
     }
 
-    const importLines = ['import Speech', 'import AVFoundation', 'import LocalAuthentication', 'import UIKit'];
+    const importLines = ['import Speech', 'import AVFoundation', 'import LocalAuthentication', 'import UIKit', 'import WidgetKit'];
     let nextContent = content;
     for (const importLine of importLines) {
         if (!nextContent.includes(importLine)) {
