@@ -1,22 +1,31 @@
 import WidgetKit
 import SwiftUI
+import Foundation
 
-private enum SharedData {
+private enum WidgetLinks {
+    static let quickExpense = "fingenda://widget?action=quick-expense"
+    static let quickIncome = "fingenda://widget?action=quick-income"
+    static let voiceAdd = "fingenda://widget?action=voice-add"
+    static let market = "fingenda://widget?action=open-market"
+    static let dashboard = "fingenda://widget?tab=dashboard"
+}
+
+private enum SharedSnapshotStore {
     static var appGroupCandidates: [String] {
-        var groups: [String] = []
+        var values: [String] = []
 
         if let bundleId = Bundle.main.bundleIdentifier {
             let appBundleId = bundleId.replacingOccurrences(of: ".widget", with: "")
             if !appBundleId.isEmpty {
-                groups.append("group.\(appBundleId)")
+                values.append("group.\(appBundleId)")
             }
         }
 
-        groups.append("group.com.fingenda.app")
-        groups.append("group.com.fingenda")
+        values.append("group.com.fingenda.app")
+        values.append("group.com.fingenda")
 
         var seen = Set<String>()
-        return groups.filter { candidate in
+        return values.filter { candidate in
             guard !candidate.isEmpty else { return false }
             return seen.insert(candidate).inserted
         }
@@ -31,25 +40,25 @@ private enum SharedData {
     static let streakKeys = ["widget_streak_days", "streak_days"]
     static let goalProgressKeys = ["widget_goal_progress", "goal_progress"]
 
-    static func currentSnapshot() -> FingendaSnapshot {
-        let store = appGroupCandidates.compactMap { UserDefaults(suiteName: $0) }.first ?? UserDefaults.standard
+    static func load() -> FingendaSnapshot {
+        let defaults = appGroupCandidates.compactMap { UserDefaults(suiteName: $0) }.first ?? UserDefaults.standard
 
-        if let payload = readSnapshotPayload(store) {
-            return payload
+        if let decoded = decodeSnapshot(defaults) {
+            return decoded
         }
 
         return FingendaSnapshot(
-            income: readNumber(store, keys: incomeKeys),
-            expense: readNumber(store, keys: expenseKeys),
-            usdTry: readNumber(store, keys: usdKeys),
-            eurTry: readNumber(store, keys: eurKeys),
-            savings: readNumber(store, keys: savingsKeys),
-            streakDays: readInt(store, keys: streakKeys),
-            goalProgress: readNumber(store, keys: goalProgressKeys)
+            income: readNumber(defaults, keys: incomeKeys),
+            expense: readNumber(defaults, keys: expenseKeys),
+            usdTry: readNumber(defaults, keys: usdKeys),
+            eurTry: readNumber(defaults, keys: eurKeys),
+            savings: readNumber(defaults, keys: savingsKeys),
+            streakDays: readInt(defaults, keys: streakKeys),
+            goalProgress: readNumber(defaults, keys: goalProgressKeys)
         )
     }
 
-    private static func readSnapshotPayload(_ defaults: UserDefaults) -> FingendaSnapshot? {
+    private static func decodeSnapshot(_ defaults: UserDefaults) -> FingendaSnapshot? {
         for key in snapshotKeyCandidates {
             guard let raw = defaults.string(forKey: key), !raw.isEmpty else { continue }
             guard let data = raw.data(using: .utf8) else { continue }
@@ -66,6 +75,7 @@ private enum SharedData {
                 goalProgress: number(dict["goalProgress"])
             )
         }
+
         return nil
     }
 
@@ -81,6 +91,7 @@ private enum SharedData {
                 return parsed
             }
         }
+
         return 0
     }
 
@@ -89,9 +100,7 @@ private enum SharedData {
     }
 
     private static func number(_ value: Any?) -> Double {
-        if let n = value as? NSNumber {
-            return n.doubleValue
-        }
+        if let n = value as? NSNumber { return n.doubleValue }
         if let s = value as? String {
             let normalized = s.replacingOccurrences(of: ",", with: ".")
             return Double(normalized) ?? 0
@@ -121,14 +130,12 @@ private struct FingendaSnapshot {
         income - expense
     }
 
-    var spendPressure: Double {
-        let ref = max(income, 1)
-        return clamp(expense / ref, min: 0, max: 1.5)
+    var spendRatio: Double {
+        clamp(expense / max(income, 1), min: 0, max: 1.6)
     }
 
-    var savingsRate: Double {
-        let ref = max(income, 1)
-        return clamp(savings / ref, min: 0, max: 1)
+    var savingsRatio: Double {
+        clamp(savings / max(income, 1), min: 0, max: 1.0)
     }
 
     var normalizedGoalProgress: Double {
@@ -139,10 +146,10 @@ private struct FingendaSnapshot {
     }
 
     var scoreValue: Int {
-        let pressurePenalty = spendPressure * 55
-        let savingsBoost = savingsRate * 28
-        let streakBoost = clamp(Double(streakDays) / 20.0, min: 0, max: 1) * 12
-        let result = 80 - pressurePenalty + savingsBoost + streakBoost
+        let spendPenalty = spendRatio * 52
+        let savingsBoost = savingsRatio * 28
+        let streakBoost = clamp(Double(streakDays) / 21.0, min: 0, max: 1) * 14
+        let result = 78 - spendPenalty + savingsBoost + streakBoost
         return Int(clamp(result, min: 5, max: 99))
     }
 }
@@ -157,125 +164,118 @@ private struct FingendaProvider: TimelineProvider {
         FingendaEntry(
             date: Date(),
             snapshot: FingendaSnapshot(
-                income: 21240,
-                expense: 14320,
-                usdTry: 39.18,
-                eurTry: 42.55,
-                savings: 6920,
+                income: 21400,
+                expense: 14200,
+                usdTry: 39.14,
+                eurTry: 42.52,
+                savings: 6700,
                 streakDays: 8,
-                goalProgress: 0.58
+                goalProgress: 0.62
             )
         )
     }
 
     func getSnapshot(in context: Context, completion: @escaping (FingendaEntry) -> Void) {
-        completion(FingendaEntry(date: Date(), snapshot: SharedData.currentSnapshot()))
+        completion(FingendaEntry(date: Date(), snapshot: SharedSnapshotStore.load()))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<FingendaEntry>) -> Void) {
         let now = Date()
-        let entry = FingendaEntry(date: now, snapshot: SharedData.currentSnapshot())
-        let refreshDate = Calendar.current.date(byAdding: .minute, value: 1, to: now) ?? now.addingTimeInterval(60)
+        let refreshDate = Calendar.current.date(byAdding: .minute, value: 30, to: now) ?? now.addingTimeInterval(1800)
+        let entry = FingendaEntry(date: now, snapshot: SharedSnapshotStore.load())
         completion(Timeline(entries: [entry], policy: .after(refreshDate)))
     }
 }
 
-private enum WidgetLinks {
-    static let quickExpense = "fingenda://widget?action=quick-expense"
-    static let quickIncome = "fingenda://widget?action=quick-income"
-    static let voiceAdd = "fingenda://widget?action=voice-add"
-    static let market = "fingenda://widget?action=open-market"
-    static let dashboard = "fingenda://widget?tab=dashboard"
-}
-
-private enum WidgetFormatters {
+private enum WidgetFormatter {
     static let currency: NumberFormatter = {
-        let f = NumberFormatter()
-        f.numberStyle = .currency
-        f.locale = Locale(identifier: "tr_TR")
-        f.maximumFractionDigits = 0
-        return f
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.locale = Locale(identifier: "tr_TR")
+        formatter.maximumFractionDigits = 0
+        return formatter
     }()
 
     static let decimal: NumberFormatter = {
-        let f = NumberFormatter()
-        f.numberStyle = .decimal
-        f.locale = Locale(identifier: "tr_TR")
-        f.minimumFractionDigits = 2
-        f.maximumFractionDigits = 2
-        return f
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.locale = Locale(identifier: "tr_TR")
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+        return formatter
     }()
 }
 
-private func formatCurrency(_ value: Double) -> String {
-    WidgetFormatters.currency.string(from: NSNumber(value: value)) ?? "0 TL"
+private enum WidgetText {
+    static func currency(_ value: Double) -> String {
+        WidgetFormatter.currency.string(from: NSNumber(value: value)) ?? "0 TL"
+    }
+
+    static func decimal(_ value: Double) -> String {
+        WidgetFormatter.decimal.string(from: NSNumber(value: value)) ?? "0,00"
+    }
+
+    static func percent(from value: Double) -> String {
+        "\(Int(round(clamp(value, min: 0, max: 1) * 100)))%"
+    }
 }
 
-private func formatFX(_ value: Double) -> String {
-    WidgetFormatters.decimal.string(from: NSNumber(value: value)) ?? "0,00"
-}
-
-private func formatPercent(_ value: Double) -> String {
-    "\(Int(round(value * 100)))%"
-}
-
-private func clamp(_ value: Double, min lower: Double, max upper: Double) -> Double {
-    Swift.max(lower, Swift.min(upper, value))
-}
-
-private struct WidgetPalette {
-    let backgroundStart: Color
-    let backgroundEnd: Color
-    let glowPrimary: Color
-    let glowSecondary: Color
-    let cardStart: Color
-    let cardEnd: Color
-    let cardBorder: Color
+private struct WidgetTheme {
+    let bgTop: Color
+    let bgBottom: Color
+    let haloPrimary: Color
+    let haloSecondary: Color
+    let card: Color
+    let cardStrong: Color
+    let border: Color
     let textPrimary: Color
     let textSecondary: Color
-    let chipStart: Color
-    let chipEnd: Color
-    let chipBorder: Color
-    let scoreAccent: Color
+    let accentBlue: Color
+    let accentMint: Color
+    let accentLime: Color
+    let accentOrange: Color
+    let accentPurple: Color
 
-    static func forScheme(_ scheme: ColorScheme) -> WidgetPalette {
+    static func current(for scheme: ColorScheme) -> WidgetTheme {
         if scheme == .dark {
-            return WidgetPalette(
-                backgroundStart: Color(red: 0.05, green: 0.08, blue: 0.17),
-                backgroundEnd: Color(red: 0.07, green: 0.14, blue: 0.30),
-                glowPrimary: Color(red: 0.48, green: 0.43, blue: 1.0).opacity(0.34),
-                glowSecondary: Color(red: 0.53, green: 0.98, blue: 0.83).opacity(0.18),
-                cardStart: Color.white.opacity(0.11),
-                cardEnd: Color.white.opacity(0.07),
-                cardBorder: Color.white.opacity(0.17),
+            return WidgetTheme(
+                bgTop: Color(red: 0.05, green: 0.08, blue: 0.17),
+                bgBottom: Color(red: 0.06, green: 0.13, blue: 0.28),
+                haloPrimary: Color(red: 0.44, green: 0.38, blue: 1.0).opacity(0.28),
+                haloSecondary: Color(red: 0.40, green: 0.86, blue: 1.0).opacity(0.20),
+                card: Color.white.opacity(0.12),
+                cardStrong: Color.white.opacity(0.17),
+                border: Color.white.opacity(0.20),
                 textPrimary: Color.white.opacity(0.98),
-                textSecondary: Color.white.opacity(0.72),
-                chipStart: Color.white.opacity(0.20),
-                chipEnd: Color.white.opacity(0.12),
-                chipBorder: Color.white.opacity(0.22),
-                scoreAccent: Color(red: 0.66, green: 0.96, blue: 0.50)
+                textSecondary: Color.white.opacity(0.78),
+                accentBlue: Color(red: 0.38, green: 0.60, blue: 1.0),
+                accentMint: Color(red: 0.37, green: 0.90, blue: 0.82),
+                accentLime: Color(red: 0.76, green: 0.98, blue: 0.44),
+                accentOrange: Color(red: 1.0, green: 0.78, blue: 0.43),
+                accentPurple: Color(red: 0.60, green: 0.49, blue: 1.0)
             )
         }
 
-        return WidgetPalette(
-            backgroundStart: Color(red: 0.88, green: 0.93, blue: 1.0),
-            backgroundEnd: Color(red: 0.82, green: 0.89, blue: 1.0),
-            glowPrimary: Color(red: 0.45, green: 0.38, blue: 1.0).opacity(0.22),
-            glowSecondary: Color(red: 0.39, green: 0.82, blue: 0.96).opacity(0.16),
-            cardStart: Color.white.opacity(0.88),
-            cardEnd: Color.white.opacity(0.72),
-            cardBorder: Color.white.opacity(0.78),
+        return WidgetTheme(
+            bgTop: Color(red: 0.88, green: 0.93, blue: 1.0),
+            bgBottom: Color(red: 0.82, green: 0.90, blue: 1.0),
+            haloPrimary: Color(red: 0.45, green: 0.38, blue: 1.0).opacity(0.18),
+            haloSecondary: Color(red: 0.38, green: 0.82, blue: 0.98).opacity(0.16),
+            card: Color.white.opacity(0.82),
+            cardStrong: Color.white.opacity(0.94),
+            border: Color.white.opacity(0.88),
             textPrimary: Color(red: 0.11, green: 0.16, blue: 0.29),
-            textSecondary: Color(red: 0.26, green: 0.32, blue: 0.49).opacity(0.92),
-            chipStart: Color.white.opacity(0.94),
-            chipEnd: Color.white.opacity(0.80),
-            chipBorder: Color.white.opacity(0.82),
-            scoreAccent: Color(red: 0.20, green: 0.45, blue: 1.0)
+            textSecondary: Color(red: 0.25, green: 0.31, blue: 0.48).opacity(0.90),
+            accentBlue: Color(red: 0.23, green: 0.50, blue: 1.0),
+            accentMint: Color(red: 0.17, green: 0.76, blue: 0.72),
+            accentLime: Color(red: 0.70, green: 0.88, blue: 0.30),
+            accentOrange: Color(red: 0.95, green: 0.67, blue: 0.28),
+            accentPurple: Color(red: 0.47, green: 0.38, blue: 0.93)
         )
     }
 }
 
-private struct WidgetSurface<Content: View>: View {
+private struct WidgetCanvas<Content: View>: View {
     let content: Content
     @Environment(\.colorScheme) private var colorScheme
 
@@ -284,56 +284,46 @@ private struct WidgetSurface<Content: View>: View {
     }
 
     var body: some View {
-        let palette = WidgetPalette.forScheme(colorScheme)
+        let theme = WidgetTheme.current(for: colorScheme)
 
         content
             .padding(14)
             .containerBackground(for: .widget) {
                 ZStack {
                     LinearGradient(
-                        colors: [palette.backgroundStart, palette.backgroundEnd],
+                        colors: [theme.bgTop, theme.bgBottom],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
 
                     RadialGradient(
-                        colors: [palette.glowPrimary, .clear],
+                        colors: [theme.haloPrimary, .clear],
                         center: .topLeading,
-                        startRadius: 12,
-                        endRadius: 220
-                    )
-
-                    RadialGradient(
-                        colors: [palette.glowSecondary, .clear],
-                        center: .bottomTrailing,
-                        startRadius: 12,
+                        startRadius: 20,
                         endRadius: 200
                     )
 
-                    RoundedRectangle(cornerRadius: 28, style: .continuous)
-                        .stroke(
-                            LinearGradient(
-                                colors: [palette.cardBorder.opacity(0.95), .clear, palette.cardBorder.opacity(0.55)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 0.9
-                        )
-                        .padding(0.5)
+                    RadialGradient(
+                        colors: [theme.haloSecondary, .clear],
+                        center: .bottomTrailing,
+                        startRadius: 10,
+                        endRadius: 170
+                    )
                 }
             }
     }
 }
 
-private struct NeonCard<Content: View>: View {
+private struct SurfaceCard<Content: View>: View {
     let content: Content
-    var radius: CGFloat = 14
+    var radius: CGFloat = 12
     var highlighted: Bool = false
     var tint: Color? = nil
+
     @Environment(\.colorScheme) private var colorScheme
 
     init(
-        radius: CGFloat = 14,
+        radius: CGFloat = 12,
         highlighted: Bool = false,
         tint: Color? = nil,
         @ViewBuilder content: () -> Content
@@ -345,72 +335,62 @@ private struct NeonCard<Content: View>: View {
     }
 
     var body: some View {
-        let palette = WidgetPalette.forScheme(colorScheme)
-        let accent = tint ?? palette.scoreAccent
+        let theme = WidgetTheme.current(for: colorScheme)
+        let glow = tint ?? theme.accentBlue
 
         content
             .padding(10)
             .background(
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [palette.cardStart, palette.cardEnd],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                    .fill(highlighted ? theme.cardStrong : theme.card)
                     .overlay(
                         RoundedRectangle(cornerRadius: radius, style: .continuous)
-                            .stroke(
-                                highlighted
-                                    ? accent.opacity(colorScheme == .dark ? 0.34 : 0.30)
-                                    : palette.cardBorder.opacity(colorScheme == .dark ? 0.95 : 0.75),
-                                lineWidth: highlighted ? 1.0 : 0.8
-                            )
+                            .stroke(theme.border, lineWidth: highlighted ? 1.0 : 0.8)
                     )
                     .shadow(
-                        color: (highlighted ? accent : .black).opacity(colorScheme == .dark ? 0.22 : 0.12),
-                        radius: highlighted ? 10 : 5,
+                        color: glow.opacity(highlighted ? (colorScheme == .dark ? 0.26 : 0.16) : 0.08),
+                        radius: highlighted ? 8 : 2,
                         x: 0,
-                        y: highlighted ? 6 : 3
+                        y: highlighted ? 5 : 1
                     )
             )
     }
 }
 
-private struct ActionChip: View {
+private struct ActionPill: View {
     let title: String
     let symbol: String
-    let link: String
+    let url: URL
+
     @Environment(\.colorScheme) private var colorScheme
 
-    var body: some View {
-        let palette = WidgetPalette.forScheme(colorScheme)
+    init(title: String, symbol: String, link: String) {
+        self.title = title
+        self.symbol = symbol
+        self.url = URL(string: link) ?? URL(string: WidgetLinks.dashboard)!
+    }
 
-        Link(destination: URL(string: link)!) {
-            HStack(spacing: 5) {
+    var body: some View {
+        let theme = WidgetTheme.current(for: colorScheme)
+
+        Link(destination: url) {
+            HStack(spacing: 4) {
                 Image(systemName: symbol)
                     .font(.system(size: 10, weight: .semibold))
                 Text(title)
                     .font(.system(size: 11, weight: .bold, design: .rounded))
                     .lineLimit(1)
-                    .minimumScaleFactor(0.85)
+                    .minimumScaleFactor(0.82)
             }
-            .foregroundStyle(palette.textPrimary)
-            .padding(.vertical, 6)
             .frame(maxWidth: .infinity)
+            .foregroundStyle(theme.textPrimary)
+            .padding(.vertical, 6)
             .background(
                 Capsule(style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [palette.chipStart, palette.chipEnd],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                    .fill(theme.card)
                     .overlay(
                         Capsule(style: .continuous)
-                            .stroke(palette.chipBorder.opacity(0.9), lineWidth: 0.8)
+                            .stroke(theme.border, lineWidth: 0.8)
                     )
             )
         }
@@ -418,42 +398,93 @@ private struct ActionChip: View {
     }
 }
 
+private struct MiniStat: View {
+    let title: String
+    let value: String
+    let tone: Color
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        let theme = WidgetTheme.current(for: colorScheme)
+
+        SurfaceCard(radius: 11, highlighted: false, tint: tone) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                    .foregroundStyle(theme.textSecondary)
+                    .lineLimit(1)
+
+                Text(value)
+                    .font(.system(size: 13, weight: .heavy, design: .rounded))
+                    .foregroundStyle(theme.textPrimary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+private struct ScoreBadge: View {
+    let value: Int
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        let theme = WidgetTheme.current(for: colorScheme)
+
+        Text("\(value)")
+            .font(.system(size: 19, weight: .heavy, design: .rounded))
+            .foregroundStyle(theme.textPrimary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(theme.cardStrong)
+                    .overlay(
+                        Capsule(style: .continuous)
+                            .stroke(theme.border, lineWidth: 0.9)
+                    )
+            )
+    }
+}
+
 private struct RingSlice: Identifiable {
     let id = UUID()
     let label: String
+    let value: Double
     let color: Color
     let start: Double
     let end: Double
-    let percent: Int
 }
 
-private func ringSlices(from snapshot: FingendaSnapshot) -> [RingSlice] {
-    let savingsWeight = clamp(snapshot.savingsRate * 0.9, min: 0.12, max: 0.46)
-    let spendWeight = clamp(snapshot.spendPressure * 0.52, min: 0.18, max: 0.58)
-    let marketWeight = clamp((snapshot.usdTry + snapshot.eurTry) > 0 ? 0.16 : 0.11, min: 0.10, max: 0.22)
-    let reserveWeight = clamp(1 - (savingsWeight + spendWeight + marketWeight), min: 0.10, max: 0.30)
+private func distributionSlices(for snapshot: FingendaSnapshot, theme: WidgetTheme) -> [RingSlice] {
+    let expenseRaw = clamp(snapshot.spendRatio, min: 0.14, max: 0.58)
+    let savingsRaw = clamp(snapshot.savingsRatio, min: 0.10, max: 0.46)
+    let fxRaw = (snapshot.usdTry > 0 || snapshot.eurTry > 0) ? 0.16 : 0.10
+    let otherRaw = clamp(1 - (expenseRaw + savingsRaw + fxRaw), min: 0.10, max: 0.34)
 
-    let raw = [
-        ("Gider", Color(red: 0.50, green: 0.45, blue: 1.0), spendWeight),
-        ("Birikim", Color(red: 0.33, green: 0.89, blue: 0.78), savingsWeight),
-        ("Doviz", Color(red: 1.0, green: 0.82, blue: 0.47), marketWeight),
-        ("Diger", Color(red: 0.78, green: 1.0, blue: 0.47), reserveWeight)
+    let rows: [(String, Double, Color)] = [
+        ("Gider", expenseRaw, theme.accentPurple),
+        ("Birikim", savingsRaw, theme.accentMint),
+        ("Doviz", fxRaw, theme.accentOrange),
+        ("Diger", otherRaw, theme.accentLime)
     ]
 
-    let total = max(raw.reduce(0) { $0 + $1.2 }, 0.001)
-    let gap = 0.018
-    let usable = 1 - (gap * Double(raw.count))
+    let sum = max(rows.reduce(0) { $0 + $1.1 }, 0.0001)
+    let gap = 0.015
+    let usableRange = 1 - (Double(rows.count) * gap)
     var cursor = 0.0
 
-    return raw.map { item in
-        let normalized = (item.2 / total) * usable
+    return rows.map { row in
+        let normalized = (row.1 / sum) * usableRange
         defer { cursor += normalized + gap }
         return RingSlice(
-            label: item.0,
-            color: item.1,
+            label: row.0,
+            value: row.1 / sum,
+            color: row.2,
             start: cursor,
-            end: cursor + normalized,
-            percent: Int(round((item.2 / total) * 100))
+            end: cursor + normalized
         )
     }
 }
@@ -464,287 +495,23 @@ private struct SegmentedRing: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(.white.opacity(0.08), lineWidth: 16)
+                .stroke(.white.opacity(0.12), lineWidth: 14)
 
-            ForEach(slices) { slice in
+            ForEach(slices) { item in
                 Circle()
-                    .trim(from: slice.start, to: slice.end)
+                    .trim(from: item.start, to: item.end)
                     .stroke(
-                        slice.color,
-                        style: StrokeStyle(lineWidth: 16, lineCap: .round, lineJoin: .round)
+                        item.color,
+                        style: StrokeStyle(lineWidth: 14, lineCap: .round, lineJoin: .round)
                     )
                     .rotationEffect(.degrees(-90))
-                    .shadow(color: slice.color.opacity(0.45), radius: 4, x: 0, y: 0)
+                    .shadow(color: item.color.opacity(0.36), radius: 3, x: 0, y: 0)
             }
         }
     }
 }
 
-private struct ExpenseRingWidgetView: View {
-    let entry: FingendaEntry
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        WidgetSurface {
-            let slices = ringSlices(from: entry.snapshot)
-            let palette = WidgetPalette.forScheme(colorScheme)
-
-            VStack(alignment: .leading, spacing: 9) {
-                HStack(spacing: 8) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Fingenda • Harcama DNA")
-                            .font(.system(size: 14, weight: .heavy, design: .rounded))
-                            .foregroundStyle(palette.textPrimary)
-                        Text("Son 30 gun")
-                            .font(.system(size: 10, weight: .semibold, design: .rounded))
-                            .foregroundStyle(palette.textSecondary)
-                    }
-                    Spacer(minLength: 0)
-                    NeonCard(radius: 11, highlighted: true, tint: palette.scoreAccent) {
-                        VStack(alignment: .trailing, spacing: 1) {
-                            Text("SKOR")
-                                .font(.system(size: 9, weight: .bold, design: .rounded))
-                                .foregroundStyle(palette.textSecondary)
-                            Text("\(entry.snapshot.scoreValue)")
-                                .font(.system(size: 20, weight: .heavy, design: .rounded))
-                                .foregroundStyle(palette.textPrimary)
-                        }
-                    }
-                    .frame(width: 74)
-                }
-
-                HStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(.white.opacity(colorScheme == .dark ? 0.04 : 0.24))
-                            .frame(width: 124, height: 124)
-                        SegmentedRing(slices: slices)
-                            .frame(width: 114, height: 114)
-
-                        VStack(spacing: 0) {
-                            Text("DAGILIM")
-                                .font(.system(size: 8, weight: .bold, design: .rounded))
-                                .foregroundStyle(palette.textSecondary)
-                            Text("\(Int(round(entry.snapshot.spendPressure * 100)))%")
-                                .font(.system(size: 18, weight: .heavy, design: .rounded))
-                                .foregroundStyle(palette.textPrimary)
-                        }
-                    }
-
-                    VStack(alignment: .leading, spacing: 7) {
-                        ForEach(slices) { item in
-                            HStack(spacing: 6) {
-                                Circle()
-                                    .fill(item.color)
-                                    .frame(width: 7, height: 7)
-                                Text(item.label)
-                                    .font(.system(size: 10, weight: .bold, design: .rounded))
-                                    .foregroundStyle(palette.textSecondary)
-                                    .lineLimit(1)
-                                Spacer(minLength: 3)
-                                Text("\(item.percent)%")
-                                    .font(.system(size: 10, weight: .heavy, design: .rounded))
-                                    .foregroundStyle(palette.textPrimary)
-                            }
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 5)
-                            .background(
-                                Capsule(style: .continuous)
-                                    .fill(.white.opacity(colorScheme == .dark ? 0.09 : 0.50))
-                            )
-                        }
-                    }
-                }
-
-                HStack(spacing: 7) {
-                    ActionChip(title: "Gider", symbol: "minus.circle.fill", link: WidgetLinks.quickExpense)
-                    ActionChip(title: "Gelir", symbol: "plus.circle.fill", link: WidgetLinks.quickIncome)
-                    ActionChip(title: "Doviz", symbol: "chart.xyaxis.line", link: WidgetLinks.market)
-                }
-            }
-        }
-        .widgetURL(URL(string: WidgetLinks.dashboard))
-    }
-}
-
-private struct BalanceStackWidgetView: View {
-    let entry: FingendaEntry
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        WidgetSurface {
-            let palette = WidgetPalette.forScheme(colorScheme)
-
-            VStack(spacing: 8) {
-                HStack {
-                    Text("Nakit Durumu")
-                        .font(.system(size: 13, weight: .heavy, design: .rounded))
-                        .foregroundStyle(palette.textPrimary)
-                    Spacer(minLength: 0)
-                    Text(entry.snapshot.hasData ? "Canli" : "Hazir")
-                        .font(.system(size: 10, weight: .bold, design: .rounded))
-                        .foregroundStyle(palette.textSecondary)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(
-                            Capsule(style: .continuous)
-                                .fill(.white.opacity(colorScheme == .dark ? 0.13 : 0.55))
-                        )
-                }
-
-                NeonCard(radius: 16, highlighted: true, tint: palette.scoreAccent) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Net Bakiye")
-                            .font(.system(size: 10, weight: .bold, design: .rounded))
-                            .foregroundStyle(palette.textSecondary)
-                        Text(formatCurrency(entry.snapshot.netBalance))
-                            .font(.system(size: 26, weight: .heavy, design: .rounded))
-                            .foregroundStyle(palette.textPrimary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.72)
-                    }
-                }
-
-                HStack(spacing: 8) {
-                    NeonCard(radius: 14, tint: Color(red: 0.52, green: 0.88, blue: 1.0)) {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text("Baski")
-                                .font(.system(size: 10, weight: .semibold, design: .rounded))
-                                .foregroundStyle(palette.textSecondary)
-                            Text(formatPercent(entry.snapshot.spendPressure))
-                                .font(.system(size: 16, weight: .heavy, design: .rounded))
-                                .foregroundStyle(palette.textPrimary)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-
-                    NeonCard(radius: 14, tint: Color(red: 0.58, green: 0.95, blue: 0.56)) {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text("Birikim")
-                                .font(.system(size: 10, weight: .semibold, design: .rounded))
-                                .foregroundStyle(palette.textSecondary)
-                            Text(formatCurrency(entry.snapshot.savings))
-                                .font(.system(size: 14, weight: .heavy, design: .rounded))
-                                .foregroundStyle(palette.textPrimary)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.72)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                }
-
-                HStack(spacing: 8) {
-                    ActionChip(title: "Gider", symbol: "minus.circle.fill", link: WidgetLinks.quickExpense)
-                    ActionChip(title: "Sesle", symbol: "waveform.badge.mic", link: WidgetLinks.voiceAdd)
-                }
-            }
-        }
-        .widgetURL(URL(string: WidgetLinks.dashboard))
-    }
-}
-
-private func performanceSeries(from snapshot: FingendaSnapshot) -> [Double] {
-    let load = snapshot.spendPressure
-    let savings = snapshot.savingsRate
-    let base = [0.42, 0.56, 0.48, 0.64, 0.74]
-    return base.enumerated().map { index, value in
-        let drift = (Double(index) - 2) * 0.03
-        return clamp(value - (load * 0.14) + (savings * 0.16) + drift, min: 0.15, max: 0.96)
-    }
-}
-
-private struct PerformanceBarsWidgetView: View {
-    let entry: FingendaEntry
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        WidgetSurface {
-            let series = performanceSeries(from: entry.snapshot)
-            let palette = WidgetPalette.forScheme(colorScheme)
-            let growth = Int(round((1 - entry.snapshot.spendPressure) * 100))
-            let labels = ["Pzt", "Sal", "Car", "Per", "Cum"]
-
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Performans")
-                        .font(.system(size: 14, weight: .bold, design: .rounded))
-                        .foregroundStyle(palette.textPrimary)
-                    Spacer(minLength: 0)
-                    Text("+\(growth)%")
-                        .font(.system(size: 12, weight: .heavy, design: .rounded))
-                        .foregroundStyle(palette.scoreAccent)
-                }
-
-                NeonCard(radius: 14) {
-                    VStack(spacing: 6) {
-                        HStack(alignment: .bottom, spacing: 7) {
-                            ForEach(Array(series.enumerated()), id: \.offset) { index, value in
-                                VStack(spacing: 4) {
-                                    Text("\(Int(round(value * 100)))%")
-                                        .font(.system(size: 9, weight: .bold, design: .rounded))
-                                        .foregroundStyle(palette.textSecondary)
-
-                                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                        .fill(
-                                            LinearGradient(
-                                                colors: [
-                                                    Color(red: 0.52, green: 0.48, blue: 1.0),
-                                                    Color(red: 0.71, green: 0.41, blue: 1.0)
-                                                ],
-                                                startPoint: .bottom,
-                                                endPoint: .top
-                                            )
-                                        )
-                                        .frame(height: 28 + (value * 48))
-                                        .overlay(alignment: .top) {
-                                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                                .fill(Color(red: 0.80, green: 1.0, blue: 0.45))
-                                                .frame(height: 4)
-                                        }
-                                }
-                                .frame(maxWidth: .infinity)
-                                .overlay(alignment: .bottom) {
-                                    Text(labels[index])
-                                        .font(.system(size: 8, weight: .semibold, design: .rounded))
-                                        .foregroundStyle(palette.textSecondary.opacity(0.85))
-                                        .offset(y: 12)
-                                }
-                            }
-                        }
-                        .padding(.bottom, 10)
-
-                        Capsule(style: .continuous)
-                            .fill(.white.opacity(colorScheme == .dark ? 0.08 : 0.45))
-                            .frame(height: 4)
-                    }
-                }
-
-                HStack(spacing: 7) {
-                    ActionChip(title: "Gelir", symbol: "plus.circle.fill", link: WidgetLinks.quickIncome)
-                    ActionChip(title: "Doviz", symbol: "chart.line.uptrend.xyaxis", link: WidgetLinks.market)
-                    ActionChip(title: "Panel", symbol: "square.grid.2x2.fill", link: WidgetLinks.dashboard)
-                }
-            }
-        }
-        .widgetURL(URL(string: WidgetLinks.dashboard))
-    }
-}
-
-private func trendSeries(from snapshot: FingendaSnapshot) -> [Double] {
-    let base = clamp((snapshot.income - snapshot.expense) / max(snapshot.income, 1), min: -0.8, max: 0.9)
-    let fxPulse = clamp((snapshot.usdTry + snapshot.eurTry) / 100.0, min: 0.0, max: 1.0)
-    return [
-        0.20 + (base * 0.12),
-        0.26 + (base * 0.22),
-        0.22 + (fxPulse * 0.10),
-        0.33 + (snapshot.savingsRate * 0.28),
-        0.30 + (base * 0.20),
-        0.41 + (snapshot.normalizedGoalProgress * 0.24),
-        0.46 + (snapshot.savingsRate * 0.30)
-    ].map { clamp($0, min: 0.10, max: 0.92) }
-}
-
-private struct TrendLineShape: Shape {
+private struct SparklineShape: Shape {
     let points: [Double]
 
     func path(in rect: CGRect) -> Path {
@@ -752,16 +519,181 @@ private struct TrendLineShape: Shape {
 
         let step = rect.width / CGFloat(points.count - 1)
         var path = Path()
-        for (index, point) in points.enumerated() {
+
+        for (index, value) in points.enumerated() {
             let x = CGFloat(index) * step
-            let y = rect.height * CGFloat(1 - point)
+            let y = rect.height * CGFloat(1 - value)
             if index == 0 {
                 path.move(to: CGPoint(x: x, y: y))
             } else {
                 path.addLine(to: CGPoint(x: x, y: y))
             }
         }
+
         return path
+    }
+}
+
+private func marketTrend(from snapshot: FingendaSnapshot) -> [Double] {
+    let base = clamp((snapshot.income - snapshot.expense) / max(snapshot.income, 1), min: -0.8, max: 0.9)
+    let fxSignal = clamp((snapshot.usdTry + snapshot.eurTry) / 100.0, min: 0.0, max: 1.0)
+
+    return [
+        0.35 + (base * 0.12),
+        0.42 + (fxSignal * 0.10),
+        0.38 + (base * 0.09),
+        0.44 + (snapshot.savingsRatio * 0.15),
+        0.41 + (base * 0.07),
+        0.46 + (snapshot.normalizedGoalProgress * 0.18),
+        0.50 + (snapshot.savingsRatio * 0.20)
+    ].map { clamp($0, min: 0.12, max: 0.88) }
+}
+
+private struct CashStatusWidgetView: View {
+    let entry: FingendaEntry
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        let theme = WidgetTheme.current(for: colorScheme)
+
+        WidgetCanvas {
+            VStack(spacing: 9) {
+                HStack {
+                    Text("Nakit Durumu")
+                        .font(.system(size: 16, weight: .heavy, design: .rounded))
+                        .foregroundStyle(theme.textPrimary)
+                        .lineLimit(1)
+
+                    Spacer(minLength: 4)
+
+                    Text(entry.snapshot.hasData ? "Canli" : "Hazir")
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundStyle(theme.textSecondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            Capsule(style: .continuous)
+                                .fill(theme.cardStrong)
+                        )
+                }
+
+                SurfaceCard(radius: 12, highlighted: true, tint: theme.accentBlue) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Net Bakiye")
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                            .foregroundStyle(theme.textSecondary)
+
+                        Text(WidgetText.currency(entry.snapshot.netBalance))
+                            .font(.system(size: 34, weight: .heavy, design: .rounded))
+                            .foregroundStyle(theme.textPrimary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.65)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                HStack(spacing: 8) {
+                    MiniStat(
+                        title: "Baski",
+                        value: WidgetText.percent(from: clamp(entry.snapshot.spendRatio / 1.2, min: 0, max: 1)),
+                        tone: theme.accentOrange
+                    )
+                    MiniStat(
+                        title: "Birikim",
+                        value: WidgetText.currency(entry.snapshot.savings),
+                        tone: theme.accentMint
+                    )
+                }
+
+                HStack(spacing: 8) {
+                    ActionPill(title: "Gider", symbol: "minus.circle.fill", link: WidgetLinks.quickExpense)
+                    ActionPill(title: "Sesle", symbol: "waveform.badge.mic", link: WidgetLinks.voiceAdd)
+                }
+            }
+        }
+        .widgetURL(URL(string: WidgetLinks.dashboard))
+    }
+}
+
+private struct DnaSummaryWidgetView: View {
+    let entry: FingendaEntry
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        let theme = WidgetTheme.current(for: colorScheme)
+        let slices = distributionSlices(for: entry.snapshot, theme: theme)
+
+        WidgetCanvas {
+            VStack(spacing: 9) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("Fingenda • Harcama DNA")
+                            .font(.system(size: 14, weight: .heavy, design: .rounded))
+                            .foregroundStyle(theme.textPrimary)
+                            .lineLimit(1)
+                        Text("Son 30 gun")
+                            .font(.system(size: 10, weight: .semibold, design: .rounded))
+                            .foregroundStyle(theme.textSecondary)
+                    }
+
+                    Spacer(minLength: 6)
+                    ScoreBadge(value: entry.snapshot.scoreValue)
+                }
+
+                HStack(spacing: 10) {
+                    ZStack {
+                        Circle()
+                            .fill(theme.card.opacity(0.75))
+                            .frame(width: 112, height: 112)
+
+                        SegmentedRing(slices: slices)
+                            .frame(width: 98, height: 98)
+
+                        VStack(spacing: 0) {
+                            Text("DAGILIM")
+                                .font(.system(size: 8, weight: .bold, design: .rounded))
+                                .foregroundStyle(theme.textSecondary)
+                            Text(WidgetText.percent(from: clamp(entry.snapshot.spendRatio / 1.4, min: 0, max: 1)))
+                                .font(.system(size: 20, weight: .heavy, design: .rounded))
+                                .foregroundStyle(theme.textPrimary)
+                        }
+                    }
+
+                    VStack(spacing: 7) {
+                        ForEach(slices) { row in
+                            HStack(spacing: 7) {
+                                Circle()
+                                    .fill(row.color)
+                                    .frame(width: 7, height: 7)
+                                Text(row.label)
+                                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                                    .foregroundStyle(theme.textSecondary)
+                                    .lineLimit(1)
+                                Spacer(minLength: 4)
+                                Text("\(Int(round(row.value * 100)))%")
+                                    .font(.system(size: 11, weight: .heavy, design: .rounded))
+                                    .foregroundStyle(theme.textPrimary)
+                                    .lineLimit(1)
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 5)
+                            .background(
+                                Capsule(style: .continuous)
+                                    .fill(theme.card)
+                            )
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+
+                HStack(spacing: 8) {
+                    ActionPill(title: "Gider", symbol: "minus.circle.fill", link: WidgetLinks.quickExpense)
+                    ActionPill(title: "Gelir", symbol: "plus.circle.fill", link: WidgetLinks.quickIncome)
+                    ActionPill(title: "Doviz", symbol: "chart.xyaxis.line", link: WidgetLinks.market)
+                }
+            }
+        }
+        .widgetURL(URL(string: WidgetLinks.dashboard))
     }
 }
 
@@ -770,90 +702,62 @@ private struct MarketPulseWidgetView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        WidgetSurface {
-            let series = trendSeries(from: entry.snapshot)
-            let palette = WidgetPalette.forScheme(colorScheme)
-            let hasFx = entry.snapshot.usdTry > 0 || entry.snapshot.eurTry > 0
+        let theme = WidgetTheme.current(for: colorScheme)
+        let trend = marketTrend(from: entry.snapshot)
+        let hasRates = entry.snapshot.usdTry > 0 || entry.snapshot.eurTry > 0
 
-            VStack(alignment: .leading, spacing: 9) {
+        WidgetCanvas {
+            VStack(spacing: 9) {
                 HStack {
-                    Text("Doviz + Nakit")
-                        .font(.system(size: 14, weight: .bold, design: .rounded))
-                        .foregroundStyle(palette.textPrimary)
-                    Spacer(minLength: 0)
-                    Text(hasFx ? "Canli" : "Hazir")
+                    Text("Doviz Nabzi")
+                        .font(.system(size: 14, weight: .heavy, design: .rounded))
+                        .foregroundStyle(theme.textPrimary)
+                        .lineLimit(1)
+                    Spacer(minLength: 4)
+                    Text(hasRates ? "Canli" : "Bekliyor")
                         .font(.system(size: 10, weight: .bold, design: .rounded))
-                        .foregroundStyle(palette.textSecondary)
+                        .foregroundStyle(theme.textSecondary)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(
-                            Capsule(style: .continuous)
-                                .fill(.white.opacity(colorScheme == .dark ? 0.13 : 0.55))
-                        )
+                        .background(Capsule(style: .continuous).fill(theme.cardStrong))
                 }
 
                 HStack(spacing: 8) {
-                    NeonCard(radius: 13, tint: Color(red: 0.48, green: 0.86, blue: 1.0)) {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text("USD/TRY")
-                                .font(.system(size: 10, weight: .bold, design: .rounded))
-                                .foregroundStyle(palette.textSecondary)
-                            Text(entry.snapshot.usdTry > 0 ? formatFX(entry.snapshot.usdTry) : "--")
-                                .font(.system(size: 16, weight: .heavy, design: .rounded))
-                                .foregroundStyle(palette.textPrimary)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-
-                    NeonCard(radius: 13, tint: Color(red: 0.68, green: 0.92, blue: 0.53)) {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text("EUR/TRY")
-                                .font(.system(size: 10, weight: .bold, design: .rounded))
-                                .foregroundStyle(palette.textSecondary)
-                            Text(entry.snapshot.eurTry > 0 ? formatFX(entry.snapshot.eurTry) : "--")
-                                .font(.system(size: 16, weight: .heavy, design: .rounded))
-                                .foregroundStyle(palette.textPrimary)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
+                    MiniStat(
+                        title: "USD/TRY",
+                        value: entry.snapshot.usdTry > 0 ? WidgetText.decimal(entry.snapshot.usdTry) : "--",
+                        tone: theme.accentBlue
+                    )
+                    MiniStat(
+                        title: "EUR/TRY",
+                        value: entry.snapshot.eurTry > 0 ? WidgetText.decimal(entry.snapshot.eurTry) : "--",
+                        tone: theme.accentMint
+                    )
                 }
 
-                NeonCard(radius: 13) {
+                SurfaceCard(radius: 11, highlighted: true, tint: theme.accentMint) {
                     ZStack {
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .fill(.white.opacity(colorScheme == .dark ? 0.03 : 0.35))
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(theme.card)
 
-                        TrendLineShape(points: series)
+                        SparklineShape(points: trend)
                             .stroke(
                                 LinearGradient(
-                                    colors: [
-                                        Color(red: 0.79, green: 1.0, blue: 0.40),
-                                        Color(red: 0.44, green: 0.86, blue: 1.0),
-                                        Color(red: 0.57, green: 0.50, blue: 1.0)
-                                    ],
+                                    colors: [theme.accentLime, theme.accentMint, theme.accentBlue, theme.accentPurple],
                                     startPoint: .leading,
                                     endPoint: .trailing
                                 ),
-                                style: StrokeStyle(lineWidth: 3.0, lineCap: .round, lineJoin: .round)
+                                style: StrokeStyle(lineWidth: 3.2, lineCap: .round, lineJoin: .round)
                             )
-                            .shadow(color: Color(red: 0.44, green: 0.86, blue: 1.0).opacity(0.35), radius: 4, x: 0, y: 0)
-                            .padding(.horizontal, 8)
+                            .padding(.horizontal, 9)
                             .padding(.vertical, 8)
                     }
-
-                    if !hasFx {
-                        Text("Veri senkronu bekleniyor")
-                            .font(.system(size: 9, weight: .semibold, design: .rounded))
-                            .foregroundStyle(palette.textSecondary.opacity(0.85))
-                            .padding(.top, 1)
-                    }
                 }
-                .frame(height: 52)
+                .frame(height: 58)
 
-                HStack(spacing: 7) {
-                    ActionChip(title: "Doviz", symbol: "chart.xyaxis.line", link: WidgetLinks.market)
-                    ActionChip(title: "Sesle", symbol: "waveform.badge.mic", link: WidgetLinks.voiceAdd)
-                    ActionChip(title: "Panel", symbol: "square.grid.2x2.fill", link: WidgetLinks.dashboard)
+                HStack(spacing: 8) {
+                    ActionPill(title: "Piyasa", symbol: "chart.line.uptrend.xyaxis", link: WidgetLinks.market)
+                    ActionPill(title: "Sesle Ekle", symbol: "waveform.badge.mic", link: WidgetLinks.voiceAdd)
                 }
             }
         }
@@ -861,49 +765,113 @@ private struct MarketPulseWidgetView: View {
     }
 }
 
-struct FingendaExpenseRingWidget: Widget {
-    let kind: String = "FingendaExpenseRingWidget"
+private struct DailyPulseWidgetView: View {
+    let entry: FingendaEntry
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        let theme = WidgetTheme.current(for: colorScheme)
+
+        WidgetCanvas {
+            VStack(spacing: 9) {
+                HStack {
+                    Text("Gunluk Durum")
+                        .font(.system(size: 14, weight: .heavy, design: .rounded))
+                        .foregroundStyle(theme.textPrimary)
+                    Spacer(minLength: 4)
+                    Text("Bugun")
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundStyle(theme.textSecondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Capsule(style: .continuous).fill(theme.cardStrong))
+                }
+
+                HStack(spacing: 8) {
+                    MiniStat(title: "Gelir", value: WidgetText.currency(entry.snapshot.income), tone: theme.accentMint)
+                    MiniStat(title: "Gider", value: WidgetText.currency(entry.snapshot.expense), tone: theme.accentOrange)
+                    MiniStat(title: "Net", value: WidgetText.currency(entry.snapshot.netBalance), tone: theme.accentBlue)
+                }
+
+                SurfaceCard(radius: 11, highlighted: true, tint: theme.accentPurple) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Text("Hedef ilerleme")
+                                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                .foregroundStyle(theme.textSecondary)
+                            Spacer(minLength: 4)
+                            Text(WidgetText.percent(from: entry.snapshot.normalizedGoalProgress))
+                                .font(.system(size: 11, weight: .heavy, design: .rounded))
+                                .foregroundStyle(theme.textPrimary)
+                        }
+
+                        GeometryReader { geo in
+                            let width = geo.size.width
+                            let progressWidth = max(12, width * entry.snapshot.normalizedGoalProgress)
+
+                            ZStack(alignment: .leading) {
+                                Capsule(style: .continuous)
+                                    .fill(theme.card)
+
+                                Capsule(style: .continuous)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [theme.accentMint, theme.accentBlue, theme.accentPurple],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .frame(width: progressWidth)
+                            }
+                        }
+                        .frame(height: 8)
+
+                        Text("Seri: \(entry.snapshot.streakDays) gun")
+                            .font(.system(size: 10, weight: .bold, design: .rounded))
+                            .foregroundStyle(theme.textSecondary)
+                            .lineLimit(1)
+                    }
+                }
+                .frame(height: 64)
+
+                HStack(spacing: 8) {
+                    ActionPill(title: "Gider", symbol: "minus.circle.fill", link: WidgetLinks.quickExpense)
+                    ActionPill(title: "Gelir", symbol: "plus.circle.fill", link: WidgetLinks.quickIncome)
+                    ActionPill(title: "Panel", symbol: "square.grid.2x2.fill", link: WidgetLinks.dashboard)
+                }
+            }
+        }
+        .widgetURL(URL(string: WidgetLinks.dashboard))
+    }
+}
+
+private struct FingendaCashStatusWidget: Widget {
+    let kind: String = "FingendaCashStatusWidget"
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: FingendaProvider()) { entry in
-            ExpenseRingWidgetView(entry: entry)
+            CashStatusWidgetView(entry: entry)
+        }
+        .configurationDisplayName("Nakit Durumu")
+        .description("Net bakiye, baski ve birikim ozetini hizli gor.")
+        .supportedFamilies([.systemSmall])
+    }
+}
+
+private struct FingendaDnaSummaryWidget: Widget {
+    let kind: String = "FingendaDnaSummaryWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: FingendaProvider()) { entry in
+            DnaSummaryWidgetView(entry: entry)
         }
         .configurationDisplayName("Harcama DNA")
-        .description("Gider dagilimi ve finans skorunu tek widgetta takip et.")
+        .description("Kategori dagilimi ve finans skorunu takip et.")
         .supportedFamilies([.systemMedium])
-        .contentMarginsDisabled()
     }
 }
 
-struct FingendaBalanceStackWidget: Widget {
-    let kind: String = "FingendaBalanceStackWidget"
-
-    var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: FingendaProvider()) { entry in
-            BalanceStackWidgetView(entry: entry)
-        }
-        .configurationDisplayName("Nakit Ozeti")
-        .description("Net bakiye, birikim ve harcama baskisini hizli gor.")
-        .supportedFamilies([.systemSmall])
-        .contentMarginsDisabled()
-    }
-}
-
-struct FingendaPerformanceBarsWidget: Widget {
-    let kind: String = "FingendaPerformanceBarsWidget"
-
-    var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: FingendaProvider()) { entry in
-            PerformanceBarsWidgetView(entry: entry)
-        }
-        .configurationDisplayName("Finans Performansi")
-        .description("Haftalik trendi ve buyume oranini sutun grafikte gor.")
-        .supportedFamilies([.systemMedium])
-        .contentMarginsDisabled()
-    }
-}
-
-struct FingendaMarketPulseWidget: Widget {
+private struct FingendaMarketPulseWidget: Widget {
     let kind: String = "FingendaMarketPulseWidget"
 
     var body: some WidgetConfiguration {
@@ -911,18 +879,34 @@ struct FingendaMarketPulseWidget: Widget {
             MarketPulseWidgetView(entry: entry)
         }
         .configurationDisplayName("Doviz Nabzi")
-        .description("USD/EUR kuru ve trend cizgisini canli takip et.")
+        .description("USD/EUR kuru ve trendini sade bir panelde gor.")
         .supportedFamilies([.systemMedium])
-        .contentMarginsDisabled()
+    }
+}
+
+private struct FingendaDailyPulseWidget: Widget {
+    let kind: String = "FingendaDailyPulseWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: FingendaProvider()) { entry in
+            DailyPulseWidgetView(entry: entry)
+        }
+        .configurationDisplayName("Gunluk Durum")
+        .description("Gelir, gider ve hedef ilerlemesini tek bakista takip et.")
+        .supportedFamilies([.systemMedium])
     }
 }
 
 @main
 struct FingendaWidgetBundle: WidgetBundle {
     var body: some Widget {
-        FingendaExpenseRingWidget()
-        FingendaBalanceStackWidget()
-        FingendaPerformanceBarsWidget()
+        FingendaCashStatusWidget()
+        FingendaDnaSummaryWidget()
         FingendaMarketPulseWidget()
+        FingendaDailyPulseWidget()
     }
+}
+
+private func clamp(_ value: Double, min lower: Double, max upper: Double) -> Double {
+    Swift.max(lower, Swift.min(upper, value))
 }
