@@ -91968,9 +91968,12 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         const preferences = capacitor?.Plugins?.Preferences || null;
         if (!preferences || typeof preferences.set !== 'function') return;
 
-        const APP_GROUPS = ['group.com.fingenda.app', 'group.com.fingenda'];
+        const appId = String(capacitor?.config?.appId || '').trim();
+        const primaryAppGroup = appId ? `group.${appId}` : 'group.com.fingenda.app';
+        const APP_GROUPS = Array.from(new Set([primaryAppGroup, 'group.com.fingenda.app', 'group.com.fingenda']));
         const DEFAULT_PREF_GROUP = 'NativeStorage';
         const SYNC_INTERVAL_MS = 60000;
+        const RELEVANT_STORAGE_PREFIXES = ['my_expenses_', 'fingo_', 'widget_', 'market_', 'live_rates'];
 
         let syncTimer = null;
         let syncInFlight = false;
@@ -92027,9 +92030,18 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
         };
 
         const buildWidgetSnapshot = () => {
-            const finance = (typeof window.getFinanceSnapshot === 'function')
-                ? (window.getFinanceSnapshot('month') || {})
-                : {};
+            let finance = {};
+            if (typeof window.getFinanceSnapshot === 'function') {
+                const monthFinance = window.getFinanceSnapshot('month') || {};
+                const monthCount = Number(monthFinance.count || 0);
+                if (monthCount > 0) {
+                    finance = monthFinance;
+                } else {
+                    const allFinance = window.getFinanceSnapshot('all') || {};
+                    const allCount = Number(allFinance.count || 0);
+                    finance = allCount > 0 ? allFinance : monthFinance;
+                }
+            }
             const rates = getRates();
 
             const income = Math.max(0, toNumber(finance.income));
@@ -92098,6 +92110,9 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
                 }
             }
 
+            if (!wrote) {
+                console.warn('[WidgetSync] App Group yazimi basarisiz. Kontrol et:', APP_GROUPS.join(', '));
+            }
             return wrote;
         };
 
@@ -92168,9 +92183,52 @@ ${data.insights.map(i => `- ${i}`).join('\n')}
             });
         };
 
+        const shouldTrackStorageKey = (key) => {
+            const normalized = String(key || '').toLowerCase();
+            if (!normalized) return false;
+            return RELEVANT_STORAGE_PREFIXES.some((prefix) => normalized.startsWith(prefix));
+        };
+
+        const wrapStorageSetters = () => {
+            try {
+                if (window.localStorage && typeof window.localStorage.setItem === 'function' && !window.localStorage.setItem.__widgetSyncWrapped) {
+                    const originalSetItem = window.localStorage.setItem.bind(window.localStorage);
+                    const wrappedSetItem = function (key, value) {
+                        const result = originalSetItem(key, value);
+                        if (shouldTrackStorageKey(key)) {
+                            scheduleSync(90);
+                        }
+                        return result;
+                    };
+                    wrappedSetItem.__widgetSyncWrapped = true;
+                    window.localStorage.setItem = wrappedSetItem;
+                }
+            } catch (_) {
+                // no-op
+            }
+
+            try {
+                if (window.AppStorage && typeof window.AppStorage.set === 'function' && !window.AppStorage.set.__widgetSyncWrapped) {
+                    const originalAppStorageSet = window.AppStorage.set.bind(window.AppStorage);
+                    const wrappedAppStorageSet = async function (key, value) {
+                        const result = await originalAppStorageSet(key, value);
+                        if (shouldTrackStorageKey(key)) {
+                            scheduleSync(90);
+                        }
+                        return result;
+                    };
+                    wrappedAppStorageSet.__widgetSyncWrapped = true;
+                    window.AppStorage.set = wrappedAppStorageSet;
+                }
+            } catch (_) {
+                // no-op
+            }
+        };
+
         window.syncWidgetSharedData = (force = false) => runSync(!!force);
 
         wrapSyncTriggers();
+        wrapStorageSetters();
         setInterval(() => scheduleSync(0), SYNC_INTERVAL_MS);
         window.addEventListener('fingenda:data-changed', () => scheduleSync(80));
         window.addEventListener('focus', () => scheduleSync(120));

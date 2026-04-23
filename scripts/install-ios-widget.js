@@ -6,9 +6,12 @@ const ROOT = path.resolve(__dirname, '..');
 const IOS_ROOT = path.join(ROOT, 'ios', 'App');
 const XCODEPROJ_PATH = path.join(IOS_ROOT, 'App.xcodeproj');
 const WIDGET_NAME = 'FingendaWidget';
+const APP_TARGET_DIR = path.join(IOS_ROOT, 'App');
 const WIDGET_DIR = path.join(IOS_ROOT, WIDGET_NAME);
 const WIDGET_SWIFT_PATH = path.join(WIDGET_DIR, `${WIDGET_NAME}.swift`);
 const WIDGET_PLIST_PATH = path.join(WIDGET_DIR, 'Info.plist');
+const APP_ENTITLEMENTS_PATH = path.join(APP_TARGET_DIR, 'App.entitlements');
+const WIDGET_ENTITLEMENTS_PATH = path.join(WIDGET_DIR, `${WIDGET_NAME}.entitlements`);
 const WIDGET_TEMPLATE_PATH = path.join(
   ROOT,
   'scripts',
@@ -97,12 +100,28 @@ function buildWidgetPlistContent() {
 `;
 }
 
+function buildEntitlementsContent(appGroupId) {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>${appGroupId}</string>
+	</array>
+</dict>
+</plist>
+`;
+}
+
 function configureXcodeProject(appBundleId) {
   const rubyScript = `require 'xcodeproj'
 
 project_path = ARGV[0]
 app_bundle_id = ARGV[1]
 widget_name = 'FingendaWidget'
+app_entitlements_relpath = 'App/App.entitlements'
+widget_entitlements_relpath = "#{widget_name}/#{widget_name}.entitlements"
 
 project = Xcodeproj::Project.open(project_path)
 app_target = project.targets.find { |t| t.name == 'App' }
@@ -181,6 +200,10 @@ end
 
 widget_bundle_id = "#{app_bundle_id}.widget"
 
+app_target.build_configurations.each do |config|
+  config.build_settings['CODE_SIGN_ENTITLEMENTS'] = app_entitlements_relpath
+end
+
 widget_target.build_configurations.each do |config|
   config.build_settings['PRODUCT_NAME'] = widget_name
   config.build_settings['EXECUTABLE_NAME'] = '$(PRODUCT_NAME)'
@@ -194,6 +217,7 @@ widget_target.build_configurations.each do |config|
   config.build_settings['SKIP_INSTALL'] = 'YES'
   config.build_settings['APPLICATION_EXTENSION_API_ONLY'] = 'YES'
   config.build_settings['GENERATE_INFOPLIST_FILE'] = 'NO'
+  config.build_settings['CODE_SIGN_ENTITLEMENTS'] = widget_entitlements_relpath
 end
 
 unless app_target.dependencies.any? { |d| d.target == widget_target }
@@ -219,6 +243,13 @@ else
   matching_refs.drop(1).each(&:remove_from_project)
 end
 
+target_attributes = project.root_object.attributes['TargetAttributes'] ||= {}
+[app_target, widget_target].each do |target|
+  attrs = target_attributes[target.uuid] ||= {}
+  caps = attrs['SystemCapabilities'] ||= {}
+  caps['com.apple.ApplicationGroups.iOS'] = { 'enabled' => 1 }
+end
+
 project.save
 `;
 
@@ -240,14 +271,21 @@ function main() {
   }
 
   ensureDir(WIDGET_DIR);
+  ensureDir(APP_TARGET_DIR);
 
   const swiftChanged = writeIfChanged(WIDGET_SWIFT_PATH, buildWidgetSwiftContent());
   const plistChanged = writeIfChanged(WIDGET_PLIST_PATH, buildWidgetPlistContent());
-
   const appBundleId = readAppBundleId();
+  const appGroupId = `group.${appBundleId}`;
+  const appEntitlementsChanged = writeIfChanged(APP_ENTITLEMENTS_PATH, buildEntitlementsContent(appGroupId));
+  const widgetEntitlementsChanged = writeIfChanged(
+    WIDGET_ENTITLEMENTS_PATH,
+    buildEntitlementsContent(appGroupId)
+  );
+
   configureXcodeProject(appBundleId);
 
-  if (swiftChanged || plistChanged) {
+  if (swiftChanged || plistChanged || appEntitlementsChanged || widgetEntitlementsChanged) {
     log('Widget dosyalari olusturuldu/guncellendi.');
   } else {
     log('Widget dosyalari zaten guncel.');

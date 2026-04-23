@@ -2,10 +2,25 @@ import WidgetKit
 import SwiftUI
 
 private enum SharedData {
-    static let appGroupCandidates = [
-        "group.com.fingenda.app",
-        "group.com.fingenda"
-    ]
+    static var appGroupCandidates: [String] {
+        var groups: [String] = []
+
+        if let bundleId = Bundle.main.bundleIdentifier {
+            let appBundleId = bundleId.replacingOccurrences(of: ".widget", with: "")
+            if !appBundleId.isEmpty {
+                groups.append("group.\(appBundleId)")
+            }
+        }
+
+        groups.append("group.com.fingenda.app")
+        groups.append("group.com.fingenda")
+
+        var seen = Set<String>()
+        return groups.filter { candidate in
+            guard !candidate.isEmpty else { return false }
+            return seen.insert(candidate).inserted
+        }
+    }
 
     static let snapshotKeyCandidates = ["widget_snapshot_v1", "fingenda_widget_snapshot"]
     static let incomeKeys = ["widget_income_total", "income_total", "dashboard_income"]
@@ -160,7 +175,7 @@ private struct FingendaProvider: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping (Timeline<FingendaEntry>) -> Void) {
         let now = Date()
         let entry = FingendaEntry(date: now, snapshot: SharedData.currentSnapshot())
-        let refreshDate = Calendar.current.date(byAdding: .minute, value: 15, to: now) ?? now.addingTimeInterval(900)
+        let refreshDate = Calendar.current.date(byAdding: .minute, value: 1, to: now) ?? now.addingTimeInterval(60)
         completion(Timeline(entries: [entry], policy: .after(refreshDate)))
     }
 }
