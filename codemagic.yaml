@@ -129,9 +129,22 @@ workflows:
 
       - name: Build signed IPA
         script: |
-          xcode-project build-ipa \
+          set -e
+
+          if ! xcode-project build-ipa \
             --workspace "$CM_BUILD_DIR/$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME"; then
+            echo "Build failed. Xcode loglardan hata detaylari cikartiliyor..."
+            if ls /tmp/xcodebuild_logs/*.log >/dev/null 2>&1; then
+              for LOG_FILE in /tmp/xcodebuild_logs/*.log; do
+                echo "----- ${LOG_FILE} (last 220 lines) -----"
+                tail -n 220 "$LOG_FILE" || true
+                echo "----- ${LOG_FILE} (filtered errors) -----"
+                grep -E "error:|CodeSign|Provisioning profile|entitlement|No signing certificate" "$LOG_FILE" | tail -n 120 || true
+              done
+            fi
+            exit 1
+          fi
 
     artifacts:
       - build/ios/ipa/*.ipa
@@ -286,9 +299,22 @@ workflows:
 
       - name: Build signed IPA
         script: |
-          xcode-project build-ipa \
+          set -e
+
+          if ! xcode-project build-ipa \
             --workspace "$CM_BUILD_DIR/$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME"; then
+            echo "Build failed. Xcode loglardan hata detaylari cikartiliyor..."
+            if ls /tmp/xcodebuild_logs/*.log >/dev/null 2>&1; then
+              for LOG_FILE in /tmp/xcodebuild_logs/*.log; do
+                echo "----- ${LOG_FILE} (last 220 lines) -----"
+                tail -n 220 "$LOG_FILE" || true
+                echo "----- ${LOG_FILE} (filtered errors) -----"
+                grep -E "error:|CodeSign|Provisioning profile|entitlement|No signing certificate" "$LOG_FILE" | tail -n 120 || true
+              done
+            fi
+            exit 1
+          fi
 
     artifacts:
       - build/ios/ipa/*.ipa

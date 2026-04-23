@@ -4,9 +4,13 @@ const { execSync, spawnSync } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..');
 const PROJECT_PATH = path.join(ROOT, 'ios', 'App', 'App.xcodeproj');
+const APP_TARGET_NAME = 'App';
 const TARGET_NAME = 'FingendaWidget';
 const APP_BUNDLE_ID = (process.env.APP_BUNDLE_ID || 'com.fingenda.app').trim();
 const WIDGET_BUNDLE_ID = `${APP_BUNDLE_ID}.widget`;
+const APP_GROUP_ID = `group.${APP_BUNDLE_ID}`;
+const APP_ENTITLEMENTS_RELPATH = 'App/App.entitlements';
+const WIDGET_ENTITLEMENTS_RELPATH = `${TARGET_NAME}/${TARGET_NAME}.entitlements`;
 const PROFILES_DIR = path.join(
   process.env.HOME || '/Users/builder',
   'Library',
@@ -33,6 +37,25 @@ function getFirstMatch(xml, regex) {
   return match && match[1] ? match[1].trim() : '';
 }
 
+function parseAppGroups(xml) {
+  const entitlementsArray = xml.match(
+    /<key>com\.apple\.security\.application-groups<\/key>\s*<array>([\s\S]*?)<\/array>/m
+  );
+
+  if (!entitlementsArray || !entitlementsArray[1]) return [];
+
+  const result = [];
+  const regex = /<string>([^<]+)<\/string>/g;
+  let match;
+
+  while ((match = regex.exec(entitlementsArray[1])) !== null) {
+    const value = (match[1] || '').trim();
+    if (value) result.push(value);
+  }
+
+  return result;
+}
+
 function parseProfile(filePath) {
   const proc = spawnSync('/usr/bin/security', ['cms', '-D', '-i', filePath], {
     encoding: 'utf8',
@@ -53,9 +76,10 @@ function parseProfile(filePath) {
   ) || appIdentifier.split('.')[0] || '';
   const expiresAtRaw = getFirstMatch(xml, /<key>ExpirationDate<\/key>\s*<date>([^<]+)<\/date>/m);
   const expiresAt = expiresAtRaw ? new Date(expiresAtRaw) : new Date(0);
+  const appGroups = parseAppGroups(xml);
 
   if (!name || !uuid || !appIdentifier) return null;
-  return { filePath, name, uuid, teamId, appIdentifier, expiresAt };
+  return { filePath, name, uuid, teamId, appIdentifier, expiresAt, appGroups };
 }
 
 function bundleMatchScore(appIdentifier, bundleId) {
@@ -99,25 +123,67 @@ function selectProfileForBundle(bundleId) {
   return candidates[0].profile;
 }
 
-function applyProfileToWidgetTarget(profile) {
+function profileSupportsExpectedAppGroup(profile, expectedAppGroup) {
+  if (!profile || !Array.isArray(profile.appGroups)) return false;
+  return profile.appGroups.includes(expectedAppGroup);
+}
+
+function applyProfileToWidgetTarget(profile, flags) {
+  const widgetHasAppGroups = flags.widgetHasAppGroups ? '1' : '0';
+  const appHasAppGroups = flags.appHasAppGroups ? '1' : '0';
+
   const rubyScript = `require 'xcodeproj'
 
 project_path = ARGV[0]
-target_name = ARGV[1]
-profile_name = ARGV[2]
-profile_uuid = ARGV[3]
-team_id = ARGV[4]
+app_target_name = ARGV[1]
+widget_target_name = ARGV[2]
+profile_name = ARGV[3]
+profile_uuid = ARGV[4]
+team_id = ARGV[5]
+widget_has_app_groups = ARGV[6] == '1'
+app_has_app_groups = ARGV[7] == '1'
+app_entitlements_relpath = ARGV[8]
+widget_entitlements_relpath = ARGV[9]
 
 project = Xcodeproj::Project.open(project_path)
-target = project.targets.find { |t| t.name == target_name }
-raise "Target bulunamadi: #{target_name}" unless target
+app_target = project.targets.find { |t| t.name == app_target_name }
+raise "Target bulunamadi: #{app_target_name}" unless app_target
 
-target.build_configurations.each do |config|
+widget_target = project.targets.find { |t| t.name == widget_target_name }
+raise "Target bulunamadi: #{widget_target_name}" unless widget_target
+
+widget_target.build_configurations.each do |config|
   config.build_settings['CODE_SIGN_STYLE'] = 'Manual'
   config.build_settings['DEVELOPMENT_TEAM'] = team_id
   config.build_settings['PROVISIONING_PROFILE_SPECIFIER'] = profile_name
   config.build_settings['PROVISIONING_PROFILE'] = profile_uuid
   config.build_settings['CODE_SIGN_IDENTITY[sdk=iphoneos*]'] = 'Apple Distribution'
+
+  if widget_has_app_groups
+    config.build_settings['CODE_SIGN_ENTITLEMENTS'] = widget_entitlements_relpath
+  else
+    config.build_settings.delete('CODE_SIGN_ENTITLEMENTS')
+  end
+end
+
+app_target.build_configurations.each do |config|
+  if app_has_app_groups
+    config.build_settings['CODE_SIGN_ENTITLEMENTS'] = app_entitlements_relpath
+  else
+    config.build_settings.delete('CODE_SIGN_ENTITLEMENTS')
+  end
+end
+
+target_attributes = project.root_object.attributes['TargetAttributes'] ||= {}
+[app_target, widget_target].each do |target|
+  attrs = target_attributes[target.uuid] ||= {}
+  caps = attrs['SystemCapabilities'] ||= {}
+
+  if (target == widget_target && widget_has_app_groups) || (target == app_target && app_has_app_groups)
+    caps['com.apple.ApplicationGroups.iOS'] = { 'enabled' => 1 }
+  else
+    caps.delete('com.apple.ApplicationGroups.iOS')
+  end
 end
 
 project.save
@@ -128,7 +194,7 @@ project.save
   try {
     ensureRubyXcodeproj();
     execSync(
-      `ruby "${tempRubyPath}" "${PROJECT_PATH}" "${TARGET_NAME}" "${profile.name}" "${profile.uuid}" "${profile.teamId}"`,
+      `ruby "${tempRubyPath}" "${PROJECT_PATH}" "${APP_TARGET_NAME}" "${TARGET_NAME}" "${profile.name}" "${profile.uuid}" "${profile.teamId}" "${widgetHasAppGroups}" "${appHasAppGroups}" "${APP_ENTITLEMENTS_RELPATH}" "${WIDGET_ENTITLEMENTS_RELPATH}"`,
       { stdio: 'inherit' }
     );
   } finally {
@@ -144,10 +210,35 @@ function main() {
     return;
   }
 
-  const profile = selectProfileForBundle(WIDGET_BUNDLE_ID);
-  log(`Widget profile secildi: ${profile.name} (${profile.uuid})`);
-  applyProfileToWidgetTarget(profile);
-  log('Widget target signing ayarlari guncellendi.');
+  const widgetProfile = selectProfileForBundle(WIDGET_BUNDLE_ID);
+  log(`Widget profile secildi: ${widgetProfile.name} (${widgetProfile.uuid})`);
+
+  let appProfile = null;
+  try {
+    appProfile = selectProfileForBundle(APP_BUNDLE_ID);
+    log(`App profile secildi: ${appProfile.name} (${appProfile.uuid})`);
+  } catch (error) {
+    log(`App profile secimi atlandi: ${error.message}`);
+  }
+
+  const widgetHasAppGroups = profileSupportsExpectedAppGroup(widgetProfile, APP_GROUP_ID);
+  const appHasAppGroups = appProfile
+    ? profileSupportsExpectedAppGroup(appProfile, APP_GROUP_ID)
+    : false;
+
+  if (!widgetHasAppGroups || !appHasAppGroups) {
+    log(
+      `App Group entitlement fallback aktif. Beklenen grup: ${APP_GROUP_ID} | app=${appHasAppGroups} widget=${widgetHasAppGroups}`
+    );
+  } else {
+    log(`App Group entitlement bulundu: ${APP_GROUP_ID}`);
+  }
+
+  applyProfileToWidgetTarget(widgetProfile, {
+    widgetHasAppGroups,
+    appHasAppGroups
+  });
+  log('Widget signing ve entitlement ayarlari guncellendi.');
 }
 
 main();
