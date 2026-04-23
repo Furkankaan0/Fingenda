@@ -154,6 +154,18 @@ product_ref.name = "#{widget_name}.appex"
 product_ref.source_tree = 'BUILT_PRODUCTS_DIR'
 products_group.children << product_ref unless products_group.children.include?(product_ref)
 
+# Daha once patch'lerden kalan bozuk/tekrar .appex referanslarini temizle
+project.files.each do |file_ref|
+  next unless file_ref.path.to_s.end_with?('.appex')
+  next if file_ref == product_ref
+  if file_ref.path.to_s.strip == '.appex' || file_ref.path.to_s == "#{widget_name}.appex"
+    begin
+      file_ref.remove_from_project
+    rescue
+    end
+  end
+end
+
 widget_group = project.main_group.find_subpath(widget_name, true)
 widget_group.set_source_tree('<group>')
 widget_group.path = widget_name
@@ -198,6 +210,18 @@ project.files.each do |file_ref|
   file_ref.remove_from_project
 end
 
+# Ayni dosyanin widget grubu icindeki tekrar referanslarini temizle
+widget_group.files.each do |file_ref|
+  next if file_ref == swift_ref || file_ref == plist_ref
+  if file_ref.path.to_s == "#{widget_name}.swift" || file_ref.path.to_s == "Info.plist" ||
+     file_ref.path.to_s == expected_swift_relpath || file_ref.path.to_s == expected_plist_relpath
+    begin
+      file_ref.remove_from_project
+    rescue
+    end
+  end
+end
+
 widget_bundle_id = "#{app_bundle_id}.widget"
 
 app_target.build_configurations.each do |config|
@@ -228,20 +252,16 @@ embed_phase = app_target.copy_files_build_phases.find { |bp| bp.name == 'Embed A
 embed_phase ||= app_target.new_copy_files_build_phase('Embed App Extensions')
 embed_phase.dst_subfolder_spec = '13'
 
+# Tum bozuk/tekrar appex girislerini temizle, sonra tek dogru entry ekle
 embed_phase.files.each do |build_file|
   ref = build_file.file_ref
   next unless ref
-  if ref.path.to_s.strip == '.appex'
+  if ref.path.to_s.strip == '.appex' || ref.path.to_s == "#{widget_name}.appex"
     build_file.remove_from_project
   end
 end
 
-matching_refs = embed_phase.files.select { |build_file| build_file.file_ref == product_ref }
-if matching_refs.empty?
-  embed_phase.add_file_reference(product_ref, true)
-else
-  matching_refs.drop(1).each(&:remove_from_project)
-end
+embed_phase.add_file_reference(product_ref, true)
 
 target_attributes = project.root_object.attributes['TargetAttributes'] ||= {}
 [app_target, widget_target].each do |target|
