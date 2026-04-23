@@ -846,7 +846,7 @@ private struct DailyPulseWidgetView: View {
 }
 
 private struct FingendaCashStatusWidget: Widget {
-    let kind: String = "FingendaCashStatusWidget"
+    let kind: String = "FingendaBalanceStackWidget"
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: FingendaProvider()) { entry in
@@ -859,7 +859,7 @@ private struct FingendaCashStatusWidget: Widget {
 }
 
 private struct FingendaDnaSummaryWidget: Widget {
-    let kind: String = "FingendaDnaSummaryWidget"
+    let kind: String = "FingendaExpenseRingWidget"
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: FingendaProvider()) { entry in
@@ -885,7 +885,7 @@ private struct FingendaMarketPulseWidget: Widget {
 }
 
 private struct FingendaDailyPulseWidget: Widget {
-    let kind: String = "FingendaDailyPulseWidget"
+    let kind: String = "FingendaPerformanceBarsWidget"
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: FingendaProvider()) { entry in
