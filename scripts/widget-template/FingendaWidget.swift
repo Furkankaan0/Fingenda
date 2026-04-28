@@ -75,6 +75,16 @@ private struct FingendaWidgetSnapshot: Codable, Hashable {
     let themeMode: String
     let isPremium: Bool
     let lastUpdated: Date
+    let usdTry: Double
+    let eurTry: Double
+    let gramGoldTry: Double
+    let usdChange: Double
+    let eurChange: Double
+    let gramGoldChange: Double
+
+    var hasMarketData: Bool {
+        usdTry > 0.01 || eurTry > 0.01 || gramGoldTry > 0.01
+    }
 
     var hasAnyFinancialData: Bool {
         abs(netBalance) > 0.01
@@ -82,6 +92,7 @@ private struct FingendaWidgetSnapshot: Codable, Hashable {
             || monthlyExpense > 0.01
             || savingsCurrent > 0.01
             || installmentCount > 0
+            || hasMarketData
     }
 
     var hasInsight: Bool {
@@ -134,7 +145,13 @@ private struct FingendaWidgetSnapshot: Codable, Hashable {
         currencyCode: "TRY",
         themeMode: "auto",
         isPremium: true,
-        lastUpdated: Date()
+        lastUpdated: Date(),
+        usdTry: 32.25,
+        eurTry: 35.10,
+        gramGoldTry: 2_410.50,
+        usdChange: 0.32,
+        eurChange: 0.41,
+        gramGoldChange: 0.28
     )
 
     static let empty = FingendaWidgetSnapshot(
@@ -155,7 +172,13 @@ private struct FingendaWidgetSnapshot: Codable, Hashable {
         currencyCode: "TRY",
         themeMode: "auto",
         isPremium: false,
-        lastUpdated: Date()
+        lastUpdated: Date(),
+        usdTry: 0,
+        eurTry: 0,
+        gramGoldTry: 0,
+        usdChange: 0,
+        eurChange: 0,
+        gramGoldChange: 0
     )
 }
 
@@ -195,6 +218,12 @@ private enum FingendaWidgetDataSource {
     private static let currencyCodeKeys = ["widget_currency_code", "currency_code"]
     private static let themeModeKeys = ["widget_theme_mode", "theme_mode"]
     private static let premiumKeys = ["widget_is_premium", "is_premium", "premium_state"]
+    private static let usdTryKeys = ["widget_fx_usd_try", "fx_usd_try", "usd_try", "usdTry"]
+    private static let eurTryKeys = ["widget_fx_eur_try", "fx_eur_try", "eur_try", "eurTry"]
+    private static let gramGoldTryKeys = ["widget_fx_gram_try", "fx_gram_try", "gram_try", "gramTry", "gramGoldTry"]
+    private static let usdChangeKeys = ["widget_fx_usd_change", "fx_usd_change", "usd_change", "usdChange"]
+    private static let eurChangeKeys = ["widget_fx_eur_change", "fx_eur_change", "eur_change", "eurChange"]
+    private static let gramGoldChangeKeys = ["widget_fx_gram_change", "fx_gram_change", "gram_change", "gramChange", "gramGoldChange"]
 
     static func load() -> FingendaWidgetLoadResult {
         let defaults = resolveDefaults()
@@ -314,6 +343,42 @@ private enum FingendaWidgetDataSource {
             dict["percentageChange"],
             fallback: readNumber(defaults, keys: percentageChangeKeys)
         )
+        let usdTry = readSnapshotNumber(
+            dict,
+            keys: ["usdTry", "usdTRY", "USD", "usd", "dolar"],
+            defaults: defaults,
+            fallbackKeys: usdTryKeys
+        )
+        let eurTry = readSnapshotNumber(
+            dict,
+            keys: ["eurTry", "eurTRY", "EUR", "eur", "euro"],
+            defaults: defaults,
+            fallbackKeys: eurTryKeys
+        )
+        let gramGoldTry = readSnapshotNumber(
+            dict,
+            keys: ["gramGoldTry", "gramTry", "GRAM", "GA", "gold", "altin"],
+            defaults: defaults,
+            fallbackKeys: gramGoldTryKeys
+        )
+        let usdChange = readSnapshotNumber(
+            dict,
+            keys: ["usdChange", "USDChange", "usd_change"],
+            defaults: defaults,
+            fallbackKeys: usdChangeKeys
+        )
+        let eurChange = readSnapshotNumber(
+            dict,
+            keys: ["eurChange", "EURChange", "eur_change"],
+            defaults: defaults,
+            fallbackKeys: eurChangeKeys
+        )
+        let gramGoldChange = readSnapshotNumber(
+            dict,
+            keys: ["gramGoldChange", "gramChange", "GRAMChange", "gram_change"],
+            defaults: defaults,
+            fallbackKeys: gramGoldChangeKeys
+        )
 
         return FingendaWidgetSnapshot(
             date: date,
@@ -333,7 +398,13 @@ private enum FingendaWidgetDataSource {
             currencyCode: currency.isEmpty ? "TRY" : currency,
             themeMode: themeMode.isEmpty ? "auto" : themeMode,
             isPremium: isPremium,
-            lastUpdated: lastUpdated
+            lastUpdated: lastUpdated,
+            usdTry: usdTry,
+            eurTry: eurTry,
+            gramGoldTry: gramGoldTry,
+            usdChange: usdChange,
+            eurChange: eurChange,
+            gramGoldChange: gramGoldChange
         )
     }
 
@@ -363,7 +434,13 @@ private enum FingendaWidgetDataSource {
             currencyCode: readString(defaults, keys: currencyCodeKeys, fallback: "TRY"),
             themeMode: readString(defaults, keys: themeModeKeys, fallback: "auto"),
             isPremium: readBool(defaults, keys: premiumKeys),
-            lastUpdated: parseDate(defaults.string(forKey: "widget_last_updated")) ?? Date()
+            lastUpdated: parseDate(defaults.string(forKey: "widget_last_updated")) ?? Date(),
+            usdTry: readNumber(defaults, keys: usdTryKeys),
+            eurTry: readNumber(defaults, keys: eurTryKeys),
+            gramGoldTry: readNumber(defaults, keys: gramGoldTryKeys),
+            usdChange: readNumber(defaults, keys: usdChangeKeys),
+            eurChange: readNumber(defaults, keys: eurChangeKeys),
+            gramGoldChange: readNumber(defaults, keys: gramGoldChangeKeys)
         )
     }
 
@@ -435,14 +512,68 @@ private enum FingendaWidgetDataSource {
             }
 
             if let value = defaults.string(forKey: key) {
-                let normalized = value.replacingOccurrences(of: ",", with: ".")
-                if let parsed = Double(normalized) {
+                if let parsed = parseLocalizedDouble(value) {
                     return parsed
                 }
             }
         }
 
         return fallback
+    }
+
+    private static func readSnapshotNumber(
+        _ dict: [String: Any],
+        keys: [String],
+        defaults: UserDefaults,
+        fallbackKeys: [String],
+        fallback: Double = 0
+    ) -> Double {
+        for key in keys {
+            if let parsed = nestedNumber(dict[key]) {
+                return parsed
+            }
+        }
+        return readNumber(defaults, keys: fallbackKeys, fallback: fallback)
+    }
+
+    private static func nestedNumber(_ value: Any?) -> Double? {
+        if let numeric = value as? NSNumber {
+            return numeric.doubleValue
+        }
+
+        if let text = value as? String {
+            return parseLocalizedDouble(text)
+        }
+
+        if let dict = value as? [String: Any] {
+            for key in ["satis", "selling", "sale", "value", "rate", "try", "last", "price", "degisim", "change", "changePercent"] {
+                if let parsed = nestedNumber(dict[key]) {
+                    return parsed
+                }
+            }
+        }
+
+        return nil
+    }
+
+    private static func parseLocalizedDouble(_ raw: String) -> Double? {
+        var text = raw
+            .replacingOccurrences(of: "%", with: "")
+            .replacingOccurrences(of: "₺", with: "")
+            .replacingOccurrences(of: "TL", with: "", options: .caseInsensitive)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !text.isEmpty else { return nil }
+        let hasComma = text.contains(",")
+        let dotCount = text.filter { $0 == "." }.count
+
+        if hasComma {
+            text = text.replacingOccurrences(of: ".", with: "").replacingOccurrences(of: ",", with: ".")
+        } else if dotCount > 1 {
+            text = text.replacingOccurrences(of: ".", with: "")
+        }
+
+        return Double(text)
     }
 
     private static func readInt(_ defaults: UserDefaults, keys: [String]) -> Int {
@@ -482,8 +613,7 @@ private enum FingendaWidgetDataSource {
         }
 
         if let text = value as? String {
-            let normalized = text.replacingOccurrences(of: ",", with: ".")
-            return Double(normalized) ?? fallback
+            return parseLocalizedDouble(text) ?? fallback
         }
 
         return fallback
@@ -622,10 +752,34 @@ private enum WidgetFormat {
         return "\(sign)\(percent(value, maxFractionDigits: 1))"
     }
 
+    static func marketRate(_ value: Double) -> String {
+        guard value > 0 else { return "--" }
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.locale = Locale(identifier: "tr_TR")
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+        formatter.usesGroupingSeparator = true
+        return formatter.string(from: NSNumber(value: value)) ?? "--"
+    }
+
+    static func marketChange(_ value: Double) -> String {
+        guard abs(value) > 0.0001 else { return "--" }
+        let sign = value > 0 ? "+" : ""
+        return "\(sign)%\(marketRate(abs(value)))"
+    }
+
     static func shortDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "tr_TR")
         formatter.dateFormat = "d MMM"
+        return formatter.string(from: date)
+    }
+
+    static func shortTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "tr_TR")
+        formatter.dateFormat = "HH:mm"
         return formatter.string(from: date)
     }
 }
@@ -2210,11 +2364,21 @@ private struct ReferenceMarketsWidgetView: View {
                     ReferenceHeader(title: "Piyasalar", systemImage: "chart.line.uptrend.xyaxis", showsDots: true)
                         .foregroundStyle(theme.textPrimary)
 
-                    ReferenceMarketRow(icon: "$", name: "Dolar", value: "32,25", change: "%0,32", tint: theme.green, theme: theme)
+                    ReferenceMarketRow(icon: "$", name: "Dolar", value: WidgetFormat.marketRate(entry.snapshot.usdTry), changeValue: entry.snapshot.usdChange, tint: theme.green, theme: theme)
+                    ReferenceMarketRow(icon: "EUR", name: "Euro", value: WidgetFormat.marketRate(entry.snapshot.eurTry), changeValue: entry.snapshot.eurChange, tint: theme.blue, theme: theme)
+                    ReferenceMarketRow(icon: "Au", name: "Gram Alt\u{0131}n", value: WidgetFormat.marketRate(entry.snapshot.gramGoldTry), changeValue: entry.snapshot.gramGoldChange, tint: theme.gold, theme: theme)
+                    if false {
                     ReferenceMarketRow(icon: "€", name: "Euro", value: "35,10", change: "%0,41", tint: theme.blue, theme: theme)
                     ReferenceMarketRow(icon: "⌂", name: "Gram Altın", value: "2.410,50", change: "%0,28", tint: theme.gold, theme: theme)
 
                     Text("Son güncelleme: 09:30")
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .foregroundStyle(theme.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.top, 2)
+                    }
+
+                    Text("Son g\u{00FC}ncelleme: \(WidgetFormat.shortTime(entry.snapshot.lastUpdated))")
                         .font(.system(size: 10, weight: .medium, design: .rounded))
                         .foregroundStyle(theme.textSecondary)
                         .frame(maxWidth: .infinity, alignment: .center)
@@ -2240,32 +2404,59 @@ private struct ReferenceMarketRow: View {
     let icon: String
     let name: String
     let value: String
-    let change: String
+    let changeValue: Double
     let tint: Color
     let theme: ReferenceWidgetTheme
+    let isVisible: Bool
+
+    init(icon: String, name: String, value: String, changeValue: Double, tint: Color, theme: ReferenceWidgetTheme) {
+        self.icon = icon
+        self.name = name
+        self.value = value
+        self.changeValue = changeValue
+        self.tint = tint
+        self.theme = theme
+        self.isVisible = true
+    }
+
+    init(icon: String, name: String, value: String, change: String, tint: Color, theme: ReferenceWidgetTheme) {
+        self.icon = icon
+        self.name = name
+        self.value = value
+        self.changeValue = 0
+        self.tint = tint
+        self.theme = theme
+        self.isVisible = false
+    }
 
     var body: some View {
-        HStack(spacing: 10) {
-            ReferenceCoinBadge(text: icon, tint: tint)
-            Text(name)
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundStyle(theme.textPrimary)
-                .lineLimit(1)
-            Spacer(minLength: 6)
-            Text(value)
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundStyle(theme.textPrimary)
-                .lineLimit(1)
-            HStack(spacing: 2) {
-                Image(systemName: "triangle.fill")
-                    .font(.system(size: 6, weight: .bold))
-                Text(change)
-                    .font(.system(size: 10, weight: .bold, design: .rounded))
+        let hasChange = abs(changeValue) > 0.0001
+        let isPositive = changeValue >= 0
+
+        if isVisible {
+            HStack(spacing: 10) {
+                ReferenceCoinBadge(text: icon, tint: tint)
+                Text(name)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(theme.textPrimary)
+                    .lineLimit(1)
+                Spacer(minLength: 6)
+                Text(value)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(theme.textPrimary)
+                    .lineLimit(1)
+                HStack(spacing: 2) {
+                    Image(systemName: hasChange ? "triangle.fill" : "minus")
+                        .font(.system(size: 6, weight: .bold))
+                        .rotationEffect(isPositive ? .degrees(0) : .degrees(180))
+                    Text(WidgetFormat.marketChange(changeValue))
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                }
+                .foregroundStyle(hasChange ? (isPositive ? theme.green : theme.red) : theme.textSecondary)
+                .frame(width: 54, alignment: .trailing)
             }
-            .foregroundStyle(theme.green)
-            .frame(width: 54, alignment: .trailing)
+            .padding(.vertical, 2)
         }
-        .padding(.vertical, 2)
     }
 }
 
