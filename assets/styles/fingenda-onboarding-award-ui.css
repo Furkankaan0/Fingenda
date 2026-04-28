@@ -1,0 +1,388 @@
+#fingo-onboarding {
+        min-height: 100vh;
+        min-height: 100dvh;
+        overflow: hidden;
+        background:
+            radial-gradient(circle at 14% 4%, color-mix(in srgb, var(--fo-active-accent, #60a5fa) 34%, transparent) 0%, transparent 27%),
+            radial-gradient(circle at 86% 10%, color-mix(in srgb, var(--fo-active-accent-2, #8b5cf6) 28%, transparent) 0%, transparent 31%),
+            radial-gradient(circle at 50% 104%, rgba(15, 23, 42, 0.92) 0%, transparent 38%),
+            linear-gradient(156deg, var(--fo-bg-1, #040814) 0%, var(--fo-bg-2, #0a1123) 52%, var(--fo-bg-3, #111827) 100%) !important;
+        contain: layout paint;
+    }
+
+    #fingo-onboarding::before {
+        opacity: 0.035;
+        background-size: 180px;
+    }
+
+    #fingo-onboarding::after {
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 18%),
+            radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.055) 0%, transparent 44%),
+            linear-gradient(180deg, rgba(4, 7, 15, 0) 0%, rgba(4, 7, 15, 0.2) 50%, rgba(4, 7, 15, 0.78) 100%);
+    }
+
+    #fingo-onboarding .fo-topbar {
+        flex: 0 0 auto;
+        padding: max(14px, env(safe-area-inset-top, 14px)) 20px 0 !important;
+    }
+
+    #fingo-onboarding .fo-progress-wrap {
+        flex: 0 0 auto;
+        margin-top: 9px !important;
+    }
+
+    #fingo-onboarding .fo-slides {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: clamp(10px, 1.8vh, 18px) 16px 0 !important;
+        overflow: hidden;
+    }
+
+    #fingo-onboarding .fo-slide {
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 0 4px clamp(8px, 1.4vh, 16px) !important;
+    }
+
+    #fingo-onboarding .fo-slide-shell {
+        width: min(100%, 402px);
+        min-height: 100%;
+        margin: 0 auto;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(10px, 1.6vh, 16px);
+        isolation: isolate;
+    }
+
+    #fingo-onboarding .fo-hero-stage {
+        width: min(100%, 396px);
+        height: clamp(208px, 31vh, 292px) !important;
+        margin: 0 auto !important;
+        perspective: 1200px;
+        transform-style: preserve-3d;
+        overflow: visible;
+    }
+
+    #fingo-onboarding .fo-stage-glow {
+        filter: blur(28px);
+        opacity: 0.72;
+    }
+
+    #fingo-onboarding .fo-device {
+        width: min(64vw, 238px) !important;
+        max-width: 238px;
+        max-height: min(100%, 282px);
+        border-radius: 34px;
+        transform: translateZ(0) rotateX(6deg) rotateY(-5deg);
+        transform-origin: center;
+        backface-visibility: hidden;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.15),
+            inset 0 -18px 38px rgba(2, 6, 23, 0.2),
+            0 40px 72px -42px rgba(0, 0, 0, 0.95),
+            0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    #fingo-onboarding .fo-device::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        pointer-events: none;
+        background:
+            linear-gradient(120deg, rgba(255, 255, 255, 0.16) 0%, transparent 24%, transparent 74%, rgba(255, 255, 255, 0.06) 100%),
+            radial-gradient(circle at 22% 6%, rgba(255, 255, 255, 0.16) 0%, transparent 28%);
+        mix-blend-mode: screen;
+        opacity: 0.72;
+    }
+
+    #fingo-onboarding .fo-device__screen {
+        background:
+            radial-gradient(circle at 25% 5%, color-mix(in srgb, var(--fo-active-accent, #60a5fa) 20%, transparent) 0%, transparent 31%),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.018) 100%);
+    }
+
+    #fingo-onboarding .fo-core {
+        border-radius: 26px;
+        background:
+            radial-gradient(circle at 30% 12%, color-mix(in srgb, var(--fo-active-accent, #60a5fa) 15%, transparent) 0%, transparent 34%),
+            linear-gradient(160deg, rgba(255, 255, 255, 0.105) 0%, rgba(255, 255, 255, 0.035) 48%, rgba(255, 255, 255, 0.02) 100%);
+    }
+
+    #fingo-onboarding .fo-floating-card {
+        width: clamp(96px, 26vw, 118px);
+        min-height: 66px;
+        border-radius: 24px;
+        transform: translateZ(38px);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.14),
+            0 24px 44px -34px rgba(0, 0, 0, 0.94),
+            0 0 0 1px rgba(255, 255, 255, 0.07);
+    }
+
+    #fingo-onboarding .fo-floating-card--left {
+        left: max(0px, calc(50% - 192px));
+        top: 18px;
+        transform: translateZ(40px) rotate(-7deg);
+    }
+
+    #fingo-onboarding .fo-floating-card--right {
+        right: max(0px, calc(50% - 192px));
+        bottom: 16px;
+        transform: translateZ(40px) rotate(7deg);
+    }
+
+    #fingo-onboarding .fo-core-main-badge,
+    #fingo-onboarding .fo-premium-badge,
+    #fingo-onboarding .fo-fab {
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.24),
+            inset 0 -18px 32px rgba(2, 6, 23, 0.2),
+            0 24px 44px -28px var(--fo-active-shadow, rgba(96, 165, 250, 0.4));
+    }
+
+    #fingo-onboarding .fo-copy {
+        margin: 0 !important;
+        padding: 0 4px;
+    }
+
+    #fingo-onboarding .fo-headline {
+        font-size: clamp(28px, 7vw, 38px) !important;
+        line-height: 1.02;
+        letter-spacing: -0.052em;
+    }
+
+    #fingo-onboarding .fo-subtext {
+        max-width: 31ch;
+        margin-top: 9px !important;
+        font-size: clamp(13px, 3.45vw, 15px) !important;
+        line-height: 1.48 !important;
+    }
+
+    #fingo-onboarding .fo-features {
+        max-width: 392px !important;
+        gap: clamp(8px, 1.2vh, 11px) !important;
+        margin: 0 !important;
+    }
+
+    #fingo-onboarding .fo-feat {
+        min-height: 58px;
+        padding: clamp(11px, 1.55vh, 14px) 14px !important;
+        border-radius: 22px;
+        background:
+            linear-gradient(145deg, rgba(255, 255, 255, 0.13) 0%, rgba(255, 255, 255, 0.055) 100%);
+    }
+
+    #fingo-onboarding .fo-feat-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 15px;
+    }
+
+    #fingo-onboarding .fo-feat-text {
+        font-size: clamp(12px, 3.25vw, 14px) !important;
+        line-height: 1.36 !important;
+    }
+
+    #fingo-onboarding .fo-cta-area {
+        flex: 0 0 auto;
+        padding: 12px 20px max(18px, env(safe-area-inset-bottom, 18px)) !important;
+        gap: 8px !important;
+        background:
+            linear-gradient(180deg, rgba(4, 7, 15, 0) 0%, rgba(4, 7, 15, 0.42) 36%, rgba(4, 7, 15, 0.9) 100%) !important;
+    }
+
+    #fingo-onboarding .fo-apple-auth,
+    #fingo-onboarding .fo-cta,
+    #fingo-onboarding .fo-cta-secondary {
+        width: min(calc(100% - 20px), 392px) !important;
+        flex: 0 0 auto;
+    }
+
+    #fingo-onboarding .fo-apple-auth {
+        height: 52px !important;
+        border-radius: 19px !important;
+        margin-bottom: 2px !important;
+    }
+
+    #fingo-onboarding .fo-cta {
+        height: 54px !important;
+        border-radius: 20px !important;
+    }
+
+    #fingo-onboarding .fo-cta-secondary {
+        height: 46px !important;
+        border-radius: 18px !important;
+        color: rgba(226, 232, 240, 0.88) !important;
+    }
+
+    html:not(.dark) #fingo-onboarding {
+        background:
+            radial-gradient(circle at 15% 4%, color-mix(in srgb, var(--fo-active-accent, #60a5fa) 18%, white) 0%, transparent 30%),
+            radial-gradient(circle at 86% 9%, color-mix(in srgb, var(--fo-active-accent-2, #8b5cf6) 14%, white) 0%, transparent 32%),
+            linear-gradient(160deg, #fbfdff 0%, #eef4fb 56%, #e7eef8 100%) !important;
+    }
+
+    html:not(.dark) #fingo-onboarding::after {
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.78) 0%, transparent 22%),
+            radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.62) 0%, transparent 48%),
+            linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(248, 250, 252, 0.72) 100%);
+    }
+
+    html:not(.dark) #fingo-onboarding .fo-device {
+        background:
+            linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(6, 10, 24, 0.98) 100%);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.18),
+            inset 0 -18px 38px rgba(2, 6, 23, 0.2),
+            0 36px 68px -44px rgba(15, 23, 42, 0.56),
+            0 0 0 1px rgba(255, 255, 255, 0.42);
+    }
+
+    html:not(.dark) #fingo-onboarding .fo-floating-card,
+    html:not(.dark) #fingo-onboarding .fo-feat {
+        border-color: rgba(255, 255, 255, 0.86);
+        background:
+            linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.62) 100%);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.9),
+            0 24px 44px -34px rgba(15, 23, 42, 0.28);
+    }
+
+    html:not(.dark) #fingo-onboarding .fo-headline {
+        color: #0f172a !important;
+    }
+
+    html:not(.dark) #fingo-onboarding .fo-subtext,
+    html:not(.dark) #fingo-onboarding .fo-floating-card__text {
+        color: #475569 !important;
+    }
+
+    html:not(.dark) #fingo-onboarding .fo-feat-text {
+        color: #111827 !important;
+    }
+
+    html:not(.dark) #fingo-onboarding .fo-cta-area {
+        background:
+            linear-gradient(180deg, rgba(245, 247, 250, 0) 0%, rgba(245, 247, 250, 0.62) 30%, rgba(245, 247, 250, 0.96) 100%) !important;
+    }
+
+    @media (max-width: 380px) {
+        #fingo-onboarding .fo-slides {
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+        }
+
+        #fingo-onboarding .fo-floating-card {
+            width: 94px;
+            padding: 10px;
+        }
+
+        #fingo-onboarding .fo-device {
+            width: min(62vw, 210px) !important;
+        }
+    }
+
+    @media (max-height: 760px) {
+        #fingo-onboarding .fo-hero-stage {
+            height: clamp(188px, 29vh, 236px) !important;
+        }
+
+        #fingo-onboarding .fo-device {
+            width: min(58vw, 204px) !important;
+        }
+
+        #fingo-onboarding .fo-feat {
+            min-height: 52px;
+        }
+
+        #fingo-onboarding .fo-feat-icon {
+            width: 38px;
+            height: 38px;
+        }
+    }
+
+    @media (max-height: 680px) {
+        #fingo-onboarding .fo-topbar {
+            padding-top: max(10px, env(safe-area-inset-top, 10px)) !important;
+        }
+
+        #fingo-onboarding .fo-progress-wrap {
+            margin-top: 6px !important;
+        }
+
+        #fingo-onboarding .fo-slides {
+            padding-top: 8px !important;
+        }
+
+        #fingo-onboarding .fo-slide-shell {
+            gap: 8px;
+        }
+
+        #fingo-onboarding .fo-hero-stage {
+            height: 168px !important;
+        }
+
+        #fingo-onboarding .fo-device {
+            width: min(54vw, 176px) !important;
+            border-radius: 28px;
+        }
+
+        #fingo-onboarding .fo-device__screen {
+            padding: 12px 12px 12px;
+        }
+
+        #fingo-onboarding .fo-floating-card {
+            display: none;
+        }
+
+        #fingo-onboarding .fo-headline {
+            font-size: 25px !important;
+        }
+
+        #fingo-onboarding .fo-subtext {
+            font-size: 12.5px !important;
+            line-height: 1.36 !important;
+            margin-top: 6px !important;
+        }
+
+        #fingo-onboarding .fo-features {
+            gap: 7px !important;
+        }
+
+        #fingo-onboarding .fo-feat {
+            min-height: 46px;
+            padding: 9px 12px !important;
+            border-radius: 18px;
+        }
+
+        #fingo-onboarding .fo-feat-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+        }
+
+        #fingo-onboarding .fo-feat-text {
+            font-size: 12px !important;
+        }
+
+        #fingo-onboarding .fo-cta-area {
+            padding-top: 8px !important;
+            gap: 6px !important;
+        }
+
+        #fingo-onboarding .fo-apple-auth,
+        #fingo-onboarding .fo-cta {
+            height: 48px !important;
+        }
+
+        #fingo-onboarding .fo-cta-secondary {
+            height: 40px !important;
+        }
+    }

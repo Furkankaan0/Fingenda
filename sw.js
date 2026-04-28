@@ -1,8 +1,11 @@
-const CACHE_VERSION = 'fingenda-shell-v3';
+const CACHE_VERSION = 'fingenda-shell-v4';
 const APP_SHELL = [
     './',
     './index.html',
     './logo.jpg',
+    './assets/styles/fingenda-apple-auth-polish.css',
+    './assets/styles/fingenda-onboarding-award-ui.css',
+    './assets/js/fingenda-apple-auth-web-bridge.js',
     './dna-performance-runtime.js',
     './dna-refresh-core.js',
     './dna-refresh-ui.js',

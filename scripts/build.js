@@ -23,6 +23,7 @@ const COPY_LIST = [
     'fingenda-native-voice.js',
     'sw.js',
     'manifest.json',
+    'assets',
     'logo.jpg',
     'logo-120.png',
     'logo-152.png',
