@@ -65,8 +65,15 @@ private struct FingendaWidgetSnapshot: Codable, Hashable {
     let savingsCurrent: Double
     let savingsTarget: Double
     let savingsProgress: Double
+    let goalTitle: String
+    let goalTargetDate: Date?
     let installmentCount: Int
     let installmentTotal: Double
+    let installmentTitle: String
+    let installmentPaidCount: Int
+    let installmentTotalCount: Int
+    let installmentNextDueDate: Date?
+    let installmentProgress: Double
     let todayEvents: [WidgetTodayEvent]
     let insightTitle: String
     let insightText: String
@@ -91,7 +98,11 @@ private struct FingendaWidgetSnapshot: Codable, Hashable {
             || monthlyIncome > 0.01
             || monthlyExpense > 0.01
             || savingsCurrent > 0.01
+            || savingsTarget > 0.01
+            || !goalTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             || installmentCount > 0
+            || installmentTotalCount > 0
+            || !installmentTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             || hasMarketData
     }
 
@@ -104,6 +115,26 @@ private struct FingendaWidgetSnapshot: Codable, Hashable {
             return clamp(savingsProgress / 100.0, min: 0, max: 1)
         }
         return clamp(savingsProgress, min: 0, max: 1)
+    }
+
+    var hasSavingsGoal: Bool {
+        savingsTarget > 0.01
+            || savingsCurrent > 0.01
+            || !goalTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    var hasInstallmentPlan: Bool {
+        installmentCount > 0
+            || installmentTotal > 0.01
+            || installmentTotalCount > 0
+            || !installmentTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    var sanitizedInstallmentNextDueDate: Date? {
+        guard let dueDate = installmentNextDueDate else { return nil }
+        let today = Calendar.current.startOfDay(for: Date())
+        let normalized = Calendar.current.startOfDay(for: dueDate)
+        return normalized >= today ? dueDate : nil
     }
 
     var spendingPressure: Double {
@@ -119,8 +150,15 @@ private struct FingendaWidgetSnapshot: Codable, Hashable {
         savingsCurrent: 31_000,
         savingsTarget: 50_000,
         savingsProgress: 0.62,
+        goalTitle: "Acil Durum Fonu",
+        goalTargetDate: Calendar.current.date(byAdding: .month, value: 4, to: Date()),
         installmentCount: 2,
         installmentTotal: 4_800,
+        installmentTitle: "Kredi Kartı",
+        installmentPaidCount: 5,
+        installmentTotalCount: 12,
+        installmentNextDueDate: Calendar.current.date(byAdding: .day, value: 12, to: Date()),
+        installmentProgress: 0.42,
         todayEvents: [
             WidgetTodayEvent(
                 id: "p1",
@@ -163,8 +201,15 @@ private struct FingendaWidgetSnapshot: Codable, Hashable {
         savingsCurrent: 0,
         savingsTarget: 0,
         savingsProgress: 0,
+        goalTitle: "",
+        goalTargetDate: nil,
         installmentCount: 0,
         installmentTotal: 0,
+        installmentTitle: "",
+        installmentPaidCount: 0,
+        installmentTotalCount: 0,
+        installmentNextDueDate: nil,
+        installmentProgress: 0,
         todayEvents: [],
         insightTitle: "",
         insightText: "",
@@ -210,8 +255,15 @@ private enum FingendaWidgetDataSource {
     private static let savingsCurrentKeys = ["widget_savings_current", "widget_savings_total", "savings_total"]
     private static let savingsTargetKeys = ["widget_savings_target", "savings_target"]
     private static let savingsProgressKeys = ["widget_savings_progress", "widget_goal_progress", "goal_progress"]
+    private static let goalTitleKeys = ["widget_goal_title", "goal_title", "savings_goal_title"]
+    private static let goalTargetDateKeys = ["widget_goal_target_date", "goal_target_date", "savings_goal_target_date"]
     private static let installmentCountKeys = ["widget_installment_count", "installment_count"]
     private static let installmentTotalKeys = ["widget_installment_total", "installment_total"]
+    private static let installmentTitleKeys = ["widget_installment_title", "installment_title"]
+    private static let installmentPaidCountKeys = ["widget_installment_paid_count", "installment_paid_count"]
+    private static let installmentTotalCountKeys = ["widget_installment_total_count", "installment_total_count"]
+    private static let installmentNextDueDateKeys = ["widget_installment_next_due_date", "installment_next_due_date"]
+    private static let installmentProgressKeys = ["widget_installment_progress", "installment_progress"]
     private static let percentageChangeKeys = ["widget_percentage_change", "percentage_change"]
     private static let insightTitleKeys = ["widget_insight_title", "insight_title"]
     private static let insightTextKeys = ["widget_insight_text", "insight_text"]
@@ -298,6 +350,14 @@ private enum FingendaWidgetDataSource {
             fallback: deriveSavingsTarget(current: savingsCurrent, progress: rawProgress, defaults: defaults)
         )
 
+        let goalTitle = stringValue(
+            dict["goalTitle"],
+            fallback: readString(defaults, keys: goalTitleKeys)
+        )
+
+        let goalTargetDate = parseDate(dict["goalTargetDate"])
+            ?? parseDate(readString(defaults, keys: goalTargetDateKeys))
+
         let installmentCount = intValue(
             dict["installmentCount"],
             fallback: readInt(defaults, keys: installmentCountKeys)
@@ -306,6 +366,29 @@ private enum FingendaWidgetDataSource {
         let installmentTotal = number(
             dict["installmentTotal"],
             fallback: readNumber(defaults, keys: installmentTotalKeys)
+        )
+
+        let installmentTitle = stringValue(
+            dict["installmentTitle"],
+            fallback: readString(defaults, keys: installmentTitleKeys)
+        )
+
+        let installmentPaidCount = intValue(
+            dict["installmentPaidCount"],
+            fallback: readInt(defaults, keys: installmentPaidCountKeys)
+        )
+
+        let installmentTotalCount = intValue(
+            dict["installmentTotalCount"],
+            fallback: readInt(defaults, keys: installmentTotalCountKeys)
+        )
+
+        let installmentNextDueDate = parseDate(dict["installmentNextDueDate"])
+            ?? parseDate(readString(defaults, keys: installmentNextDueDateKeys))
+
+        let installmentProgress = number(
+            dict["installmentProgress"],
+            fallback: readNumber(defaults, keys: installmentProgressKeys)
         )
 
         let remainingBudget = number(
@@ -389,8 +472,15 @@ private enum FingendaWidgetDataSource {
             savingsCurrent: savingsCurrent,
             savingsTarget: savingsTarget,
             savingsProgress: rawProgress,
+            goalTitle: goalTitle,
+            goalTargetDate: goalTargetDate,
             installmentCount: installmentCount,
             installmentTotal: installmentTotal,
+            installmentTitle: installmentTitle,
+            installmentPaidCount: installmentPaidCount,
+            installmentTotalCount: installmentTotalCount,
+            installmentNextDueDate: installmentNextDueDate,
+            installmentProgress: installmentProgress,
             todayEvents: events,
             insightTitle: title,
             insightText: text,
@@ -425,8 +515,15 @@ private enum FingendaWidgetDataSource {
             savingsCurrent: savingsCurrent,
             savingsTarget: target,
             savingsProgress: progress,
+            goalTitle: readString(defaults, keys: goalTitleKeys),
+            goalTargetDate: parseDate(readString(defaults, keys: goalTargetDateKeys)),
             installmentCount: readInt(defaults, keys: installmentCountKeys),
             installmentTotal: readNumber(defaults, keys: installmentTotalKeys),
+            installmentTitle: readString(defaults, keys: installmentTitleKeys),
+            installmentPaidCount: readInt(defaults, keys: installmentPaidCountKeys),
+            installmentTotalCount: readInt(defaults, keys: installmentTotalCountKeys),
+            installmentNextDueDate: parseDate(readString(defaults, keys: installmentNextDueDateKeys)),
+            installmentProgress: readNumber(defaults, keys: installmentProgressKeys),
             todayEvents: parseEvents(defaults.string(forKey: "widget_today_events")),
             insightTitle: readString(defaults, keys: insightTitleKeys, fallback: "Bugünün İçgörüsü"),
             insightText: readString(defaults, keys: insightTextKeys, fallback: ""),
@@ -773,6 +870,34 @@ private enum WidgetFormat {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "tr_TR")
         formatter.dateFormat = "d MMM"
+        return formatter.string(from: date)
+    }
+
+    static func mediumDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "tr_TR")
+        formatter.dateFormat = "d MMMM yyyy"
+        return formatter.string(from: date)
+    }
+
+    static func dayNumber(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "tr_TR")
+        formatter.dateFormat = "d"
+        return formatter.string(from: date)
+    }
+
+    static func monthName(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "tr_TR")
+        formatter.dateFormat = "MMMM"
+        return formatter.string(from: date)
+    }
+
+    static func weekdayName(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "tr_TR")
+        formatter.dateFormat = "EEEE"
         return formatter.string(from: date)
     }
 
@@ -2106,11 +2231,7 @@ private enum ReferenceWidgetData {
             return Array(snapshot.todayEvents.prefix(3))
         }
 
-        return [
-            WidgetTodayEvent(id: "agenda-card", title: "Kredi Kartı Ödemesi", amount: max(snapshot.installmentTotal, 1_250), time: "Bugün", categoryIcon: "creditcard.fill", deepLink: "fingenda://installments"),
-            WidgetTodayEvent(id: "agenda-bill", title: "Elektrik Faturası", amount: 620, time: "Yarın", categoryIcon: "bolt.fill", deepLink: "fingenda://agenda/today"),
-            WidgetTodayEvent(id: "agenda-income", title: "Maaş", amount: max(snapshot.monthlyIncome, 42_000), time: "25 May", categoryIcon: "banknote.fill", deepLink: "fingenda://transactions?tab=income")
-        ]
+        return []
     }
 
     static func recentItem(from snapshot: FingendaWidgetSnapshot) -> WidgetTodayEvent {
@@ -2194,32 +2315,39 @@ private struct ReferenceSavingsWidgetView: View {
     let entry: FingendaWidgetEntry
 
     var body: some View {
+        let snapshot = entry.snapshot
+        let hasGoal = snapshot.hasSavingsGoal
+        let title = snapshot.goalTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        let displayTitle = title.isEmpty ? "Hedef seçilmedi" : title
+        let targetText = snapshot.savingsTarget > 0.01 ? WidgetFormat.currency(snapshot.savingsTarget, code: snapshot.currencyCode) : "Hedef yok"
+        let dateText = snapshot.goalTargetDate.map { WidgetFormat.mediumDate($0) } ?? "Tarih belirlenmedi"
+
         ReferenceWidgetShell(padding: 15) { theme in
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 10) {
                     ReferenceHeader(title: "Hedef Birikimim", systemImage: "target", showsDots: true)
                         .foregroundStyle(theme.textPrimary)
 
-                    Text("Yurt Dışı Seyahati")
+                    Text(displayTitle)
                         .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundStyle(theme.textPrimary)
                         .lineLimit(1)
 
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(WidgetFormat.currency(entry.snapshot.savingsCurrent, code: entry.snapshot.currencyCode))
+                        Text(WidgetFormat.currency(snapshot.savingsCurrent, code: snapshot.currencyCode))
                             .font(.system(size: 22, weight: .heavy, design: .rounded))
                             .foregroundStyle(theme.textPrimary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.62)
-                        Text("/ \(WidgetFormat.currency(max(entry.snapshot.savingsTarget, 50_000), code: entry.snapshot.currencyCode))")
+                        Text("/ \(targetText)")
                             .font(.system(size: 11, weight: .medium, design: .rounded))
                             .foregroundStyle(theme.textSecondary)
                             .lineLimit(1)
                     }
 
                     HStack(spacing: 7) {
-                        ReferenceProgressBar(progress: entry.snapshot.normalizedSavingsProgress, theme: theme, height: 8)
-                        Text(WidgetFormat.percent(entry.snapshot.normalizedSavingsProgress * 100, maxFractionDigits: 0))
+                        ReferenceProgressBar(progress: hasGoal ? snapshot.normalizedSavingsProgress : 0, theme: theme, height: 8)
+                        Text(WidgetFormat.percent((hasGoal ? snapshot.normalizedSavingsProgress : 0) * 100, maxFractionDigits: 0))
                             .font(.system(size: 11, weight: .bold, design: .rounded))
                             .foregroundStyle(theme.textPrimary)
                     }
@@ -2228,24 +2356,37 @@ private struct ReferenceSavingsWidgetView: View {
                         Text("Hedef Tarihi")
                             .font(.system(size: 11, weight: .medium, design: .rounded))
                             .foregroundStyle(theme.textSecondary)
-                        Text("30 Eylül 2025")
+                        Text(dateText)
                             .font(.system(size: 12, weight: .semibold, design: .rounded))
                             .foregroundStyle(theme.textPrimary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.72)
                     }
                 }
 
                 Spacer(minLength: 2)
 
-                ZStack(alignment: .bottom) {
-                    Text("🌴")
-                        .font(.system(size: 48))
-                        .offset(y: -34)
-                    Text("🧳")
-                        .font(.system(size: 84))
-                        .shadow(color: theme.purple.opacity(0.35), radius: 12, x: 0, y: 9)
-                    Text("💼")
-                        .font(.system(size: 45))
-                        .offset(x: -36, y: 11)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 30, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [theme.purple.opacity(0.34), theme.blue.opacity(0.16), theme.green.opacity(0.12)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 30, style: .continuous)
+                                .stroke(Color.white.opacity(theme.isDark ? 0.14 : 0.42), lineWidth: 1)
+                        )
+                        .shadow(color: theme.purple.opacity(0.22), radius: 14, x: 0, y: 10)
+
+                    VStack(spacing: 7) {
+                        ReferenceIcon3D(symbol: "target", tint: theme.purple, size: 58)
+                        Image(systemName: hasGoal ? "checkmark.seal.fill" : "plus.circle.fill")
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundStyle(hasGoal ? theme.green : theme.textSecondary)
+                    }
                 }
                 .frame(width: 120, height: 130)
             }
@@ -2258,6 +2399,8 @@ private struct ReferenceAgendaWidgetView: View {
     let entry: FingendaWidgetEntry
 
     var body: some View {
+        let agendaItems = ReferenceWidgetData.agendaItems(from: entry.snapshot)
+
         ReferenceWidgetShell(padding: 14) { theme in
             VStack(spacing: 9) {
                 ReferenceHeader(title: "Finansal Ajanda", systemImage: "calendar", trailing: "Bugün")
@@ -2265,13 +2408,13 @@ private struct ReferenceAgendaWidgetView: View {
 
                 HStack(spacing: 15) {
                     VStack(spacing: 2) {
-                        Text("23")
+                        Text(WidgetFormat.dayNumber(entry.snapshot.date))
                             .font(.system(size: 38, weight: .regular, design: .rounded))
                             .foregroundStyle(theme.textPrimary)
-                        Text("Mayıs")
+                        Text(WidgetFormat.monthName(entry.snapshot.date))
                             .font(.system(size: 12, weight: .medium, design: .rounded))
                             .foregroundStyle(theme.textSecondary)
-                        Text("Perşembe")
+                        Text(WidgetFormat.weekdayName(entry.snapshot.date))
                             .font(.system(size: 12, weight: .medium, design: .rounded))
                             .foregroundStyle(theme.textSecondary)
                     }
@@ -2281,11 +2424,19 @@ private struct ReferenceAgendaWidgetView: View {
                         .fill(theme.hairline)
                         .frame(width: 1)
 
-                    let agendaItems = ReferenceWidgetData.agendaItems(from: entry.snapshot)
-                    VStack(spacing: 0) {
-                        ForEach(agendaItems.indices, id: \.self) { index in
-                            let item = agendaItems[index]
-                            ReferenceAgendaRow(event: item, theme: theme, isLast: index == agendaItems.count - 1)
+                    if agendaItems.isEmpty {
+                        ReferenceEmptyState(
+                            title: "Bugün ödeme yok",
+                            subtitle: "Yaklaşan ödeme ve taksitlerin burada görünecek.",
+                            theme: theme
+                        )
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        VStack(spacing: 0) {
+                            ForEach(agendaItems.indices, id: \.self) { index in
+                                let item = agendaItems[index]
+                                ReferenceAgendaRow(event: item, theme: theme, isLast: index == agendaItems.count - 1)
+                            }
                         }
                     }
                 }
@@ -2482,6 +2633,17 @@ private struct ReferenceInstallmentWidgetView: View {
     let entry: FingendaWidgetEntry
 
     var body: some View {
+        let snapshot = entry.snapshot
+        let hasPlan = snapshot.hasInstallmentPlan
+        let title = snapshot.installmentTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        let displayTitle = title.isEmpty ? "Aktif taksit yok" : title
+        let totalCount = max(snapshot.installmentTotalCount, snapshot.installmentCount)
+        let paidCount = min(max(snapshot.installmentPaidCount, 0), max(totalCount, snapshot.installmentPaidCount))
+        let progress = snapshot.installmentProgress > 0
+            ? clamp(snapshot.installmentProgress, min: 0, max: 1)
+            : (totalCount > 0 ? clamp(Double(paidCount) / Double(totalCount), min: 0, max: 1) : 0)
+        let dueDateText = snapshot.sanitizedInstallmentNextDueDate.map { WidgetFormat.shortDate($0) } ?? "Tarih yok"
+
         ReferenceWidgetShell(padding: 14) { theme in
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 11) {
@@ -2490,25 +2652,33 @@ private struct ReferenceInstallmentWidgetView: View {
 
                     HStack(alignment: .firstTextBaseline, spacing: 9) {
                         VStack(alignment: .leading, spacing: 7) {
-                            Text("Taşıt Kredisi")
+                            Text(displayTitle)
                                 .font(.system(size: 12, weight: .semibold, design: .rounded))
                                 .foregroundStyle(theme.textPrimary)
+                                .lineLimit(1)
                             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                                Text(WidgetFormat.currency(max(entry.snapshot.installmentTotal, 14_250), code: entry.snapshot.currencyCode))
+                                Text(WidgetFormat.currency(snapshot.installmentTotal, code: snapshot.currencyCode))
                                     .font(.system(size: 16, weight: .heavy, design: .rounded))
                                     .foregroundStyle(theme.textPrimary)
                                     .lineLimit(1)
-                                Text("/ ₺28.500")
-                                    .font(.system(size: 10, weight: .medium, design: .rounded))
-                                    .foregroundStyle(theme.textSecondary)
+                                if totalCount > 0 {
+                                    Text("/ \(totalCount) ay")
+                                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                                        .foregroundStyle(theme.textSecondary)
+                                }
+                                if !hasPlan {
+                                    Text("Plan ekle")
+                                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                                        .foregroundStyle(theme.textSecondary)
+                                }
                             }
                         }
                     }
 
-                    ReferenceProgressBar(progress: entry.snapshot.installmentTotal > 0 ? 0.50 : 0.50, theme: theme, height: 7)
+                    ReferenceProgressBar(progress: hasPlan ? progress : 0, theme: theme, height: 7)
 
                     HStack(alignment: .bottom) {
-                        Text("\(max(entry.snapshot.installmentCount, 5)) / 12 Taksit")
+                        Text(totalCount > 0 ? "\(paidCount) / \(totalCount) Taksit" : "Taksit planı yok")
                             .font(.system(size: 11, weight: .medium, design: .rounded))
                             .foregroundStyle(theme.textSecondary)
                         Spacer()
@@ -2516,7 +2686,7 @@ private struct ReferenceInstallmentWidgetView: View {
                             Text("Son Ödeme")
                                 .font(.system(size: 9, weight: .medium, design: .rounded))
                                 .foregroundStyle(theme.textMuted)
-                            Text("15 Haz 2025")
+                            Text(dueDateText)
                                 .font(.system(size: 11, weight: .semibold, design: .rounded))
                                 .foregroundStyle(theme.textPrimary)
                         }
@@ -2525,10 +2695,32 @@ private struct ReferenceInstallmentWidgetView: View {
 
                 Spacer(minLength: 4)
 
-                Text("🚘")
-                    .font(.system(size: 86))
-                    .shadow(color: theme.blue.opacity(0.24), radius: 12, x: 0, y: 8)
-                    .frame(width: 116)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 30, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [theme.blue.opacity(0.28), theme.purple.opacity(0.18), theme.cardBottom.opacity(0.72)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 30, style: .continuous)
+                                .stroke(Color.white.opacity(theme.isDark ? 0.12 : 0.38), lineWidth: 1)
+                        )
+                        .shadow(color: theme.blue.opacity(0.20), radius: 12, x: 0, y: 9)
+
+                    VStack(spacing: 8) {
+                        ReferenceIcon3D(symbol: "creditcard.fill", tint: theme.purple, size: 56)
+                        Text(hasPlan ? "\(max(totalCount - paidCount, 0)) ay" : "Plan")
+                            .font(.system(size: 12, weight: .heavy, design: .rounded))
+                            .foregroundStyle(theme.textPrimary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Capsule(style: .continuous).fill(theme.cardTop.opacity(0.72)))
+                    }
+                }
+                .frame(width: 116, height: 126)
             }
         }
         .widgetURL(WidgetDeepLinks.url(for: .installments))
