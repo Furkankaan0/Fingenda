@@ -59,6 +59,10 @@ workflows:
         script: |
           node scripts/install-ios-widget.js
 
+      - name: Install native iOS Apple auth bridge
+        script: |
+          node scripts/install-ios-apple-auth-plugin.js
+
       - name: Generate iOS app icons
         script: |
           node scripts/generate-ios-appicon.js
@@ -228,6 +232,10 @@ workflows:
       - name: Install iOS widget extension
         script: |
           node scripts/install-ios-widget.js
+
+      - name: Install native iOS Apple auth bridge
+        script: |
+          node scripts/install-ios-apple-auth-plugin.js
 
       - name: Generate iOS app icons
         script: |
