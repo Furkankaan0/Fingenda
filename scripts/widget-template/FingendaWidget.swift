@@ -1516,8 +1516,7 @@ private struct FingendaAccessoryBudgetWidget: Widget {
     }
 }
 
-@main
-struct FingendaWidgetBundle: WidgetBundle {
+private struct LegacyFingendaWidgetBundle: WidgetBundle {
     var body: some Widget {
         FingendaSmallNetCashWidget()
         FingendaSmallSavingsGoalWidget()
@@ -1525,6 +1524,1033 @@ struct FingendaWidgetBundle: WidgetBundle {
         FingendaMediumInsightWidget()
         FingendaLargeDailySummaryWidget()
         FingendaAccessoryBudgetWidget()
+    }
+}
+
+// MARK: - Reference Grade Widget System
+private struct ReferenceWidgetTheme {
+    let isDark: Bool
+    let backgroundTop: Color
+    let backgroundBottom: Color
+    let cardTop: Color
+    let cardBottom: Color
+    let cardStroke: Color
+    let hairline: Color
+    let textPrimary: Color
+    let textSecondary: Color
+    let textMuted: Color
+    let purple: Color
+    let violet: Color
+    let blue: Color
+    let green: Color
+    let red: Color
+    let gold: Color
+    let softShadow: Color
+
+    static func current(for scheme: ColorScheme) -> ReferenceWidgetTheme {
+        if scheme == .dark {
+            return ReferenceWidgetTheme(
+                isDark: true,
+                backgroundTop: Color(red: 0.03, green: 0.06, blue: 0.12),
+                backgroundBottom: Color(red: 0.01, green: 0.03, blue: 0.08),
+                cardTop: Color(red: 0.08, green: 0.11, blue: 0.18),
+                cardBottom: Color(red: 0.03, green: 0.06, blue: 0.12),
+                cardStroke: Color.white.opacity(0.20),
+                hairline: Color.white.opacity(0.10),
+                textPrimary: Color.white.opacity(0.96),
+                textSecondary: Color.white.opacity(0.74),
+                textMuted: Color.white.opacity(0.52),
+                purple: Color(red: 0.47, green: 0.24, blue: 1.00),
+                violet: Color(red: 0.66, green: 0.48, blue: 1.00),
+                blue: Color(red: 0.30, green: 0.45, blue: 1.00),
+                green: Color(red: 0.14, green: 0.88, blue: 0.58),
+                red: Color(red: 1.00, green: 0.31, blue: 0.37),
+                gold: Color(red: 1.00, green: 0.73, blue: 0.23),
+                softShadow: Color.black.opacity(0.52)
+            )
+        }
+
+        return ReferenceWidgetTheme(
+            isDark: false,
+            backgroundTop: Color(red: 0.96, green: 0.98, blue: 1.00),
+            backgroundBottom: Color(red: 0.90, green: 0.94, blue: 1.00),
+            cardTop: Color(red: 0.985, green: 0.992, blue: 1.00),
+            cardBottom: Color(red: 0.90, green: 0.94, blue: 1.00),
+            cardStroke: Color(red: 0.70, green: 0.76, blue: 0.88).opacity(0.52),
+            hairline: Color(red: 0.63, green: 0.69, blue: 0.82).opacity(0.30),
+            textPrimary: Color(red: 0.05, green: 0.08, blue: 0.18),
+            textSecondary: Color(red: 0.22, green: 0.27, blue: 0.40),
+            textMuted: Color(red: 0.45, green: 0.50, blue: 0.64),
+            purple: Color(red: 0.34, green: 0.26, blue: 0.96),
+            violet: Color(red: 0.55, green: 0.44, blue: 1.00),
+            blue: Color(red: 0.24, green: 0.40, blue: 0.94),
+            green: Color(red: 0.05, green: 0.63, blue: 0.24),
+            red: Color(red: 0.88, green: 0.10, blue: 0.14),
+            gold: Color(red: 0.92, green: 0.58, blue: 0.10),
+            softShadow: Color(red: 0.17, green: 0.21, blue: 0.32).opacity(0.22)
+        )
+    }
+}
+
+private struct ReferenceWidgetShell<Content: View>: View {
+    @Environment(\.colorScheme) private var colorScheme
+    let padding: CGFloat
+    let content: (ReferenceWidgetTheme) -> Content
+
+    init(padding: CGFloat = 14, @ViewBuilder content: @escaping (ReferenceWidgetTheme) -> Content) {
+        self.padding = padding
+        self.content = content
+    }
+
+    var body: some View {
+        let theme = ReferenceWidgetTheme.current(for: colorScheme)
+
+        ZStack {
+            RoundedRectangle(cornerRadius: 25, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [theme.cardTop, theme.cardBottom],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+            RadialGradient(
+                colors: [
+                    (theme.isDark ? theme.violet.opacity(0.18) : Color.white.opacity(0.68)),
+                    .clear
+                ],
+                center: .topLeading,
+                startRadius: 4,
+                endRadius: 180
+            )
+
+            RadialGradient(
+                colors: [theme.blue.opacity(theme.isDark ? 0.10 : 0.15), .clear],
+                center: .bottomTrailing,
+                startRadius: 4,
+                endRadius: 210
+            )
+
+            content(theme)
+                .padding(padding)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 25, style: .continuous)
+                .stroke(theme.cardStroke, lineWidth: 1)
+        )
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .shadow(color: theme.softShadow, radius: theme.isDark ? 11 : 12, x: 0, y: 8)
+        .containerBackground(for: .widget) {
+            LinearGradient(
+                colors: [theme.backgroundTop, theme.backgroundBottom],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+    }
+}
+
+private struct ReferenceHeader: View {
+    let title: String
+    let systemImage: String
+    let trailing: String?
+    let showsDots: Bool
+
+    init(title: String, systemImage: String = "calendar", trailing: String? = nil, showsDots: Bool = false) {
+        self.title = title
+        self.systemImage = systemImage
+        self.trailing = trailing
+        self.showsDots = showsDots
+    }
+
+    var body: some View {
+        HStack(spacing: 7) {
+            Image(systemName: systemImage)
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [Color(red: 0.42, green: 0.30, blue: 1.0), Color(red: 0.24, green: 0.46, blue: 1.0)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+            Text(title)
+                .font(.system(size: 15, weight: .bold, design: .rounded))
+                .lineLimit(1)
+                .minimumScaleFactor(0.82)
+
+            Spacer(minLength: 6)
+
+            if let trailing {
+                Text(trailing)
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .lineLimit(1)
+            }
+
+            if showsDots {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 13, weight: .bold))
+            }
+        }
+    }
+}
+
+private struct ReferenceEmptyState: View {
+    let title: String
+    let subtitle: String
+    let theme: ReferenceWidgetTheme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            Image(systemName: "tray")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(theme.textSecondary)
+            Text(title)
+                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .foregroundStyle(theme.textPrimary)
+                .lineLimit(1)
+            Text(subtitle)
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundStyle(theme.textSecondary)
+                .lineLimit(3)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+}
+
+private struct ReferenceIcon3D: View {
+    let symbol: String
+    let tint: Color
+    var size: CGFloat = 43
+    var system: Bool = true
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: size * 0.25, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [tint.opacity(0.92), tint.opacity(0.58), Color.white.opacity(0.20)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .shadow(color: tint.opacity(0.32), radius: 9, x: 0, y: 7)
+
+            RoundedRectangle(cornerRadius: size * 0.25, style: .continuous)
+                .stroke(Color.white.opacity(0.36), lineWidth: 1)
+
+            if system {
+                Image(systemName: symbol)
+                    .font(.system(size: size * 0.42, weight: .heavy))
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.22), radius: 2, x: 0, y: 1)
+            } else {
+                Text(symbol)
+                    .font(.system(size: size * 0.62))
+                    .shadow(color: .black.opacity(0.20), radius: 3, x: 0, y: 2)
+            }
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+private struct ReferenceProgressBar: View {
+    let progress: Double
+    let theme: ReferenceWidgetTheme
+    var height: CGFloat = 8
+
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .leading) {
+                Capsule(style: .continuous)
+                    .fill(theme.isDark ? Color.white.opacity(0.11) : Color(red: 0.78, green: 0.82, blue: 0.90).opacity(0.65))
+
+                Capsule(style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [theme.purple, theme.violet, theme.blue],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(width: max(height, proxy.size.width * clamp(progress, min: 0.03, max: 1)))
+                    .shadow(color: theme.purple.opacity(0.34), radius: 5, x: 0, y: 2)
+            }
+        }
+        .frame(height: height)
+    }
+}
+
+private struct ReferenceWaveChart: View {
+    let theme: ReferenceWidgetTheme
+
+    var body: some View {
+        GeometryReader { proxy in
+            let width = proxy.size.width
+            let height = proxy.size.height
+
+            ZStack(alignment: .bottomTrailing) {
+                ReferenceWaveShape(offset: 0.00)
+                    .fill(
+                        LinearGradient(
+                            colors: [theme.violet.opacity(0.30), theme.blue.opacity(0.04)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .frame(width: width, height: height)
+
+                ReferenceWaveShape(offset: 0.18)
+                    .stroke(theme.violet.opacity(theme.isDark ? 0.86 : 0.68), style: StrokeStyle(lineWidth: 2.3, lineCap: .round, lineJoin: .round))
+                    .frame(width: width, height: height)
+
+                ReferenceWaveShape(offset: -0.10)
+                    .stroke(theme.blue.opacity(theme.isDark ? 0.74 : 0.56), style: StrokeStyle(lineWidth: 1.8, lineCap: .round, lineJoin: .round))
+                    .frame(width: width, height: height * 0.76)
+                    .offset(y: height * 0.18)
+
+                HStack(alignment: .bottom, spacing: 3) {
+                    Capsule().frame(width: 3, height: 11)
+                    Capsule().frame(width: 3, height: 16)
+                    Capsule().frame(width: 3, height: 22)
+                }
+                .foregroundStyle(theme.blue)
+                .opacity(0.84)
+                .padding(.trailing, 4)
+                .padding(.bottom, 2)
+            }
+        }
+    }
+}
+
+private struct ReferenceWaveShape: Shape {
+    let offset: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let h = rect.height
+        let w = rect.width
+
+        path.move(to: CGPoint(x: 0, y: h * (0.75 + offset)))
+        path.addCurve(
+            to: CGPoint(x: w * 0.32, y: h * (0.55 + offset)),
+            control1: CGPoint(x: w * 0.10, y: h * (0.88 + offset)),
+            control2: CGPoint(x: w * 0.20, y: h * (0.38 + offset))
+        )
+        path.addCurve(
+            to: CGPoint(x: w * 0.62, y: h * (0.32 + offset)),
+            control1: CGPoint(x: w * 0.44, y: h * (0.74 + offset)),
+            control2: CGPoint(x: w * 0.50, y: h * (0.28 + offset))
+        )
+        path.addCurve(
+            to: CGPoint(x: w, y: h * (0.05 + offset)),
+            control1: CGPoint(x: w * 0.74, y: h * (0.48 + offset)),
+            control2: CGPoint(x: w * 0.84, y: h * (0.02 + offset))
+        )
+        path.addLine(to: CGPoint(x: w, y: h))
+        path.addLine(to: CGPoint(x: 0, y: h))
+        path.closeSubpath()
+        return path
+    }
+}
+
+private struct ReferenceMiniBars: View {
+    let theme: ReferenceWidgetTheme
+    let values: [Double]
+
+    var body: some View {
+        HStack(alignment: .bottom, spacing: 4) {
+            ForEach(values.indices, id: \.self) { index in
+                let value = values[index]
+                RoundedRectangle(cornerRadius: 3, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [theme.violet, theme.purple],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .overlay(alignment: .top) {
+                        Text("\(Int(value * 100))%")
+                            .font(.system(size: 7, weight: .heavy, design: .rounded))
+                            .foregroundStyle(.white)
+                            .padding(.top, 3)
+                    }
+                    .frame(width: 24, height: 24 + CGFloat(value * 56))
+            }
+        }
+    }
+}
+
+private struct ReferenceGlobe: View {
+    let theme: ReferenceWidgetTheme
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [
+                            Color(red: 0.52, green: 0.78, blue: 1.00),
+                            Color(red: 0.23, green: 0.44, blue: 0.88),
+                            Color(red: 0.05, green: 0.10, blue: 0.27)
+                        ],
+                        center: .topLeading,
+                        startRadius: 6,
+                        endRadius: 66
+                    )
+                )
+                .shadow(color: theme.blue.opacity(0.38), radius: 16, x: 0, y: 12)
+
+            Circle()
+                .stroke(Color.white.opacity(theme.isDark ? 0.15 : 0.26), lineWidth: 1)
+
+            ForEach(0..<4, id: \.self) { index in
+                Capsule(style: .continuous)
+                    .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                    .frame(width: 74 - CGFloat(index * 12), height: 74)
+            }
+
+            Image(systemName: "map.fill")
+                .font(.system(size: 34, weight: .semibold))
+                .foregroundStyle(Color.white.opacity(0.26))
+        }
+        .frame(width: 86, height: 86)
+    }
+}
+
+private struct ReferenceActionItem: View {
+    @Environment(\.colorScheme) private var colorScheme
+    let title: String
+    let symbol: String
+    let tint: Color
+    let destination: URL
+
+    var body: some View {
+        let theme = ReferenceWidgetTheme.current(for: colorScheme)
+
+        Link(destination: destination) {
+            VStack(spacing: 7) {
+                ReferenceIcon3D(symbol: symbol, tint: tint, size: 43)
+                Text(title)
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .foregroundStyle(theme.textPrimary)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private enum ReferenceWidgetData {
+    static func agendaItems(from snapshot: FingendaWidgetSnapshot) -> [WidgetTodayEvent] {
+        if !snapshot.todayEvents.isEmpty {
+            return Array(snapshot.todayEvents.prefix(3))
+        }
+
+        return [
+            WidgetTodayEvent(id: "agenda-card", title: "Kredi Kartı Ödemesi", amount: max(snapshot.installmentTotal, 1_250), time: "Bugün", categoryIcon: "creditcard.fill", deepLink: "fingenda://installments"),
+            WidgetTodayEvent(id: "agenda-bill", title: "Elektrik Faturası", amount: 620, time: "Yarın", categoryIcon: "bolt.fill", deepLink: "fingenda://agenda/today"),
+            WidgetTodayEvent(id: "agenda-income", title: "Maaş", amount: max(snapshot.monthlyIncome, 42_000), time: "25 May", categoryIcon: "banknote.fill", deepLink: "fingenda://transactions?tab=income")
+        ]
+    }
+
+    static func recentItem(from snapshot: FingendaWidgetSnapshot) -> WidgetTodayEvent {
+        snapshot.todayEvents.first ?? WidgetTodayEvent(
+            id: "recent-coffee",
+            title: "Kahve",
+            amount: snapshot.monthlyExpense > 0 ? min(snapshot.monthlyExpense, 75) : 75,
+            time: "Bugün · Gıda",
+            categoryIcon: "cup.and.saucer.fill",
+            deepLink: "fingenda://transactions?filter=monthly"
+        )
+    }
+}
+
+// MARK: - Reference Widget Views
+private struct ReferenceTodayWidgetView: View {
+    let entry: FingendaWidgetEntry
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        let theme = ReferenceWidgetTheme.current(for: colorScheme)
+
+        ReferenceWidgetShell(padding: 14) { theme in
+            VStack(alignment: .leading, spacing: 9) {
+                ReferenceHeader(title: "Bugün", systemImage: "calendar")
+                    .foregroundStyle(theme.textPrimary)
+
+                if entry.effectiveState == .empty {
+                    ReferenceEmptyState(title: "Henüz veri yok", subtitle: "İlk işlemini eklediğinde bugün kartı dolacak.", theme: theme)
+                } else {
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Gelir")
+                                .font(.system(size: 10, weight: .medium, design: .rounded))
+                                .foregroundStyle(theme.textSecondary)
+                            Text(WidgetFormat.currency(entry.snapshot.monthlyIncome, code: entry.snapshot.currencyCode))
+                                .font(.system(size: 16, weight: .heavy, design: .rounded))
+                                .foregroundStyle(theme.green)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.58)
+                        }
+
+                        Spacer(minLength: 8)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Gider")
+                                .font(.system(size: 10, weight: .medium, design: .rounded))
+                                .foregroundStyle(theme.textSecondary)
+                            Text(WidgetFormat.currency(entry.snapshot.monthlyExpense, code: entry.snapshot.currencyCode))
+                                .font(.system(size: 16, weight: .heavy, design: .rounded))
+                                .foregroundStyle(theme.red)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.58)
+                        }
+                    }
+
+                    Rectangle()
+                        .fill(theme.hairline)
+                        .frame(height: 1)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Kalan")
+                            .font(.system(size: 10, weight: .medium, design: .rounded))
+                            .foregroundStyle(theme.textSecondary)
+                        Text(WidgetFormat.currency(entry.snapshot.remainingBudget, code: entry.snapshot.currencyCode))
+                            .font(.system(size: 17, weight: .heavy, design: .rounded))
+                            .foregroundStyle(theme.textPrimary)
+                            .lineLimit(1)
+                    }
+
+                    ReferenceWaveChart(theme: theme)
+                        .frame(height: 58)
+                }
+            }
+        }
+        .widgetURL(WidgetDeepLinks.url(for: .dashboard))
+    }
+}
+
+private struct ReferenceSavingsWidgetView: View {
+    let entry: FingendaWidgetEntry
+
+    var body: some View {
+        ReferenceWidgetShell(padding: 15) { theme in
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 10) {
+                    ReferenceHeader(title: "Hedef Birikimim", systemImage: "target", showsDots: true)
+                        .foregroundStyle(theme.textPrimary)
+
+                    Text("Yurt Dışı Seyahati")
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundStyle(theme.textPrimary)
+                        .lineLimit(1)
+
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(WidgetFormat.currency(entry.snapshot.savingsCurrent, code: entry.snapshot.currencyCode))
+                            .font(.system(size: 22, weight: .heavy, design: .rounded))
+                            .foregroundStyle(theme.textPrimary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.62)
+                        Text("/ \(WidgetFormat.currency(max(entry.snapshot.savingsTarget, 50_000), code: entry.snapshot.currencyCode))")
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .foregroundStyle(theme.textSecondary)
+                            .lineLimit(1)
+                    }
+
+                    HStack(spacing: 7) {
+                        ReferenceProgressBar(progress: entry.snapshot.normalizedSavingsProgress, theme: theme, height: 8)
+                        Text(WidgetFormat.percent(entry.snapshot.normalizedSavingsProgress * 100, maxFractionDigits: 0))
+                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                            .foregroundStyle(theme.textPrimary)
+                    }
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Hedef Tarihi")
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .foregroundStyle(theme.textSecondary)
+                        Text("30 Eylül 2025")
+                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .foregroundStyle(theme.textPrimary)
+                    }
+                }
+
+                Spacer(minLength: 2)
+
+                ZStack(alignment: .bottom) {
+                    Text("🌴")
+                        .font(.system(size: 48))
+                        .offset(y: -34)
+                    Text("🧳")
+                        .font(.system(size: 84))
+                        .shadow(color: theme.purple.opacity(0.35), radius: 12, x: 0, y: 9)
+                    Text("💼")
+                        .font(.system(size: 45))
+                        .offset(x: -36, y: 11)
+                }
+                .frame(width: 120, height: 130)
+            }
+        }
+        .widgetURL(WidgetDeepLinks.url(for: .savings))
+    }
+}
+
+private struct ReferenceAgendaWidgetView: View {
+    let entry: FingendaWidgetEntry
+
+    var body: some View {
+        ReferenceWidgetShell(padding: 14) { theme in
+            VStack(spacing: 9) {
+                ReferenceHeader(title: "Finansal Ajanda", systemImage: "calendar", trailing: "Bugün")
+                    .foregroundStyle(theme.textPrimary)
+
+                HStack(spacing: 15) {
+                    VStack(spacing: 2) {
+                        Text("23")
+                            .font(.system(size: 38, weight: .regular, design: .rounded))
+                            .foregroundStyle(theme.textPrimary)
+                        Text("Mayıs")
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundStyle(theme.textSecondary)
+                        Text("Perşembe")
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundStyle(theme.textSecondary)
+                    }
+                    .frame(width: 58)
+
+                    Rectangle()
+                        .fill(theme.hairline)
+                        .frame(width: 1)
+
+                    let agendaItems = ReferenceWidgetData.agendaItems(from: entry.snapshot)
+                    VStack(spacing: 0) {
+                        ForEach(agendaItems.indices, id: \.self) { index in
+                            let item = agendaItems[index]
+                            ReferenceAgendaRow(event: item, theme: theme, isLast: index == agendaItems.count - 1)
+                        }
+                    }
+                }
+
+                Link(destination: WidgetDeepLinks.url(for: .agendaToday)) {
+                    ZStack {
+                        Circle()
+                            .fill(LinearGradient(colors: [theme.violet, theme.purple], startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .frame(width: 40, height: 40)
+                            .shadow(color: theme.purple.opacity(0.46), radius: 10, x: 0, y: 7)
+                        Image(systemName: "plus")
+                            .font(.system(size: 22, weight: .medium))
+                            .foregroundStyle(.white)
+                    }
+                }
+                .buttonStyle(.plain)
+                .offset(y: 2)
+            }
+        }
+        .widgetURL(WidgetDeepLinks.url(for: .agendaToday))
+    }
+}
+
+private struct ReferenceAgendaRow: View {
+    let event: WidgetTodayEvent
+    let theme: ReferenceWidgetTheme
+    let isLast: Bool
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 10) {
+                ReferenceIcon3D(symbol: event.categoryIcon, tint: iconTint, size: 28)
+
+                Text(event.title)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(theme.textPrimary)
+                    .lineLimit(1)
+
+                Spacer(minLength: 6)
+
+                Text(WidgetFormat.currency(event.amount, code: "TRY"))
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .foregroundStyle(theme.textPrimary)
+                    .lineLimit(1)
+
+                Text(event.time)
+                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .foregroundStyle(theme.textSecondary)
+                    .lineLimit(1)
+                    .frame(width: 42, alignment: .trailing)
+            }
+            .padding(.vertical, 7)
+
+            if !isLast {
+                Rectangle()
+                    .fill(theme.hairline)
+                    .frame(height: 1)
+            }
+        }
+    }
+
+    private var iconTint: Color {
+        if event.categoryIcon.contains("bolt") { return theme.gold }
+        if event.categoryIcon.contains("banknote") { return theme.green }
+        return theme.purple
+    }
+}
+
+private struct ReferenceMarketsWidgetView: View {
+    let entry: FingendaWidgetEntry
+
+    var body: some View {
+        ReferenceWidgetShell(padding: 14) { theme in
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 10) {
+                    ReferenceHeader(title: "Piyasalar", systemImage: "chart.line.uptrend.xyaxis", showsDots: true)
+                        .foregroundStyle(theme.textPrimary)
+
+                    ReferenceMarketRow(icon: "$", name: "Dolar", value: "32,25", change: "%0,32", tint: theme.green, theme: theme)
+                    ReferenceMarketRow(icon: "€", name: "Euro", value: "35,10", change: "%0,41", tint: theme.blue, theme: theme)
+                    ReferenceMarketRow(icon: "⌂", name: "Gram Altın", value: "2.410,50", change: "%0,28", tint: theme.gold, theme: theme)
+
+                    Text("Son güncelleme: 09:30")
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .foregroundStyle(theme.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.top, 2)
+                }
+
+                ReferenceGlobe(theme: theme)
+                    .overlay(alignment: .topTrailing) {
+                        ReferenceCoinBadge(text: "$", tint: theme.green)
+                            .offset(x: 12, y: -6)
+                    }
+                    .overlay(alignment: .bottomTrailing) {
+                        ReferenceCoinBadge(text: "▰", tint: theme.gold)
+                            .offset(x: 12, y: 7)
+                    }
+            }
+        }
+        .widgetURL(WidgetDeepLinks.url(for: .custom("fingenda://market")))
+    }
+}
+
+private struct ReferenceMarketRow: View {
+    let icon: String
+    let name: String
+    let value: String
+    let change: String
+    let tint: Color
+    let theme: ReferenceWidgetTheme
+
+    var body: some View {
+        HStack(spacing: 10) {
+            ReferenceCoinBadge(text: icon, tint: tint)
+            Text(name)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(theme.textPrimary)
+                .lineLimit(1)
+            Spacer(minLength: 6)
+            Text(value)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(theme.textPrimary)
+                .lineLimit(1)
+            HStack(spacing: 2) {
+                Image(systemName: "triangle.fill")
+                    .font(.system(size: 6, weight: .bold))
+                Text(change)
+                    .font(.system(size: 10, weight: .bold, design: .rounded))
+            }
+            .foregroundStyle(theme.green)
+            .frame(width: 54, alignment: .trailing)
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+private struct ReferenceCoinBadge: View {
+    let text: String
+    let tint: Color
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(LinearGradient(colors: [tint.opacity(0.98), tint.opacity(0.70)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                .shadow(color: tint.opacity(0.34), radius: 6, x: 0, y: 4)
+            Text(text)
+                .font(.system(size: 15, weight: .heavy, design: .rounded))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+        }
+        .frame(width: 30, height: 30)
+    }
+}
+
+private struct ReferenceInstallmentWidgetView: View {
+    let entry: FingendaWidgetEntry
+
+    var body: some View {
+        ReferenceWidgetShell(padding: 14) { theme in
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 11) {
+                    ReferenceHeader(title: "Taksit & Kredi", systemImage: "creditcard.fill", trailing: nil)
+                        .foregroundStyle(theme.textPrimary)
+
+                    HStack(alignment: .firstTextBaseline, spacing: 9) {
+                        VStack(alignment: .leading, spacing: 7) {
+                            Text("Taşıt Kredisi")
+                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                .foregroundStyle(theme.textPrimary)
+                            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                                Text(WidgetFormat.currency(max(entry.snapshot.installmentTotal, 14_250), code: entry.snapshot.currencyCode))
+                                    .font(.system(size: 16, weight: .heavy, design: .rounded))
+                                    .foregroundStyle(theme.textPrimary)
+                                    .lineLimit(1)
+                                Text("/ ₺28.500")
+                                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                                    .foregroundStyle(theme.textSecondary)
+                            }
+                        }
+                    }
+
+                    ReferenceProgressBar(progress: entry.snapshot.installmentTotal > 0 ? 0.50 : 0.50, theme: theme, height: 7)
+
+                    HStack(alignment: .bottom) {
+                        Text("\(max(entry.snapshot.installmentCount, 5)) / 12 Taksit")
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .foregroundStyle(theme.textSecondary)
+                        Spacer()
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Son Ödeme")
+                                .font(.system(size: 9, weight: .medium, design: .rounded))
+                                .foregroundStyle(theme.textMuted)
+                            Text("15 Haz 2025")
+                                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                .foregroundStyle(theme.textPrimary)
+                        }
+                    }
+                }
+
+                Spacer(minLength: 4)
+
+                Text("🚘")
+                    .font(.system(size: 86))
+                    .shadow(color: theme.blue.opacity(0.24), radius: 12, x: 0, y: 8)
+                    .frame(width: 116)
+            }
+        }
+        .widgetURL(WidgetDeepLinks.url(for: .installments))
+    }
+}
+
+private struct ReferenceQuickAddWidgetView: View {
+    let entry: FingendaWidgetEntry
+
+    var body: some View {
+        ReferenceWidgetShell(padding: 15) { theme in
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Hızlı Ekle")
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .foregroundStyle(theme.textPrimary)
+
+                HStack(spacing: 8) {
+                    ReferenceActionItem(title: "Gelir", symbol: "arrow.down", tint: theme.green, destination: WidgetDeepLinks.url(for: .custom("fingenda://transaction/new?type=income")))
+                    ReferenceActionItem(title: "Gider", symbol: "arrow.up", tint: theme.red, destination: WidgetDeepLinks.url(for: .custom("fingenda://transaction/new?type=expense")))
+                    ReferenceActionItem(title: "Hedef", symbol: "target", tint: theme.violet, destination: WidgetDeepLinks.url(for: .savings))
+                    ReferenceActionItem(title: "Taksit", symbol: "creditcard.fill", tint: theme.purple, destination: WidgetDeepLinks.url(for: .installments))
+                    ReferenceActionItem(title: "Not", symbol: "note.text", tint: theme.gold, destination: WidgetDeepLinks.url(for: .custom("fingenda://notes/new")))
+                    ReferenceActionItem(title: "Sesli Not", symbol: "mic.fill", tint: theme.blue, destination: WidgetDeepLinks.url(for: .custom("fingenda://voice-add")))
+                }
+            }
+        }
+        .widgetURL(WidgetDeepLinks.url(for: .dashboard))
+    }
+}
+
+private struct ReferenceRecentWidgetView: View {
+    let entry: FingendaWidgetEntry
+
+    var body: some View {
+        let item = ReferenceWidgetData.recentItem(from: entry.snapshot)
+
+        ReferenceWidgetShell(padding: 14) { theme in
+            VStack(alignment: .leading, spacing: 15) {
+                ReferenceHeader(title: "Son Kayıtlarım", systemImage: "calendar", showsDots: true)
+                    .foregroundStyle(theme.textPrimary)
+
+                HStack(spacing: 13) {
+                    Text("☕️")
+                        .font(.system(size: 47))
+                        .frame(width: 56, height: 56)
+                        .background(
+                            Circle()
+                                .fill(theme.isDark ? Color.white.opacity(0.07) : Color.white.opacity(0.48))
+                        )
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(item.title)
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .foregroundStyle(theme.textPrimary)
+                            .lineLimit(1)
+                        Text(item.time)
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .foregroundStyle(theme.textSecondary)
+                            .lineLimit(1)
+                    }
+
+                    Spacer(minLength: 4)
+
+                    Text(WidgetFormat.currency(item.amount, code: entry.snapshot.currencyCode))
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .foregroundStyle(theme.red)
+                        .lineLimit(1)
+
+                    ReferenceAudioBars(theme: theme)
+
+                    Link(destination: item.resolvedURL) {
+                        ZStack {
+                            Circle()
+                                .fill(theme.isDark ? Color.white.opacity(0.08) : Color(red: 0.88, green: 0.92, blue: 1.0))
+                                .frame(width: 48, height: 48)
+                                .overlay(Circle().stroke(theme.cardStroke, lineWidth: 1))
+                            Image(systemName: "play.fill")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundStyle(theme.purple)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .widgetURL(WidgetDeepLinks.url(for: .transactionsMonthly))
+    }
+}
+
+private struct ReferenceAudioBars: View {
+    let theme: ReferenceWidgetTheme
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 2) {
+            ForEach([0.30, 0.55, 0.72, 0.98, 0.78, 0.52, 0.35, 0.64, 0.86, 0.48], id: \.self) { value in
+                Capsule(style: .continuous)
+                    .fill(LinearGradient(colors: [theme.blue, theme.purple], startPoint: .top, endPoint: .bottom))
+                    .frame(width: 3, height: 28 * value)
+            }
+        }
+        .frame(width: 52, height: 34)
+    }
+}
+
+// MARK: - Reference Widget Definitions
+private struct FingendaReferenceTodayWidget: Widget {
+    let kind = "FingendaReferenceTodayWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: FingendaWidgetProvider()) { entry in
+            ReferenceTodayWidgetView(entry: entry)
+        }
+        .configurationDisplayName("Bugün")
+        .description("Gelir, gider ve kalan tutarını görsel dalga kartıyla takip et.")
+        .supportedFamilies([.systemSmall])
+        .contentMarginsDisabled()
+    }
+}
+
+private struct FingendaReferenceSavingsWidget: Widget {
+    let kind = "FingendaReferenceSavingsWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: FingendaWidgetProvider()) { entry in
+            ReferenceSavingsWidgetView(entry: entry)
+        }
+        .configurationDisplayName("Hedef Birikimim")
+        .description("Birikim hedefini premium seyahat kartı ile takip et.")
+        .supportedFamilies([.systemMedium])
+        .contentMarginsDisabled()
+    }
+}
+
+private struct FingendaReferenceAgendaWidget: Widget {
+    let kind = "FingendaReferenceAgendaWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: FingendaWidgetProvider()) { entry in
+            ReferenceAgendaWidgetView(entry: entry)
+        }
+        .configurationDisplayName("Finansal Ajanda")
+        .description("Yaklaşan ödeme ve gelir kayıtlarını ajanda formatında gör.")
+        .supportedFamilies([.systemMedium])
+        .contentMarginsDisabled()
+    }
+}
+
+private struct FingendaReferenceMarketsWidget: Widget {
+    let kind = "FingendaReferenceMarketsWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: FingendaWidgetProvider()) { entry in
+            ReferenceMarketsWidgetView(entry: entry)
+        }
+        .configurationDisplayName("Piyasalar")
+        .description("Döviz ve altın özetini premium piyasa kartında izle.")
+        .supportedFamilies([.systemMedium])
+        .contentMarginsDisabled()
+    }
+}
+
+private struct FingendaReferenceInstallmentWidget: Widget {
+    let kind = "FingendaReferenceInstallmentWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: FingendaWidgetProvider()) { entry in
+            ReferenceInstallmentWidgetView(entry: entry)
+        }
+        .configurationDisplayName("Taksit & Kredi")
+        .description("Kredi ve taksit ilerlemesini araç kartı ile takip et.")
+        .supportedFamilies([.systemMedium])
+        .contentMarginsDisabled()
+    }
+}
+
+private struct FingendaReferenceQuickAddWidget: Widget {
+    let kind = "FingendaReferenceQuickAddWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: FingendaWidgetProvider()) { entry in
+            ReferenceQuickAddWidgetView(entry: entry)
+        }
+        .configurationDisplayName("Hızlı Ekle")
+        .description("Gelir, gider, hedef, taksit, not ve sesli not akışlarına hızlı eriş.")
+        .supportedFamilies([.systemMedium])
+        .contentMarginsDisabled()
+    }
+}
+
+private struct FingendaReferenceRecentWidget: Widget {
+    let kind = "FingendaReferenceRecentWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: FingendaWidgetProvider()) { entry in
+            ReferenceRecentWidgetView(entry: entry)
+        }
+        .configurationDisplayName("Son Kayıtlarım")
+        .description("Son işlemini ve hızlı oynat aksiyonunu tek kartta gör.")
+        .supportedFamilies([.systemMedium])
+        .contentMarginsDisabled()
+    }
+}
+
+@main
+struct FingendaWidgetBundle: WidgetBundle {
+    var body: some Widget {
+        FingendaReferenceTodayWidget()
+        FingendaReferenceSavingsWidget()
+        FingendaReferenceAgendaWidget()
+        FingendaReferenceMarketsWidget()
+        FingendaReferenceInstallmentWidget()
+        FingendaReferenceQuickAddWidget()
+        FingendaReferenceRecentWidget()
     }
 }
 
