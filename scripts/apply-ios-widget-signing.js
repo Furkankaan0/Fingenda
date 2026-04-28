@@ -227,12 +227,19 @@ function main() {
     : false;
 
   if (!widgetHasAppGroups || !appHasAppGroups) {
-    log(
-      `App Group entitlement fallback aktif. Beklenen grup: ${APP_GROUP_ID} | app=${appHasAppGroups} widget=${widgetHasAppGroups}`
+    throw new Error(
+      [
+        `Widget verisi calismasi icin App Group zorunlu: ${APP_GROUP_ID}`,
+        `App profile App Groups: ${appHasAppGroups ? 'OK' : 'EKSIK'}`,
+        `Widget profile App Groups: ${widgetHasAppGroups ? 'OK' : 'EKSIK'}`,
+        'Apple Developer > Identifiers icinde hem com.fingenda.app hem com.fingenda.app.widget icin App Groups acik olmali.',
+        `Iki App ID de ayni App Group'u icermeli: ${APP_GROUP_ID}`,
+        'Ardindan App Store provisioning profile dosyalarini yeniden olusturup Codemagic signing files icine tekrar yukleyin/fetch edin.'
+      ].join('\\n')
     );
-  } else {
-    log(`App Group entitlement bulundu: ${APP_GROUP_ID}`);
   }
+
+  log(`App Group entitlement bulundu: ${APP_GROUP_ID}`);
 
   applyProfileToWidgetTarget(widgetProfile, {
     widgetHasAppGroups,

@@ -514,9 +514,43 @@ public class FingendaWidgetRefreshPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "FingendaWidgetRefreshPlugin"
     public let jsName = "FingendaWidgetRefresh"
     public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "saveSnapshot", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "reloadTimelines", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "reloadTimelineKind", returnType: CAPPluginReturnPromise)
     ]
+
+    @objc func saveSnapshot(_ call: CAPPluginCall) {
+        let group = call.getString("group") ?? defaultAppGroup()
+        let payloadJson = call.getString("payloadJson") ?? "{}"
+
+        guard let defaults = UserDefaults(suiteName: group) else {
+            call.reject("App Group UserDefaults could not be opened: \\(group)")
+            return
+        }
+
+        let snapshotKeys = [
+            "widget_snapshot_v2",
+            "widget_snapshot_v1",
+            "fingenda_widget_snapshot"
+        ]
+
+        snapshotKeys.forEach { key in
+            defaults.set(payloadJson, forKey: key)
+        }
+        defaults.set(Date().timeIntervalSince1970, forKey: "widget_native_last_sync")
+        defaults.synchronize()
+
+        if #available(iOS 14.0, *) {
+            DispatchQueue.main.async {
+                WidgetCenter.shared.reloadAllTimelines()
+            }
+        }
+
+        call.resolve([
+            "saved": true,
+            "group": group
+        ])
+    }
 
     @objc func reloadTimelines(_ call: CAPPluginCall) {
         if #available(iOS 14.0, *) {
@@ -538,6 +572,11 @@ public class FingendaWidgetRefreshPlugin: CAPPlugin, CAPBridgedPlugin {
             "reloaded": true,
             "kind": kind
         ])
+    }
+
+    private func defaultAppGroup() -> String {
+        let bundleId = Bundle.main.bundleIdentifier ?? "com.fingenda.app"
+        return "group.\\(bundleId)"
     }
 }
 
