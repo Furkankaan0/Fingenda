@@ -16,6 +16,7 @@ const WWW = path.join(ROOT, 'www');
 // Files and directories copied into www/
 const COPY_LIST = [
     'index.html',
+    'fingenda-core.js',
     'dna-performance-runtime.js',
     'dna-refresh-core.js',
     'dna-refresh-ui.js',

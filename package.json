@@ -6,6 +6,7 @@
   "scripts": {
     "start": "npx serve www",
     "build": "node scripts/build.js",
+    "check:release": "node scripts/quality-check.js",
     "cap:init": "npx cap init Fingenda com.fingenda.app --web-dir www",
     "cap:add:ios": "npx cap add ios",
     "cap:sync": "npx cap sync",

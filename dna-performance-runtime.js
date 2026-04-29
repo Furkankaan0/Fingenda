@@ -4,67 +4,16 @@
     if (window.__dnaPerfRuntimeLoaded) return;
     window.__dnaPerfRuntimeLoaded = true;
 
-    const CATEGORY_FALLBACK_ICON = '✨';
-
-    const categoryEmojis = {
-        'Market': '🛒',
-        'Yeme-İçme': '🍽️',
-        'Ulaşım': '🚕',
-        'Fatura': '🧾',
-        'Sağlık': '💊',
-        'Eğlence': '🍿',
-        'Giyim': '👕',
-        'Eğitim': '🎓',
-        'Kira': '🏠',
-        'Teknoloji': '💻',
-        'Spor': '🏃',
-        'Hediye': '🎁',
-        'Birikim': '💎',
-        'Yatırım': '📈',
-        'Kredi': '💳',
-        'Aidat': '🏢',
-        'Döviz': '💱',
-        'Altın': '🥇',
-        'Taksit': '💳',
-        'Diğer': CATEGORY_FALLBACK_ICON
+    const core = window.FingendaCore;
+    const getPremiumCategoryIcon = core?.getCategoryIcon || function fallbackCategoryIcon(category) {
+        const categoryText = String(category || '').toLocaleLowerCase('tr-TR');
+        if (categoryText.includes('market')) return '🛒';
+        if (categoryText.includes('kredi') || categoryText.includes('kart')) return '💳';
+        if (categoryText.includes('aidat')) return '🏢';
+        if (categoryText.includes('sağlık') || categoryText.includes('saglik')) return '💊';
+        if (categoryText.includes('eğlence') || categoryText.includes('eglence')) return '🍿';
+        return '✨';
     };
-
-    function normalizeCategoryName(category) {
-        return String(category || '')
-            .normalize('NFKD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/[^\p{L}\p{N}\s]/gu, ' ')
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLocaleLowerCase('tr-TR');
-    }
-
-    function getPremiumCategoryIcon(category) {
-        const raw = String(category || '').trim();
-        if (categoryEmojis[raw]) return categoryEmojis[raw];
-
-        const normalized = normalizeCategoryName(raw);
-        const rules = [
-            [/kredi|kart|borc|borç|loan|credit/, '💳'],
-            [/aidat|apartman|site|yonetim|yönetim/, '🏢'],
-            [/market|bakkal|gida|gıda|alisveris|alışveriş|grocer/, '🛒'],
-            [/saglik|sağlık|eczane|hastane|ilac|ilaç/, '💊'],
-            [/eglence|eğlence|sinema|konser|netflix|spotify|oyun/, '🍿'],
-            [/ulasim|ulaşım|taksi|otobus|otobüs|metro|yakit|yakıt|benzin|arac|araç/, '🚕'],
-            [/yeme|icme|içme|restoran|kahve|cafe|food/, '🍽️'],
-            [/giyim|kiyafet|moda/, '👕'],
-            [/egitim|eğitim|okul|kurs|kitap/, '🎓'],
-            [/kira|ev|konut/, '🏠'],
-            [/teknoloji|telefon|bilgisayar|cihaz/, '💻'],
-            [/spor|fitness|gym/, '🏃'],
-            [/hediye/, '🎁'],
-            [/birikim|hedef|kumbara|savings/, '💎'],
-            [/yatirim|yatırım|hisse|borsa|fon|altin|altın|doviz|döviz/, '📈'],
-            [/fatura|elektrik|su|dogalgaz|doğalgaz|internet|abonelik/, '🧾']
-        ];
-        const matched = rules.find(([pattern]) => pattern.test(normalized));
-        return matched ? matched[1] : CATEGORY_FALLBACK_ICON;
-    }
 
     window.getPremiumCategoryIcon = getPremiumCategoryIcon;
 
