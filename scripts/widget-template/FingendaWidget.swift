@@ -1935,7 +1935,11 @@ private struct ReferenceWidgetShell<Content: View>: View {
             RoundedRectangle(cornerRadius: 25, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [theme.cardTop, theme.cardBottom],
+                        colors: [
+                            theme.cardTop,
+                            theme.isDark ? theme.cardBottom : Color(red: 0.92, green: 0.96, blue: 1.00),
+                            theme.cardBottom
+                        ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -1960,12 +1964,27 @@ private struct ReferenceWidgetShell<Content: View>: View {
 
             content(theme)
                 .padding(padding)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         }
         .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 25, style: .continuous)
                 .stroke(theme.cardStroke, lineWidth: 1)
         )
+        .overlay(alignment: .topLeading) {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(
+                    LinearGradient(
+                        colors: [Color.white.opacity(theme.isDark ? 0.20 : 0.62), .clear],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
+                .padding(1)
+                .allowsHitTesting(false)
+        }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .shadow(color: theme.softShadow, radius: theme.isDark ? 11 : 12, x: 0, y: 8)
         .containerBackground(for: .widget) {
@@ -2047,6 +2066,37 @@ private struct ReferenceEmptyState: View {
     }
 }
 
+private struct ReferenceMetricPill: View {
+    let title: String
+    let value: String
+    let tint: Color
+    let theme: ReferenceWidgetTheme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.system(size: 8, weight: .semibold, design: .rounded))
+                .foregroundStyle(theme.textSecondary)
+                .lineLimit(1)
+            Text(value)
+                .font(.system(size: 13, weight: .heavy, design: .rounded))
+                .foregroundStyle(tint)
+                .lineLimit(1)
+                .minimumScaleFactor(0.58)
+        }
+        .frame(maxWidth: .infinity, minHeight: 32, alignment: .leading)
+        .padding(.horizontal, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(theme.isDark ? Color.white.opacity(0.065) : Color.white.opacity(0.60))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(theme.cardStroke.opacity(theme.isDark ? 0.75 : 0.55), lineWidth: 0.8)
+                )
+        )
+    }
+}
+
 private struct ReferenceIcon3D: View {
     let symbol: String
     let tint: Color
@@ -2055,10 +2105,16 @@ private struct ReferenceIcon3D: View {
 
     var body: some View {
         ZStack {
+            RoundedRectangle(cornerRadius: size * 0.30, style: .continuous)
+                .fill(tint.opacity(0.22))
+                .frame(width: size * 0.86, height: size * 0.86)
+                .blur(radius: size * 0.18)
+                .offset(y: size * 0.16)
+
             RoundedRectangle(cornerRadius: size * 0.25, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [tint.opacity(0.92), tint.opacity(0.58), Color.white.opacity(0.20)],
+                        colors: [Color.white.opacity(0.34), tint.opacity(0.94), tint.opacity(0.64)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -2066,11 +2122,23 @@ private struct ReferenceIcon3D: View {
                 .shadow(color: tint.opacity(0.32), radius: 9, x: 0, y: 7)
 
             RoundedRectangle(cornerRadius: size * 0.25, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.50), Color.white.opacity(0.04), Color.black.opacity(0.10)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .padding(size * 0.08)
+                .blendMode(.screen)
+
+            RoundedRectangle(cornerRadius: size * 0.25, style: .continuous)
                 .stroke(Color.white.opacity(0.36), lineWidth: 1)
 
             if system {
                 Image(systemName: symbol)
                     .font(.system(size: size * 0.42, weight: .heavy))
+                    .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(.white)
                     .shadow(color: .black.opacity(0.22), radius: 2, x: 0, y: 1)
             } else {
@@ -2080,6 +2148,7 @@ private struct ReferenceIcon3D: View {
             }
         }
         .frame(width: size, height: size)
+        .compositingGroup()
     }
 }
 
@@ -2244,7 +2313,7 @@ private struct ReferenceGlobe: View {
                 .font(.system(size: 34, weight: .semibold))
                 .foregroundStyle(Color.white.opacity(0.26))
         }
-        .frame(width: 86, height: 86)
+        .frame(width: 78, height: 78)
     }
 }
 
@@ -2254,17 +2323,20 @@ private struct ReferenceActionItem: View {
     let symbol: String
     let tint: Color
     let destination: URL
+    var iconSize: CGFloat = 38
+    var labelSize: CGFloat = 10
 
     var body: some View {
         let theme = ReferenceWidgetTheme.current(for: colorScheme)
 
         Link(destination: destination) {
-            VStack(spacing: 7) {
-                ReferenceIcon3D(symbol: symbol, tint: tint, size: 43)
+            VStack(spacing: 5) {
+                ReferenceIcon3D(symbol: symbol, tint: tint, size: iconSize)
                 Text(title)
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .font(.system(size: labelSize, weight: .semibold, design: .rounded))
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.72)
             }
             .frame(maxWidth: .infinity)
         }
@@ -2294,56 +2366,47 @@ private struct ReferenceTodayWidgetView: View {
     var body: some View {
         let theme = ReferenceWidgetTheme.current(for: colorScheme)
 
-        ReferenceWidgetShell(padding: 14) { theme in
-            VStack(alignment: .leading, spacing: 9) {
+        ReferenceWidgetShell(padding: 12) { theme in
+            VStack(alignment: .leading, spacing: 5) {
                 ReferenceHeader(title: "Bugün", systemImage: "calendar")
                     .foregroundStyle(theme.textPrimary)
 
                 if !entry.snapshot.hasTodayFinancialData {
                     ReferenceEmptyState(title: "Henüz veri yok", subtitle: "İlk işlemini eklediğinde bugün kartı dolacak.", theme: theme)
                 } else {
-                    HStack(alignment: .top) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Gelir")
-                                .font(.system(size: 10, weight: .medium, design: .rounded))
-                                .foregroundStyle(theme.textSecondary)
-                            Text(WidgetFormat.currency(entry.snapshot.dailyIncome, code: entry.snapshot.currencyCode))
-                                .font(.system(size: 16, weight: .heavy, design: .rounded))
-                                .foregroundStyle(theme.green)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.58)
-                        }
-
-                        Spacer(minLength: 8)
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Gider")
-                                .font(.system(size: 10, weight: .medium, design: .rounded))
-                                .foregroundStyle(theme.textSecondary)
-                            Text(WidgetFormat.currency(entry.snapshot.dailyExpense, code: entry.snapshot.currencyCode))
-                                .font(.system(size: 16, weight: .heavy, design: .rounded))
-                                .foregroundStyle(theme.red)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.58)
-                        }
+                    HStack(spacing: 6) {
+                        ReferenceMetricPill(
+                            title: "Gelir",
+                            value: WidgetFormat.currency(entry.snapshot.dailyIncome, code: entry.snapshot.currencyCode),
+                            tint: theme.green,
+                            theme: theme
+                        )
+                        ReferenceMetricPill(
+                            title: "Gider",
+                            value: WidgetFormat.currency(entry.snapshot.dailyExpense, code: entry.snapshot.currencyCode),
+                            tint: theme.red,
+                            theme: theme
+                        )
                     }
 
                     Rectangle()
                         .fill(theme.hairline)
                         .frame(height: 1)
 
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 1) {
                         Text("Kalan")
-                            .font(.system(size: 10, weight: .medium, design: .rounded))
+                            .font(.system(size: 9, weight: .medium, design: .rounded))
                             .foregroundStyle(theme.textSecondary)
                         Text(WidgetFormat.currency(entry.snapshot.dailyBalance, code: entry.snapshot.currencyCode))
-                            .font(.system(size: 17, weight: .heavy, design: .rounded))
+                            .font(.system(size: 16, weight: .heavy, design: .rounded))
                             .foregroundStyle(theme.textPrimary)
                             .lineLimit(1)
+                            .minimumScaleFactor(0.62)
                     }
 
                     ReferenceWaveChart(theme: theme)
-                        .frame(height: 58)
+                        .frame(height: 34)
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
             }
         }
@@ -2362,8 +2425,8 @@ private struct ReferenceSavingsWidgetView: View {
         let targetText = snapshot.savingsTarget > 0.01 ? WidgetFormat.currency(snapshot.savingsTarget, code: snapshot.currencyCode) : "Hedef yok"
         let dateText = snapshot.goalTargetDate.map { WidgetFormat.mediumDate($0) } ?? "Tarih belirlenmedi"
 
-        ReferenceWidgetShell(padding: 15) { theme in
-            HStack(spacing: 12) {
+        ReferenceWidgetShell(padding: 14) { theme in
+            HStack(spacing: 10) {
                 VStack(alignment: .leading, spacing: 10) {
                     ReferenceHeader(title: "Hedef Birikimim", systemImage: "target", showsDots: true)
                         .foregroundStyle(theme.textPrimary)
@@ -2383,6 +2446,7 @@ private struct ReferenceSavingsWidgetView: View {
                             .font(.system(size: 11, weight: .medium, design: .rounded))
                             .foregroundStyle(theme.textSecondary)
                             .lineLimit(1)
+                            .minimumScaleFactor(0.60)
                     }
 
                     HStack(spacing: 7) {
@@ -2403,6 +2467,7 @@ private struct ReferenceSavingsWidgetView: View {
                             .minimumScaleFactor(0.72)
                     }
                 }
+                .layoutPriority(1)
 
                 Spacer(minLength: 2)
 
@@ -2422,13 +2487,13 @@ private struct ReferenceSavingsWidgetView: View {
                         .shadow(color: theme.purple.opacity(0.22), radius: 14, x: 0, y: 10)
 
                     VStack(spacing: 7) {
-                        ReferenceIcon3D(symbol: "target", tint: theme.purple, size: 58)
+                        ReferenceIcon3D(symbol: "target", tint: theme.purple, size: 50)
                         Image(systemName: hasGoal ? "checkmark.seal.fill" : "plus.circle.fill")
                             .font(.system(size: 22, weight: .semibold))
                             .foregroundStyle(hasGoal ? theme.green : theme.textSecondary)
                     }
                 }
-                .frame(width: 120, height: 130)
+                .frame(width: 104, height: 124)
             }
         }
         .widgetURL(WidgetDeepLinks.url(for: .savings))
@@ -2579,12 +2644,15 @@ private struct ReferenceMarketsWidgetView: View {
                 ReferenceGlobe(theme: theme)
                     .overlay(alignment: .topTrailing) {
                         ReferenceCoinBadge(text: "$", tint: theme.green)
-                            .offset(x: 12, y: -6)
+                            .scaleEffect(0.82)
+                            .offset(x: 4, y: 1)
                     }
                     .overlay(alignment: .bottomTrailing) {
                         ReferenceCoinBadge(text: "▰", tint: theme.gold)
-                            .offset(x: 12, y: 7)
+                            .scaleEffect(0.82)
+                            .offset(x: 4, y: -1)
                     }
+                    .frame(width: 88, height: 88)
             }
         }
         .widgetURL(WidgetDeepLinks.url(for: .custom("fingenda://market")))
@@ -2631,11 +2699,13 @@ private struct ReferenceMarketRow: View {
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.78)
                 Spacer(minLength: 6)
                 Text(value)
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.70)
                 HStack(spacing: 2) {
                     Image(systemName: hasChange ? "triangle.fill" : "minus")
                         .font(.system(size: 6, weight: .bold))
@@ -2644,7 +2714,7 @@ private struct ReferenceMarketRow: View {
                         .font(.system(size: 10, weight: .bold, design: .rounded))
                 }
                 .foregroundStyle(hasChange ? (isPositive ? theme.green : theme.red) : theme.textSecondary)
-                .frame(width: 54, alignment: .trailing)
+                .frame(width: 48, alignment: .trailing)
             }
             .padding(.vertical, 2)
         }
@@ -2664,6 +2734,8 @@ private struct ReferenceCoinBadge: View {
                 .font(.system(size: 15, weight: .heavy, design: .rounded))
                 .foregroundStyle(.white)
                 .lineLimit(1)
+                .minimumScaleFactor(0.55)
+                .padding(.horizontal, 3)
         }
         .frame(width: 30, height: 30)
     }
@@ -2685,8 +2757,8 @@ private struct ReferenceInstallmentWidgetView: View {
         let dueDateText = snapshot.sanitizedInstallmentNextDueDate.map { WidgetFormat.shortDate($0) } ?? "Tarih yok"
 
         ReferenceWidgetShell(padding: 14) { theme in
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 11) {
+            HStack(spacing: 10) {
+                VStack(alignment: .leading, spacing: 10) {
                     ReferenceHeader(title: "Taksit & Kredi", systemImage: "creditcard.fill", trailing: nil)
                         .foregroundStyle(theme.textPrimary)
 
@@ -2701,6 +2773,7 @@ private struct ReferenceInstallmentWidgetView: View {
                                     .font(.system(size: 16, weight: .heavy, design: .rounded))
                                     .foregroundStyle(theme.textPrimary)
                                     .lineLimit(1)
+                                    .minimumScaleFactor(0.62)
                                 if totalCount > 0 {
                                     Text("/ \(totalCount) ay")
                                         .font(.system(size: 10, weight: .medium, design: .rounded))
@@ -2732,6 +2805,7 @@ private struct ReferenceInstallmentWidgetView: View {
                         }
                     }
                 }
+                .layoutPriority(1)
 
                 Spacer(minLength: 4)
 
@@ -2751,7 +2825,7 @@ private struct ReferenceInstallmentWidgetView: View {
                         .shadow(color: theme.blue.opacity(0.20), radius: 12, x: 0, y: 9)
 
                     VStack(spacing: 8) {
-                        ReferenceIcon3D(symbol: "creditcard.fill", tint: theme.purple, size: 56)
+                        ReferenceIcon3D(symbol: "creditcard.fill", tint: theme.purple, size: 48)
                         Text(hasPlan ? "\(max(totalCount - paidCount, 0)) ay" : "Plan")
                             .font(.system(size: 12, weight: .heavy, design: .rounded))
                             .foregroundStyle(theme.textPrimary)
@@ -2760,7 +2834,7 @@ private struct ReferenceInstallmentWidgetView: View {
                             .background(Capsule(style: .continuous).fill(theme.cardTop.opacity(0.72)))
                     }
                 }
-                .frame(width: 116, height: 126)
+                .frame(width: 98, height: 122)
             }
         }
         .widgetURL(WidgetDeepLinks.url(for: .installments))
@@ -2771,8 +2845,8 @@ private struct ReferenceQuickAddWidgetView: View {
     let entry: FingendaWidgetEntry
 
     var body: some View {
-        ReferenceWidgetShell(padding: 15) { theme in
-            VStack(alignment: .leading, spacing: 16) {
+        ReferenceWidgetShell(padding: 14) { theme in
+            VStack(alignment: .leading, spacing: 10) {
                 Text("Hızlı Ekle")
                     .font(.system(size: 15, weight: .bold, design: .rounded))
                     .foregroundStyle(theme.textPrimary)
@@ -2781,9 +2855,12 @@ private struct ReferenceQuickAddWidgetView: View {
                     ReferenceActionItem(title: "Gelir", symbol: "arrow.down", tint: theme.green, destination: WidgetDeepLinks.url(for: .custom("fingenda://transaction/new?type=income")))
                     ReferenceActionItem(title: "Gider", symbol: "arrow.up", tint: theme.red, destination: WidgetDeepLinks.url(for: .custom("fingenda://transaction/new?type=expense")))
                     ReferenceActionItem(title: "Hedef", symbol: "target", tint: theme.violet, destination: WidgetDeepLinks.url(for: .savings))
+                }
+
+                HStack(spacing: 8) {
                     ReferenceActionItem(title: "Taksit", symbol: "creditcard.fill", tint: theme.purple, destination: WidgetDeepLinks.url(for: .installments))
                     ReferenceActionItem(title: "Not", symbol: "note.text", tint: theme.gold, destination: WidgetDeepLinks.url(for: .custom("fingenda://notes/new")))
-                    ReferenceActionItem(title: "Sesli Not", symbol: "mic.fill", tint: theme.blue, destination: WidgetDeepLinks.url(for: .custom("fingenda://voice-add")))
+                    ReferenceActionItem(title: "Ses", symbol: "mic.fill", tint: theme.blue, destination: WidgetDeepLinks.url(for: .custom("fingenda://voice-add")))
                 }
             }
         }
@@ -2796,13 +2873,13 @@ private struct ReferenceRecentWidgetView: View {
 
     var body: some View {
         ReferenceWidgetShell(padding: 14) { theme in
-            VStack(alignment: .leading, spacing: 15) {
+            VStack(alignment: .leading, spacing: 12) {
                 ReferenceHeader(title: "Son Kayıtlarım", systemImage: "calendar", showsDots: true)
                     .foregroundStyle(theme.textPrimary)
 
                 if let item = ReferenceWidgetData.recentItem(from: entry.snapshot) {
-                    HStack(spacing: 13) {
-                        ReferenceIcon3D(symbol: item.categoryIcon, tint: theme.purple, size: 50)
+                    HStack(spacing: 10) {
+                        ReferenceIcon3D(symbol: item.categoryIcon, tint: theme.purple, size: 44)
 
                         VStack(alignment: .leading, spacing: 3) {
                             Text(item.title)
@@ -2818,9 +2895,10 @@ private struct ReferenceRecentWidgetView: View {
                         Spacer(minLength: 4)
 
                         Text(WidgetFormat.currency(item.amount, code: entry.snapshot.currencyCode))
-                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .font(.system(size: 11, weight: .bold, design: .rounded))
                             .foregroundStyle(theme.red)
                             .lineLimit(1)
+                            .minimumScaleFactor(0.72)
 
                         ReferenceAudioBars(theme: theme)
 
@@ -2828,10 +2906,10 @@ private struct ReferenceRecentWidgetView: View {
                             ZStack {
                                 Circle()
                                     .fill(theme.isDark ? Color.white.opacity(0.08) : Color(red: 0.88, green: 0.92, blue: 1.0))
-                                    .frame(width: 48, height: 48)
+                                    .frame(width: 40, height: 40)
                                     .overlay(Circle().stroke(theme.cardStroke, lineWidth: 1))
                                 Image(systemName: "play.fill")
-                                    .font(.system(size: 20, weight: .bold))
+                                    .font(.system(size: 17, weight: .bold))
                                     .foregroundStyle(theme.purple)
                             }
                         }
@@ -2861,7 +2939,7 @@ private struct ReferenceAudioBars: View {
                     .frame(width: 3, height: 28 * value)
             }
         }
-        .frame(width: 52, height: 34)
+        .frame(width: 42, height: 32)
     }
 }
 
