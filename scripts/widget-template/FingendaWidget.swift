@@ -120,6 +120,14 @@ private struct FingendaWidgetSnapshot: Codable, Hashable {
         dailyIncome > 0.01 || dailyExpense > 0.01 || abs(dailyBalance) > 0.01
     }
 
+    var hasMonthlyIncomeExpenseData: Bool {
+        monthlyIncome > 0.01 || monthlyExpense > 0.01 || abs(monthlyBalance) > 0.01
+    }
+
+    var monthlyBalance: Double {
+        monthlyIncome - monthlyExpense
+    }
+
     var normalizedSavingsProgress: Double {
         if savingsProgress > 1 {
             return clamp(savingsProgress / 100.0, min: 0, max: 1)
@@ -2368,22 +2376,22 @@ private struct ReferenceTodayWidgetView: View {
 
         ReferenceWidgetShell(padding: 12) { theme in
             VStack(alignment: .leading, spacing: 5) {
-                ReferenceHeader(title: "Bugün", systemImage: "calendar")
+                ReferenceHeader(title: "Bu Ay", systemImage: "calendar")
                     .foregroundStyle(theme.textPrimary)
 
-                if !entry.snapshot.hasTodayFinancialData {
-                    ReferenceEmptyState(title: "Henüz veri yok", subtitle: "İlk işlemini eklediğinde bugün kartı dolacak.", theme: theme)
+                if !entry.snapshot.hasMonthlyIncomeExpenseData {
+                    ReferenceEmptyState(title: "Henüz veri yok", subtitle: "Bu ay ilk işlemini eklediğinde kart otomatik güncellenecek.", theme: theme)
                 } else {
                     HStack(spacing: 6) {
                         ReferenceMetricPill(
                             title: "Gelir",
-                            value: WidgetFormat.currency(entry.snapshot.dailyIncome, code: entry.snapshot.currencyCode),
+                            value: WidgetFormat.currency(entry.snapshot.monthlyIncome, code: entry.snapshot.currencyCode),
                             tint: theme.green,
                             theme: theme
                         )
                         ReferenceMetricPill(
                             title: "Gider",
-                            value: WidgetFormat.currency(entry.snapshot.dailyExpense, code: entry.snapshot.currencyCode),
+                            value: WidgetFormat.currency(entry.snapshot.monthlyExpense, code: entry.snapshot.currencyCode),
                             tint: theme.red,
                             theme: theme
                         )
@@ -2397,7 +2405,7 @@ private struct ReferenceTodayWidgetView: View {
                         Text("Kalan")
                             .font(.system(size: 9, weight: .medium, design: .rounded))
                             .foregroundStyle(theme.textSecondary)
-                        Text(WidgetFormat.currency(entry.snapshot.dailyBalance, code: entry.snapshot.currencyCode))
+                        Text(WidgetFormat.currency(entry.snapshot.monthlyBalance, code: entry.snapshot.currencyCode))
                             .font(.system(size: 16, weight: .heavy, design: .rounded))
                             .foregroundStyle(theme.textPrimary)
                             .lineLimit(1)
@@ -2951,8 +2959,8 @@ private struct FingendaReferenceTodayWidget: Widget {
         StaticConfiguration(kind: kind, provider: FingendaWidgetProvider()) { entry in
             ReferenceTodayWidgetView(entry: entry)
         }
-        .configurationDisplayName("Bugün")
-        .description("Gelir, gider ve kalan tutarını görsel dalga kartıyla takip et.")
+        .configurationDisplayName("Bu Ay")
+        .description("Bu ayki gelir, gider ve kalan tutarını görsel dalga kartıyla takip et.")
         .supportedFamilies([.systemSmall])
         .contentMarginsDisabled()
     }

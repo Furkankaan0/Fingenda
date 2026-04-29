@@ -169,11 +169,11 @@ function checkWidgetSnapshotContract() {
         'Recent widget should show an empty state when there are no real todayEvents.'
     );
     assert(
-        widgetSwift.includes('hasTodayFinancialData') &&
-        widgetSwift.includes('entry.snapshot.dailyIncome') &&
-        widgetSwift.includes('entry.snapshot.dailyExpense') &&
-        widgetSwift.includes('entry.snapshot.dailyBalance'),
-        'Today widget must use daily totals instead of monthly totals.'
+        widgetSwift.includes('hasMonthlyIncomeExpenseData') &&
+        widgetSwift.includes('entry.snapshot.monthlyIncome') &&
+        widgetSwift.includes('entry.snapshot.monthlyExpense') &&
+        widgetSwift.includes('entry.snapshot.monthlyBalance'),
+        'Monthly income/expense widget must use current-month totals.'
     );
 }
 
