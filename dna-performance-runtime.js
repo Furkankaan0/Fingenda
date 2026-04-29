@@ -4,23 +4,69 @@
     if (window.__dnaPerfRuntimeLoaded) return;
     window.__dnaPerfRuntimeLoaded = true;
 
+    const CATEGORY_FALLBACK_ICON = '✨';
+
     const categoryEmojis = {
         'Market': '🛒',
         'Yeme-İçme': '🍽️',
-        'Ulaşım': '🚗',
-        'Fatura': '📄',
+        'Ulaşım': '🚕',
+        'Fatura': '🧾',
         'Sağlık': '💊',
-        'Eğlence': '🎬',
+        'Eğlence': '🍿',
         'Giyim': '👕',
-        'Eğitim': '📚',
+        'Eğitim': '🎓',
         'Kira': '🏠',
         'Teknoloji': '💻',
-        'Spor': '🏋️',
+        'Spor': '🏃',
         'Hediye': '🎁',
-        'Birikim': '💰',
+        'Birikim': '💎',
         'Yatırım': '📈',
-        'Diğer': '📌'
+        'Kredi': '💳',
+        'Aidat': '🏢',
+        'Döviz': '💱',
+        'Altın': '🥇',
+        'Taksit': '💳',
+        'Diğer': CATEGORY_FALLBACK_ICON
     };
+
+    function normalizeCategoryName(category) {
+        return String(category || '')
+            .normalize('NFKD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .toLocaleLowerCase('tr-TR');
+    }
+
+    function getPremiumCategoryIcon(category) {
+        const raw = String(category || '').trim();
+        if (categoryEmojis[raw]) return categoryEmojis[raw];
+
+        const normalized = normalizeCategoryName(raw);
+        const rules = [
+            [/kredi|kart|borc|borç|loan|credit/, '💳'],
+            [/aidat|apartman|site|yonetim|yönetim/, '🏢'],
+            [/market|bakkal|gida|gıda|alisveris|alışveriş|grocer/, '🛒'],
+            [/saglik|sağlık|eczane|hastane|ilac|ilaç/, '💊'],
+            [/eglence|eğlence|sinema|konser|netflix|spotify|oyun/, '🍿'],
+            [/ulasim|ulaşım|taksi|otobus|otobüs|metro|yakit|yakıt|benzin|arac|araç/, '🚕'],
+            [/yeme|icme|içme|restoran|kahve|cafe|food/, '🍽️'],
+            [/giyim|kiyafet|moda/, '👕'],
+            [/egitim|eğitim|okul|kurs|kitap/, '🎓'],
+            [/kira|ev|konut/, '🏠'],
+            [/teknoloji|telefon|bilgisayar|cihaz/, '💻'],
+            [/spor|fitness|gym/, '🏃'],
+            [/hediye/, '🎁'],
+            [/birikim|hedef|kumbara|savings/, '💎'],
+            [/yatirim|yatırım|hisse|borsa|fon|altin|altın|doviz|döviz/, '📈'],
+            [/fatura|elektrik|su|dogalgaz|doğalgaz|internet|abonelik/, '🧾']
+        ];
+        const matched = rules.find(([pattern]) => pattern.test(normalized));
+        return matched ? matched[1] : CATEGORY_FALLBACK_ICON;
+    }
+
+    window.getPremiumCategoryIcon = getPremiumCategoryIcon;
 
     const personalities = {
         'Market': { icon: '🛒', title: 'Ev Ekonomisti', desc: 'Market ve ev ihtiyaçlarına öncelik veriyorsun. Planlı ve tutumlu bir alışverişçisin.', color: 'from-emerald-500 to-teal-600' },
@@ -238,7 +284,7 @@
             row.innerHTML = `
                 <div class="flex items-center gap-3">
                     <div class="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0" style="background:${gradient(index)}; box-shadow:0 4px 12px rgba(99,102,241,0.18);">
-                        <span class="filter drop-shadow-sm">${categoryEmojis[category] || '📌'}</span>
+                        <span class="filter drop-shadow-sm">${getPremiumCategoryIcon(category)}</span>
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between mb-1 gap-3">
