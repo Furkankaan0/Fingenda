@@ -61,6 +61,9 @@ private struct FingendaWidgetSnapshot: Codable, Hashable {
     let netBalance: Double
     let monthlyIncome: Double
     let monthlyExpense: Double
+    let dailyIncome: Double
+    let dailyExpense: Double
+    let dailyBalance: Double
     let remainingBudget: Double
     let savingsCurrent: Double
     let savingsTarget: Double
@@ -97,6 +100,9 @@ private struct FingendaWidgetSnapshot: Codable, Hashable {
         abs(netBalance) > 0.01
             || monthlyIncome > 0.01
             || monthlyExpense > 0.01
+            || dailyIncome > 0.01
+            || dailyExpense > 0.01
+            || abs(dailyBalance) > 0.01
             || savingsCurrent > 0.01
             || savingsTarget > 0.01
             || !goalTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -108,6 +114,10 @@ private struct FingendaWidgetSnapshot: Codable, Hashable {
 
     var hasInsight: Bool {
         !insightText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    var hasTodayFinancialData: Bool {
+        dailyIncome > 0.01 || dailyExpense > 0.01 || abs(dailyBalance) > 0.01
     }
 
     var normalizedSavingsProgress: Double {
@@ -146,6 +156,9 @@ private struct FingendaWidgetSnapshot: Codable, Hashable {
         netBalance: 24_800,
         monthlyIncome: 42_000,
         monthlyExpense: 17_200,
+        dailyIncome: 2_450,
+        dailyExpense: 1_320,
+        dailyBalance: 1_130,
         remainingBudget: 9_600,
         savingsCurrent: 31_000,
         savingsTarget: 50_000,
@@ -197,6 +210,9 @@ private struct FingendaWidgetSnapshot: Codable, Hashable {
         netBalance: 0,
         monthlyIncome: 0,
         monthlyExpense: 0,
+        dailyIncome: 0,
+        dailyExpense: 0,
+        dailyBalance: 0,
         remainingBudget: 0,
         savingsCurrent: 0,
         savingsTarget: 0,
@@ -250,6 +266,9 @@ private enum FingendaWidgetDataSource {
 
     private static let incomeKeys = ["widget_income_total", "income_total", "dashboard_income"]
     private static let expenseKeys = ["widget_expense_total", "expense_total", "dashboard_expense"]
+    private static let dailyIncomeKeys = ["widget_daily_income", "daily_income", "today_income"]
+    private static let dailyExpenseKeys = ["widget_daily_expense", "daily_expense", "today_expense"]
+    private static let dailyBalanceKeys = ["widget_daily_balance", "daily_balance", "today_balance"]
     private static let netBalanceKeys = ["widget_net_balance", "net_balance"]
     private static let remainingBudgetKeys = ["widget_remaining_budget", "remaining_budget"]
     private static let savingsCurrentKeys = ["widget_savings_current", "widget_savings_total", "savings_total"]
@@ -329,6 +348,25 @@ private enum FingendaWidgetDataSource {
         let date = parseDate(dict["date"]) ?? Date()
         let monthlyIncome = number(dict["monthlyIncome"], fallback: number(dict["income"]))
         let monthlyExpense = number(dict["monthlyExpense"], fallback: number(dict["expense"]))
+        let dailyIncome = readSnapshotNumber(
+            dict,
+            keys: ["dailyIncome", "todayIncome", "daily_income", "today_income"],
+            defaults: defaults,
+            fallbackKeys: dailyIncomeKeys
+        )
+        let dailyExpense = readSnapshotNumber(
+            dict,
+            keys: ["dailyExpense", "todayExpense", "daily_expense", "today_expense"],
+            defaults: defaults,
+            fallbackKeys: dailyExpenseKeys
+        )
+        let dailyBalance = readSnapshotNumber(
+            dict,
+            keys: ["dailyBalance", "todayBalance", "daily_balance", "today_balance"],
+            defaults: defaults,
+            fallbackKeys: dailyBalanceKeys,
+            fallback: dailyIncome - dailyExpense
+        )
 
         let netBalance = number(
             dict["netBalance"],
@@ -468,6 +506,9 @@ private enum FingendaWidgetDataSource {
             netBalance: netBalance,
             monthlyIncome: monthlyIncome,
             monthlyExpense: monthlyExpense,
+            dailyIncome: dailyIncome,
+            dailyExpense: dailyExpense,
+            dailyBalance: dailyBalance,
             remainingBudget: remainingBudget,
             savingsCurrent: savingsCurrent,
             savingsTarget: savingsTarget,
@@ -501,6 +542,9 @@ private enum FingendaWidgetDataSource {
     private static func snapshotFromFlatKeys(_ defaults: UserDefaults) -> FingendaWidgetSnapshot {
         let income = readNumber(defaults, keys: incomeKeys)
         let expense = readNumber(defaults, keys: expenseKeys)
+        let dailyIncome = readNumber(defaults, keys: dailyIncomeKeys)
+        let dailyExpense = readNumber(defaults, keys: dailyExpenseKeys)
+        let dailyBalance = readNumber(defaults, keys: dailyBalanceKeys, fallback: dailyIncome - dailyExpense)
         let net = readNumber(defaults, keys: netBalanceKeys, fallback: income - expense)
         let savingsCurrent = readNumber(defaults, keys: savingsCurrentKeys)
         let progress = readNumber(defaults, keys: savingsProgressKeys)
@@ -511,6 +555,9 @@ private enum FingendaWidgetDataSource {
             netBalance: net,
             monthlyIncome: income,
             monthlyExpense: expense,
+            dailyIncome: dailyIncome,
+            dailyExpense: dailyExpense,
+            dailyBalance: dailyBalance,
             remainingBudget: readNumber(defaults, keys: remainingBudgetKeys, fallback: income - expense),
             savingsCurrent: savingsCurrent,
             savingsTarget: target,
@@ -2252,7 +2299,7 @@ private struct ReferenceTodayWidgetView: View {
                 ReferenceHeader(title: "Bugün", systemImage: "calendar")
                     .foregroundStyle(theme.textPrimary)
 
-                if entry.effectiveState == .empty {
+                if !entry.snapshot.hasTodayFinancialData {
                     ReferenceEmptyState(title: "Henüz veri yok", subtitle: "İlk işlemini eklediğinde bugün kartı dolacak.", theme: theme)
                 } else {
                     HStack(alignment: .top) {
@@ -2260,7 +2307,7 @@ private struct ReferenceTodayWidgetView: View {
                             Text("Gelir")
                                 .font(.system(size: 10, weight: .medium, design: .rounded))
                                 .foregroundStyle(theme.textSecondary)
-                            Text(WidgetFormat.currency(entry.snapshot.monthlyIncome, code: entry.snapshot.currencyCode))
+                            Text(WidgetFormat.currency(entry.snapshot.dailyIncome, code: entry.snapshot.currencyCode))
                                 .font(.system(size: 16, weight: .heavy, design: .rounded))
                                 .foregroundStyle(theme.green)
                                 .lineLimit(1)
@@ -2273,7 +2320,7 @@ private struct ReferenceTodayWidgetView: View {
                             Text("Gider")
                                 .font(.system(size: 10, weight: .medium, design: .rounded))
                                 .foregroundStyle(theme.textSecondary)
-                            Text(WidgetFormat.currency(entry.snapshot.monthlyExpense, code: entry.snapshot.currencyCode))
+                            Text(WidgetFormat.currency(entry.snapshot.dailyExpense, code: entry.snapshot.currencyCode))
                                 .font(.system(size: 16, weight: .heavy, design: .rounded))
                                 .foregroundStyle(theme.red)
                                 .lineLimit(1)
@@ -2289,7 +2336,7 @@ private struct ReferenceTodayWidgetView: View {
                         Text("Kalan")
                             .font(.system(size: 10, weight: .medium, design: .rounded))
                             .foregroundStyle(theme.textSecondary)
-                        Text(WidgetFormat.currency(entry.snapshot.remainingBudget, code: entry.snapshot.currencyCode))
+                        Text(WidgetFormat.currency(entry.snapshot.dailyBalance, code: entry.snapshot.currencyCode))
                             .font(.system(size: 17, weight: .heavy, design: .rounded))
                             .foregroundStyle(theme.textPrimary)
                             .lineLimit(1)

@@ -74,6 +74,9 @@ function checkWidgetSnapshotContract() {
     const payloadFields = [
         'monthlyIncome',
         'monthlyExpense',
+        'dailyIncome',
+        'dailyExpense',
+        'dailyBalance',
         'savingsCurrent',
         'savingsTarget',
         'savingsProgress',
@@ -97,6 +100,9 @@ function checkWidgetSnapshotContract() {
     const sharedKeys = [
         'widget_income_total',
         'widget_expense_total',
+        'widget_daily_income',
+        'widget_daily_expense',
+        'widget_daily_balance',
         'widget_savings_total',
         'widget_goal_title',
         'widget_goal_target_date',
@@ -116,12 +122,18 @@ function checkWidgetSnapshotContract() {
     const swiftContracts = [
         'let goalTitle: String',
         'let goalTargetDate: Date?',
+        'let dailyIncome: Double',
+        'let dailyExpense: Double',
+        'let dailyBalance: Double',
         'let installmentTitle: String',
         'let installmentNextDueDate: Date?',
         'let usdTry: Double',
         'let eurTry: Double',
         'let gramGoldTry: Double',
         'private static let goalTitleKeys',
+        'private static let dailyIncomeKeys',
+        'private static let dailyExpenseKeys',
+        'private static let dailyBalanceKeys',
         'private static let installmentTitleKeys',
         'private static let usdTryKeys',
         'private static let eurTryKeys',
@@ -155,6 +167,13 @@ function checkWidgetSnapshotContract() {
     assert(
         widgetSwift.includes('ReferenceEmptyState(') && widgetSwift.includes('Henüz kayıt yok'),
         'Recent widget should show an empty state when there are no real todayEvents.'
+    );
+    assert(
+        widgetSwift.includes('hasTodayFinancialData') &&
+        widgetSwift.includes('entry.snapshot.dailyIncome') &&
+        widgetSwift.includes('entry.snapshot.dailyExpense') &&
+        widgetSwift.includes('entry.snapshot.dailyBalance'),
+        'Today widget must use daily totals instead of monthly totals.'
     );
 }
 
