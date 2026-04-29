@@ -2234,15 +2234,8 @@ private enum ReferenceWidgetData {
         return []
     }
 
-    static func recentItem(from snapshot: FingendaWidgetSnapshot) -> WidgetTodayEvent {
-        snapshot.todayEvents.first ?? WidgetTodayEvent(
-            id: "recent-coffee",
-            title: "Kahve",
-            amount: snapshot.monthlyExpense > 0 ? min(snapshot.monthlyExpense, 75) : 75,
-            time: "Bugün · Gıda",
-            categoryIcon: "cup.and.saucer.fill",
-            deepLink: "fingenda://transactions?filter=monthly"
-        )
+    static func recentItem(from snapshot: FingendaWidgetSnapshot) -> WidgetTodayEvent? {
+        snapshot.todayEvents.first
     }
 }
 
@@ -2755,54 +2748,54 @@ private struct ReferenceRecentWidgetView: View {
     let entry: FingendaWidgetEntry
 
     var body: some View {
-        let item = ReferenceWidgetData.recentItem(from: entry.snapshot)
-
         ReferenceWidgetShell(padding: 14) { theme in
             VStack(alignment: .leading, spacing: 15) {
                 ReferenceHeader(title: "Son Kayıtlarım", systemImage: "calendar", showsDots: true)
                     .foregroundStyle(theme.textPrimary)
 
-                HStack(spacing: 13) {
-                    Text("☕️")
-                        .font(.system(size: 47))
-                        .frame(width: 56, height: 56)
-                        .background(
-                            Circle()
-                                .fill(theme.isDark ? Color.white.opacity(0.07) : Color.white.opacity(0.48))
-                        )
+                if let item = ReferenceWidgetData.recentItem(from: entry.snapshot) {
+                    HStack(spacing: 13) {
+                        ReferenceIcon3D(symbol: item.categoryIcon, tint: theme.purple, size: 50)
 
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(item.title)
-                            .font(.system(size: 13, weight: .bold, design: .rounded))
-                            .foregroundStyle(theme.textPrimary)
-                            .lineLimit(1)
-                        Text(item.time)
-                            .font(.system(size: 11, weight: .medium, design: .rounded))
-                            .foregroundStyle(theme.textSecondary)
-                            .lineLimit(1)
-                    }
-
-                    Spacer(minLength: 4)
-
-                    Text(WidgetFormat.currency(item.amount, code: entry.snapshot.currencyCode))
-                        .font(.system(size: 12, weight: .bold, design: .rounded))
-                        .foregroundStyle(theme.red)
-                        .lineLimit(1)
-
-                    ReferenceAudioBars(theme: theme)
-
-                    Link(destination: item.resolvedURL) {
-                        ZStack {
-                            Circle()
-                                .fill(theme.isDark ? Color.white.opacity(0.08) : Color(red: 0.88, green: 0.92, blue: 1.0))
-                                .frame(width: 48, height: 48)
-                                .overlay(Circle().stroke(theme.cardStroke, lineWidth: 1))
-                            Image(systemName: "play.fill")
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundStyle(theme.purple)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(item.title)
+                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                .foregroundStyle(theme.textPrimary)
+                                .lineLimit(1)
+                            Text(item.time)
+                                .font(.system(size: 11, weight: .medium, design: .rounded))
+                                .foregroundStyle(theme.textSecondary)
+                                .lineLimit(1)
                         }
+
+                        Spacer(minLength: 4)
+
+                        Text(WidgetFormat.currency(item.amount, code: entry.snapshot.currencyCode))
+                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .foregroundStyle(theme.red)
+                            .lineLimit(1)
+
+                        ReferenceAudioBars(theme: theme)
+
+                        Link(destination: item.resolvedURL) {
+                            ZStack {
+                                Circle()
+                                    .fill(theme.isDark ? Color.white.opacity(0.08) : Color(red: 0.88, green: 0.92, blue: 1.0))
+                                    .frame(width: 48, height: 48)
+                                    .overlay(Circle().stroke(theme.cardStroke, lineWidth: 1))
+                                Image(systemName: "play.fill")
+                                    .font(.system(size: 20, weight: .bold))
+                                    .foregroundStyle(theme.purple)
+                            }
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
+                } else {
+                    ReferenceEmptyState(
+                        title: "Henüz kayıt yok",
+                        subtitle: "İlk işlemini eklediğinde burada görünecek.",
+                        theme: theme
+                    )
                 }
             }
         }

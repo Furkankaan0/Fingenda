@@ -40,6 +40,10 @@ workflows:
         script: |
           node scripts/build.js
 
+      - name: Release quality checks
+        script: |
+          npm run check:release
+
       - name: Create iOS platform if missing
         script: |
           if [ ! -f "$CM_BUILD_DIR/ios/App/Podfile" ]; then
@@ -213,6 +217,10 @@ workflows:
       - name: Build web assets
         script: |
           node scripts/build.js
+
+      - name: Release quality checks
+        script: |
+          npm run check:release
 
       - name: Create iOS platform if missing
         script: |

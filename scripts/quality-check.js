@@ -20,14 +20,34 @@ function assert(condition, message) {
     }
 }
 
+function assertIncludes(fileLabel, content, needle) {
+    assert(content.includes(needle), `${fileLabel} missing required contract: ${needle}`);
+}
+
+function countMatches(content, pattern) {
+    return (content.match(pattern) || []).length;
+}
+
 function checkCoreRuntimeWiring() {
     const buildScript = read('scripts/build.js');
     const index = read('index.html');
     const core = read('fingenda-core.js');
+    const packageJson = read('package.json');
 
     assert(buildScript.includes("'fingenda-core.js'"), 'fingenda-core.js is missing from build COPY_LIST.');
     assert(index.includes('src="fingenda-core.js"'), 'index.html does not load fingenda-core.js.');
     assert(core.includes('window.FingendaCore'), 'fingenda-core.js does not expose window.FingendaCore.');
+
+    const buildConfigIndex = index.indexOf('src="build-config.js"');
+    const coreIndex = index.indexOf('src="fingenda-core.js"');
+    const dnaRuntimeIndex = index.indexOf('src="./dna-performance-runtime.js"');
+    assert(buildConfigIndex >= 0 && coreIndex > buildConfigIndex, 'fingenda-core.js must load after build-config.js.');
+    assert(dnaRuntimeIndex > coreIndex, 'dna-performance-runtime.js must load after fingenda-core.js.');
+
+    ['safeJsonParse', 'storage', 'money', 'events', 'getCategoryIcon', 'getSmartIcon'].forEach((contract) => {
+        assertIncludes('fingenda-core.js', core, contract);
+    });
+    assert(packageJson.includes('"check:release"'), 'package.json is missing npm run check:release.');
 }
 
 function checkCategoryIconFallbacks() {
@@ -38,14 +58,136 @@ function checkCategoryIconFallbacks() {
         'Spending DNA category fallback regressed to the pin icon.'
     );
     assert(
+        !dnaRuntime.includes("|| '📌'"),
+        'Spending DNA contains a direct pin fallback.'
+    );
+    assert(
         dnaRuntime.includes('window.FingendaCore'),
         'Spending DNA runtime should use FingendaCore for shared category icon logic.'
     );
 }
 
+function checkWidgetSnapshotContract() {
+    const index = read('index.html');
+    const widgetSwift = read('scripts/widget-template/FingendaWidget.swift');
+
+    const payloadFields = [
+        'monthlyIncome',
+        'monthlyExpense',
+        'savingsCurrent',
+        'savingsTarget',
+        'savingsProgress',
+        'goalTitle',
+        'goalTargetDate',
+        'installmentTitle',
+        'installmentNextDueDate',
+        'todayEvents',
+        'usdTry',
+        'eurTry',
+        'gramGoldTry',
+        'usdChange',
+        'eurChange',
+        'gramGoldChange'
+    ];
+
+    payloadFields.forEach((field) => {
+        assertIncludes('index.html widget payload', index, field);
+    });
+
+    const sharedKeys = [
+        'widget_income_total',
+        'widget_expense_total',
+        'widget_savings_total',
+        'widget_goal_title',
+        'widget_goal_target_date',
+        'widget_installment_title',
+        'widget_installment_next_due_date',
+        'widget_fx_usd_try',
+        'widget_fx_eur_try',
+        'widget_fx_gram_try',
+        'widget_today_events',
+        'fingenda_widget_snapshot'
+    ];
+
+    sharedKeys.forEach((key) => {
+        assertIncludes('index.html widget shared keys', index, key);
+    });
+
+    const swiftContracts = [
+        'let goalTitle: String',
+        'let goalTargetDate: Date?',
+        'let installmentTitle: String',
+        'let installmentNextDueDate: Date?',
+        'let usdTry: Double',
+        'let eurTry: Double',
+        'let gramGoldTry: Double',
+        'private static let goalTitleKeys',
+        'private static let installmentTitleKeys',
+        'private static let usdTryKeys',
+        'private static let eurTryKeys',
+        'private static let gramGoldTryKeys',
+        'ReferenceWidgetData.recentItem(from: entry.snapshot)'
+    ];
+
+    swiftContracts.forEach((contract) => {
+        assertIncludes('FingendaWidget.swift', widgetSwift, contract);
+    });
+
+    const blockedLiveWidgetDemoValues = [
+        'Yurt Dışı Seyahati',
+        'Yurt Disi Seyahati',
+        'Taşıt Kredisi',
+        'Tasit Kredisi',
+        '15 Haz 2025',
+        '30 Eylül 2025',
+        '30 Eylul 2025',
+        'recent-coffee'
+    ];
+
+    blockedLiveWidgetDemoValues.forEach((value) => {
+        assert(!widgetSwift.includes(value), `Widget template contains blocked live demo value: ${value}`);
+    });
+
+    assert(
+        !widgetSwift.includes('snapshot.todayEvents.first ?? WidgetTodayEvent'),
+        'Recent widget must not synthesize fake transaction rows when no app data exists.'
+    );
+    assert(
+        widgetSwift.includes('ReferenceEmptyState(') && widgetSwift.includes('Henüz kayıt yok'),
+        'Recent widget should show an empty state when there are no real todayEvents.'
+    );
+}
+
+function checkWidgetSigningContracts() {
+    const signingScript = read('scripts/apply-ios-widget-signing.js');
+    const codemagic = read('codemagic.yaml');
+
+    [
+        'const APP_GROUP_ID = `group.${APP_BUNDLE_ID}`',
+        'parseAppGroups',
+        'profileSupportsExpectedAppGroup',
+        'Widget verisi calismasi icin App Group zorunlu',
+        'CODE_SIGN_ENTITLEMENTS',
+        'com.apple.ApplicationGroups.iOS'
+    ].forEach((contract) => {
+        assertIncludes('apply-ios-widget-signing.js', signingScript, contract);
+    });
+
+    const checkCount = countMatches(codemagic, /npm run check:release/g);
+    assert(checkCount >= 2, 'codemagic.yaml should run npm run check:release in both iOS workflows.');
+
+    const firstBuildAssets = codemagic.indexOf('- name: Build web assets');
+    const firstQualityCheck = codemagic.indexOf('- name: Release quality checks');
+    const firstIpaBuild = codemagic.indexOf('- name: Build signed IPA');
+    assert(firstBuildAssets >= 0 && firstQualityCheck > firstBuildAssets, 'Release quality checks should run after web build.');
+    assert(firstIpaBuild > firstQualityCheck, 'Release quality checks should run before signed IPA build.');
+}
+
 function main() {
     checkCoreRuntimeWiring();
     checkCategoryIconFallbacks();
+    checkWidgetSnapshotContract();
+    checkWidgetSigningContracts();
     console.log('[QUALITY] Fingenda release checks passed');
 }
 
