@@ -99,7 +99,6 @@ struct FingendaNativeSnapshot: Codable, Hashable {
     )
 }
 
-@MainActor
 final class FingendaNativeStore: ObservableObject {
     @Published private(set) var snapshot: FingendaNativeSnapshot = .empty
 
@@ -207,7 +206,7 @@ struct FingendaNativeDashboardView: View {
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
-            .ignoresSafeArea()
+            .edgesIgnoringSafeArea(.all)
 
             VStack(alignment: .leading, spacing: 18) {
                 header
@@ -217,7 +216,7 @@ struct FingendaNativeDashboardView: View {
             }
             .padding(22)
         }
-        .task {
+        .onAppear {
             store.reload()
         }
     }
@@ -226,10 +225,10 @@ struct FingendaNativeDashboardView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Fingenda Native")
                 .font(.system(size: 30, weight: .heavy, design: .rounded))
-                .foregroundStyle(Color(red: 0.05, green: 0.07, blue: 0.14))
+                .foregroundColor(Color(red: 0.05, green: 0.07, blue: 0.14))
             Text("SwiftUI migration shell")
                 .font(.system(size: 13, weight: .semibold, design: .rounded))
-                .foregroundStyle(.secondary)
+                .foregroundColor(.secondary)
         }
     }
 
@@ -237,23 +236,26 @@ struct FingendaNativeDashboardView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Bu Ay")
                 .font(.system(size: 14, weight: .bold, design: .rounded))
-                .foregroundStyle(.secondary)
+                .foregroundColor(.secondary)
 
             HStack(alignment: .firstTextBaseline) {
                 Text(formatCurrency(store.snapshot.monthlyIncome))
-                    .foregroundStyle(Color(red: 0.05, green: 0.62, blue: 0.36))
+                    .foregroundColor(Color(red: 0.05, green: 0.62, blue: 0.36))
                 Spacer()
                 Text(formatCurrency(store.snapshot.monthlyExpense))
-                    .foregroundStyle(Color(red: 0.82, green: 0.18, blue: 0.26))
+                    .foregroundColor(Color(red: 0.82, green: 0.18, blue: 0.26))
             }
             .font(.system(size: 24, weight: .heavy, design: .rounded))
 
             Text("Kalan \(formatCurrency(store.snapshot.monthlyBalance))")
                 .font(.system(size: 16, weight: .bold, design: .rounded))
-                .foregroundStyle(Color(red: 0.08, green: 0.10, blue: 0.18))
+                .foregroundColor(Color(red: 0.08, green: 0.10, blue: 0.18))
         }
         .padding(18)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .background(
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .fill(Color.white.opacity(0.68))
+        )
         .overlay(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
                 .stroke(Color.white.opacity(0.65), lineWidth: 1)
@@ -266,10 +268,13 @@ struct FingendaNativeDashboardView: View {
                 .font(.system(size: 16, weight: .bold, design: .rounded))
             Text(store.snapshot.insightText.isEmpty ? "Native ekranlar bu ortak veri katmani uzerinden parca parca tasinacak." : store.snapshot.insightText)
                 .font(.system(size: 13, weight: .medium, design: .rounded))
-                .foregroundStyle(.secondary)
+                .foregroundColor(.secondary)
         }
         .padding(18)
-        .background(Color.white.opacity(0.55), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(Color.white.opacity(0.55))
+        )
     }
 
     private func formatCurrency(_ value: Double) -> String {

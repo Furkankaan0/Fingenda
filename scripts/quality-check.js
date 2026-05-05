@@ -284,6 +284,16 @@ function checkNativeSwiftFoundation() {
         assertIncludes('FingendaNativeFoundation.swift', nativeSwift, contract);
     });
 
+    [
+        '.ignoresSafeArea(',
+        '.task {',
+        '.foregroundStyle(',
+        '.ultraThinMaterial',
+        '.background(.'
+    ].forEach((forbiddenApi) => {
+        assert(!nativeSwift.includes(forbiddenApi), `FingendaNativeFoundation.swift must stay iOS 13-safe; found ${forbiddenApi}`);
+    });
+
     assertIncludes('package.json', packageJson, '"ios:native-foundation"');
 
     const nativeStepCount = countMatches(codemagic, /Install iOS native Swift foundation/g);
