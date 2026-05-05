@@ -35,19 +35,43 @@ function checkCoreRuntimeWiring() {
     const packageJson = read('package.json');
 
     assert(buildScript.includes("'fingenda-core.js'"), 'fingenda-core.js is missing from build COPY_LIST.');
+    assert(buildScript.includes("'fingenda-performance-guard.js'"), 'fingenda-performance-guard.js is missing from build COPY_LIST.');
     assert(index.includes('src="fingenda-core.js"'), 'index.html does not load fingenda-core.js.');
+    assert(index.includes('src="fingenda-performance-guard.js"'), 'index.html does not load fingenda-performance-guard.js.');
     assert(core.includes('window.FingendaCore'), 'fingenda-core.js does not expose window.FingendaCore.');
 
     const buildConfigIndex = index.indexOf('src="build-config.js"');
     const coreIndex = index.indexOf('src="fingenda-core.js"');
+    const perfGuardIndex = index.indexOf('src="fingenda-performance-guard.js"');
     const dnaRuntimeIndex = index.indexOf('src="./dna-performance-runtime.js"');
     assert(buildConfigIndex >= 0 && coreIndex > buildConfigIndex, 'fingenda-core.js must load after build-config.js.');
+    assert(perfGuardIndex > coreIndex, 'fingenda-performance-guard.js must load after fingenda-core.js.');
+    assert(dnaRuntimeIndex > perfGuardIndex, 'dna-performance-runtime.js must load after fingenda-performance-guard.js.');
     assert(dnaRuntimeIndex > coreIndex, 'dna-performance-runtime.js must load after fingenda-core.js.');
 
-    ['safeJsonParse', 'storage', 'money', 'events', 'getCategoryIcon', 'getSmartIcon'].forEach((contract) => {
+    ['safeJsonParse', 'storage', 'money', 'events', 'perf', 'getCategoryIcon', 'getSmartIcon'].forEach((contract) => {
         assertIncludes('fingenda-core.js', core, contract);
     });
     assert(packageJson.includes('"check:release"'), 'package.json is missing npm run check:release.');
+}
+
+function checkPerformanceGuardContracts() {
+    const guard = read('fingenda-performance-guard.js');
+
+    [
+        'window.FingendaPerformanceGuard',
+        'PerformanceObserver',
+        "'longtask'",
+        'requestIdleCallback',
+        "root.classList.add('perf')",
+        "root.classList.add('perf2')",
+        'scheduleIdle',
+        'scheduleFrame',
+        'low-device-budget',
+        'reduced-motion'
+    ].forEach((contract) => {
+        assertIncludes('fingenda-performance-guard.js', guard, contract);
+    });
 }
 
 function checkCategoryIconFallbacks() {
@@ -238,6 +262,7 @@ function checkNativeSwiftFoundation() {
 
 function main() {
     checkCoreRuntimeWiring();
+    checkPerformanceGuardContracts();
     checkCategoryIconFallbacks();
     checkWidgetSnapshotContract();
     checkWidgetSigningContracts();

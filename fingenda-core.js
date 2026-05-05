@@ -132,6 +132,60 @@
         }
     };
 
+    const frameQueue = new Map();
+    let frameHandle = 0;
+
+    function scheduleIdle(task, timeout = 1200) {
+        if (typeof task !== 'function') return 0;
+        if ('requestIdleCallback' in window) {
+            return window.requestIdleCallback(task, { timeout });
+        }
+        return window.setTimeout(() => {
+            task({
+                didTimeout: true,
+                timeRemaining: () => 0
+            });
+        }, Math.min(Math.max(timeout, 16), 250));
+    }
+
+    function cancelIdle(handle) {
+        if (!handle) return;
+        if ('cancelIdleCallback' in window) {
+            window.cancelIdleCallback(handle);
+            return;
+        }
+        window.clearTimeout(handle);
+    }
+
+    function scheduleFrame(key, task) {
+        if (typeof task !== 'function') return;
+        const queueKey = key || `task-${frameQueue.size + 1}`;
+        frameQueue.set(queueKey, task);
+        if (frameHandle) return;
+
+        frameHandle = window.requestAnimationFrame(() => {
+            const tasks = Array.from(frameQueue.values());
+            frameQueue.clear();
+            frameHandle = 0;
+            tasks.forEach((queuedTask) => {
+                try {
+                    queuedTask();
+                } catch (error) {
+                    console.warn('[FingendaCore] frame task failed:', error);
+                }
+            });
+        });
+    }
+
+    const perf = Object.freeze({
+        scheduleIdle,
+        cancelIdle,
+        scheduleFrame,
+        now() {
+            return performance?.now ? performance.now() : Date.now();
+        }
+    });
+
     const core = Object.freeze({
         version: '1.0.0',
         categoryIcons,
@@ -142,6 +196,7 @@
         storage,
         money,
         events,
+        perf,
         get buildConfig() {
             return window.__FINGENDA_BUILD__ || {};
         }

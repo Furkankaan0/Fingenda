@@ -17,6 +17,7 @@ const WWW = path.join(ROOT, 'www');
 const COPY_LIST = [
     'index.html',
     'fingenda-core.js',
+    'fingenda-performance-guard.js',
     'dna-performance-runtime.js',
     'dna-refresh-core.js',
     'dna-refresh-ui.js',
