@@ -55,6 +55,10 @@ workflows:
         script: |
           npx cap sync ios
 
+      - name: Install iOS native Swift foundation
+        script: |
+          node scripts/install-ios-native-foundation.js
+
       - name: Install native iOS speech plugin
         script: |
           node scripts/install-ios-speech-plugin.js
@@ -232,6 +236,10 @@ workflows:
       - name: Sync Capacitor iOS project
         script: |
           npx cap sync ios
+
+      - name: Install iOS native Swift foundation
+        script: |
+          node scripts/install-ios-native-foundation.js
 
       - name: Install native iOS speech plugin
         script: |

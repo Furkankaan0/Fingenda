@@ -11,7 +11,8 @@
     "cap:add:ios": "npx cap add ios",
     "cap:sync": "npx cap sync",
     "cap:open:ios": "npx cap open ios",
-    "cap:build": "npm run build && npx cap sync"
+    "cap:build": "npm run build && npx cap sync",
+    "ios:native-foundation": "node scripts/install-ios-native-foundation.js"
   },
   "keywords": ["finance", "budget", "expense-tracker", "ios"],
   "author": "Fingenda",

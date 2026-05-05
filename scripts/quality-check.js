@@ -202,11 +202,46 @@ function checkWidgetSigningContracts() {
     assert(firstIpaBuild > firstQualityCheck, 'Release quality checks should run before signed IPA build.');
 }
 
+function checkNativeSwiftFoundation() {
+    const installer = read('scripts/install-ios-native-foundation.js');
+    const nativeSwift = read('scripts/native-swift/FingendaNativeFoundation.swift');
+    const codemagic = read('codemagic.yaml');
+    const packageJson = read('package.json');
+
+    [
+        'FingendaNativeFoundation.swift',
+        'configureXcodeProject',
+        'app_target.source_build_phase.add_file_reference',
+        'Swift migration foundation kurulumu tamamlandi'
+    ].forEach((contract) => {
+        assertIncludes('install-ios-native-foundation.js', installer, contract);
+    });
+
+    [
+        'struct FingendaNativeSnapshot',
+        'final class FingendaNativeStore',
+        'struct FingendaNativeDashboardView',
+        'final class FingendaNativeHostViewController',
+        'monthlyIncome',
+        'monthlyExpense',
+        'monthlyBalance',
+        'group.com.fingenda.app'
+    ].forEach((contract) => {
+        assertIncludes('FingendaNativeFoundation.swift', nativeSwift, contract);
+    });
+
+    assertIncludes('package.json', packageJson, '"ios:native-foundation"');
+
+    const nativeStepCount = countMatches(codemagic, /Install iOS native Swift foundation/g);
+    assert(nativeStepCount >= 2, 'codemagic.yaml should install the native Swift foundation in both iOS workflows.');
+}
+
 function main() {
     checkCoreRuntimeWiring();
     checkCategoryIconFallbacks();
     checkWidgetSnapshotContract();
     checkWidgetSigningContracts();
+    checkNativeSwiftFoundation();
     console.log('[QUALITY] Fingenda release checks passed');
 }
 
