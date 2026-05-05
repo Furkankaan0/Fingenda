@@ -18,6 +18,7 @@ const COPY_LIST = [
     'index.html',
     'fingenda-core.js',
     'fingenda-performance-guard.js',
+    'fingenda-premium-plans.js',
     'dna-performance-runtime.js',
     'dna-refresh-core.js',
     'dna-refresh-ui.js',

@@ -74,6 +74,36 @@ function checkPerformanceGuardContracts() {
     });
 }
 
+function checkPremiumPlanContracts() {
+    const buildScript = read('scripts/build.js');
+    const index = read('index.html');
+    const premiumPlans = read('fingenda-premium-plans.js');
+
+    assert(buildScript.includes("'fingenda-premium-plans.js'"), 'fingenda-premium-plans.js is missing from build COPY_LIST.');
+    assert(index.includes('src="fingenda-premium-plans.js"'), 'index.html does not load fingenda-premium-plans.js.');
+
+    const premiumIndex = index.indexOf('src="fingenda-premium-plans.js"');
+    const dnaRuntimeIndex = index.indexOf('src="./dna-performance-runtime.js"');
+    assert(premiumIndex > dnaRuntimeIndex, 'fingenda-premium-plans.js must load after legacy premium/runtime patches.');
+
+    [
+        'window.FingendaPremiumPlans',
+        'window.getPremiumPlanProductId',
+        'window.startPremiumCheckout',
+        'window.setPricingPlan',
+        'fingenda_pro_monthly',
+        'fingenda_pro_yearly',
+        'fingenda_pro_lifetime',
+        "PLAN_ORDER = ['monthly', 'yearly', 'lifetime']",
+        'fo-premium-plan-strip',
+        'premium-plan-card-v2',
+        "productKey: 'LIFETIME'",
+        "expiresAt: selected === 'lifetime' ? null : undefined"
+    ].forEach((contract) => {
+        assertIncludes('fingenda-premium-plans.js', premiumPlans, contract);
+    });
+}
+
 function checkCategoryIconFallbacks() {
     const dnaRuntime = read('dna-performance-runtime.js');
 
@@ -263,6 +293,7 @@ function checkNativeSwiftFoundation() {
 function main() {
     checkCoreRuntimeWiring();
     checkPerformanceGuardContracts();
+    checkPremiumPlanContracts();
     checkCategoryIconFallbacks();
     checkWidgetSnapshotContract();
     checkWidgetSigningContracts();
