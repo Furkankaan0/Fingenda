@@ -9,14 +9,14 @@
         monthly: {
             id: 'monthly',
             productKey: 'MONTHLY',
-            fallbackProductId: 'fingenda_pro_monthly',
-            fallbackPrice: '₺79,99',
+            fallbackProductId: 'com.fingenda.premium.monthly',
+            fallbackPrice: '₺49,99',
             tr: {
                 label: 'Aylık',
                 badge: 'Esnek',
                 period: '/ay',
                 title: 'Aylık Pro',
-                caption: 'Aylık esnek kullanım. İstediğin zaman App Store üzerinden iptal edebilirsin.',
+                caption: 'Esnek aylık kullanım. İstediğin zaman iptal edebilirsin.',
                 cta: 'Aylık Pro ile devam et',
                 legal: 'Aylık abonelik Apple hesabın üzerinden yenilenir. Yönetim ve iptal App Store üzerinden yapılır.'
             },
@@ -25,7 +25,7 @@
                 badge: 'Flexible',
                 period: '/mo',
                 title: 'Monthly Pro',
-                caption: 'Flexible monthly access. Cancel anytime from the App Store.',
+                caption: 'Flexible monthly access. Cancel anytime.',
                 cta: 'Continue with Monthly Pro',
                 legal: 'The monthly subscription renews through your Apple account. Manage or cancel from the App Store.'
             }
@@ -33,14 +33,14 @@
         yearly: {
             id: 'yearly',
             productKey: 'YEARLY',
-            fallbackProductId: 'fingenda_pro_yearly',
-            fallbackPrice: '₺599,99',
+            fallbackProductId: 'com.fingenda.premium.yearly',
+            fallbackPrice: '₺399,99',
             tr: {
                 label: 'Yıllık',
                 badge: 'En iyi değer',
                 period: '/yıl',
                 title: 'Yıllık Pro',
-                caption: 'Aylığa göre yaklaşık %37 avantaj. Finans ajandan için en dengeli plan.',
+                caption: 'Yıllık planda ₺33,33/ay. En dengeli seçim.',
                 cta: 'Yıllık Pro ile devam et',
                 legal: 'Yıllık abonelik Apple hesabın üzerinden yenilenir. Yönetim ve iptal App Store üzerinden yapılır.'
             },
@@ -49,7 +49,7 @@
                 badge: 'Best value',
                 period: '/yr',
                 title: 'Yearly Pro',
-                caption: 'About 37% better value than monthly. The balanced plan for your finance agenda.',
+                caption: 'Only ₺33.33/mo, billed yearly.',
                 cta: 'Continue with Yearly Pro',
                 legal: 'The yearly subscription renews through your Apple account. Manage or cancel from the App Store.'
             }
@@ -57,14 +57,14 @@
         lifetime: {
             id: 'lifetime',
             productKey: 'LIFETIME',
-            fallbackProductId: 'fingenda_pro_lifetime',
+            fallbackProductId: 'com.fingenda.premium.lifetime',
             fallbackPrice: '₺1.499,99',
             tr: {
                 label: 'Ömür Boyu',
                 badge: 'Tek ödeme',
                 period: 'tek ödeme',
                 title: 'Ömür Boyu Pro',
-                caption: 'Abonelik yok. Fingenda Pro özelliklerine kalıcı erişim.',
+                caption: 'Tek ödeme. Abonelik yok.',
                 cta: 'Ömür Boyu Pro satın al',
                 legal: 'Ömür boyu plan tek seferlik satın alımdır. Abonelik yenilemesi içermez.'
             },
@@ -73,7 +73,7 @@
                 badge: 'One-time',
                 period: 'one-time',
                 title: 'Lifetime Pro',
-                caption: 'No subscription. Permanent access to Fingenda Pro features.',
+                caption: 'One payment. No subscription.',
                 cta: 'Buy Lifetime Pro',
                 legal: 'Lifetime Pro is a one-time purchase and does not renew.'
             }
@@ -337,6 +337,172 @@
                     grid-template-columns: 1fr;
                 }
             }
+
+            #premium-modal .premium-plan-grid-v2 {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 8px;
+                padding: 7px;
+                margin: 0 0 18px;
+                border-radius: 28px;
+                background:
+                    radial-gradient(circle at 12% 0%, rgba(99, 102, 241, 0.16), transparent 45%),
+                    linear-gradient(145deg, rgba(248, 250, 252, 0.90), rgba(226, 232, 240, 0.70));
+                border: 1px solid rgba(148, 163, 184, 0.24);
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78), 0 20px 42px -34px rgba(15, 23, 42, 0.50);
+            }
+
+            html.dark #premium-modal .premium-plan-grid-v2 {
+                background:
+                    radial-gradient(circle at 16% 0%, rgba(139, 92, 246, 0.22), transparent 42%),
+                    linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(30, 27, 75, 0.62));
+                border-color: rgba(255, 255, 255, 0.10);
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 24px 46px -36px rgba(0, 0, 0, 0.86);
+            }
+
+            #premium-modal .premium-plan-card-v2 {
+                isolation: isolate;
+                min-width: 0;
+                min-height: 126px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                gap: 7px;
+                padding: 11px 10px;
+                overflow: hidden;
+                border-radius: 22px;
+                border-color: transparent;
+                background: rgba(255, 255, 255, 0.48);
+                box-shadow: none;
+            }
+
+            html.dark #premium-modal .premium-plan-card-v2 {
+                background: rgba(15, 23, 42, 0.54);
+            }
+
+            #premium-modal .premium-plan-card-v2::before {
+                content: "";
+                position: absolute;
+                inset: -1px;
+                z-index: -1;
+                opacity: 0;
+                background:
+                    radial-gradient(circle at 28% 0%, rgba(255, 255, 255, 0.58), transparent 38%),
+                    linear-gradient(145deg, rgba(99, 102, 241, 0.24), rgba(14, 165, 233, 0.08));
+                transition: opacity 180ms ease;
+            }
+
+            #premium-modal .premium-plan-card-v2.is-active {
+                transform: translateY(-1px);
+                border-color: rgba(99, 102, 241, 0.70);
+                background: rgba(255, 255, 255, 0.76);
+                box-shadow: 0 18px 32px -24px rgba(79, 70, 229, 0.58), inset 0 0 0 1px rgba(255, 255, 255, 0.76);
+            }
+
+            html.dark #premium-modal .premium-plan-card-v2.is-active {
+                border-color: rgba(167, 139, 250, 0.72);
+                background: rgba(49, 46, 129, 0.52);
+                box-shadow: 0 20px 36px -24px rgba(139, 92, 246, 0.72), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+            }
+
+            #premium-modal .premium-plan-card-v2.is-active::before {
+                opacity: 1;
+            }
+
+            #premium-modal .premium-plan-card-v2__top {
+                display: grid;
+                align-items: start;
+                justify-content: stretch;
+                gap: 6px;
+                margin: 0;
+            }
+
+            #premium-modal .premium-plan-card-v2__label {
+                font-size: clamp(11px, 2.7vw, 13px);
+                line-height: 1.05;
+                font-weight: 950;
+                letter-spacing: -0.02em;
+            }
+
+            #premium-modal .premium-plan-card-v2__badge {
+                width: max-content;
+                max-width: 100%;
+                padding: 4px 7px;
+                font-size: 8px;
+                line-height: 1;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            #premium-modal .premium-plan-card-v2__price {
+                display: grid;
+                align-items: start;
+                gap: 2px;
+                margin: 0;
+            }
+
+            #premium-modal .premium-plan-card-v2__amount {
+                font-size: clamp(17px, 4.8vw, 22px);
+                line-height: 1;
+                font-weight: 950;
+                letter-spacing: -0.06em;
+                white-space: nowrap;
+            }
+
+            #premium-modal .premium-plan-card-v2__period {
+                font-size: 10px;
+                line-height: 1.1;
+            }
+
+            #premium-modal .premium-plan-card-v2__caption {
+                min-height: 26px;
+                font-size: 9px;
+                line-height: 1.25;
+                font-weight: 800;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+
+            #premium-modal .premium-selected-price-v2 {
+                display: inline-flex;
+                align-items: baseline;
+                justify-content: center;
+                gap: 6px;
+                padding: 8px 14px;
+                border-radius: 18px;
+                background: linear-gradient(145deg, rgba(99, 102, 241, 0.12), rgba(14, 165, 233, 0.08));
+                border: 1px solid rgba(99, 102, 241, 0.18);
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.70);
+            }
+
+            html.dark #premium-modal .premium-selected-price-v2 {
+                background: linear-gradient(145deg, rgba(99, 102, 241, 0.18), rgba(139, 92, 246, 0.12));
+                border-color: rgba(255, 255, 255, 0.10);
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            }
+
+            @media (max-width: 380px) {
+                #premium-modal .premium-plan-grid-v2 {
+                    gap: 6px;
+                    padding: 6px;
+                }
+
+                #premium-modal .premium-plan-card-v2 {
+                    min-height: 118px;
+                    padding: 10px 8px;
+                    border-radius: 19px;
+                }
+
+                #premium-modal .premium-plan-card-v2__badge {
+                    display: none;
+                }
+
+                #premium-modal .premium-plan-card-v2__amount {
+                    font-size: 16px;
+                }
+            }
         `;
         document.head.appendChild(style);
     }
@@ -351,7 +517,7 @@
             const text = textFor(planId);
             const active = planId === selected ? ' is-active' : '';
             return `
-                <button type="button" class="premium-plan-card-v2${active}" data-premium-plan="${planId}" onclick="window.setPricingPlan('${planId}')">
+                <button type="button" class="premium-plan-card-v2${active}" data-premium-plan="${planId}" aria-pressed="${planId === selected ? 'true' : 'false'}" onclick="window.setPricingPlan('${planId}')">
                     <span class="premium-plan-card-v2__top">
                         <span class="premium-plan-card-v2__label">${text.label}</span>
                         <span class="premium-plan-card-v2__badge">${text.badge}</span>
@@ -378,6 +544,7 @@
 
         document.querySelectorAll('#premium-modal [data-premium-plan]').forEach((button) => {
             button.classList.toggle('is-active', button.dataset.premiumPlan === selected);
+            button.setAttribute('aria-pressed', button.dataset.premiumPlan === selected ? 'true' : 'false');
         });
 
         if (priceDisplay) {
