@@ -89,11 +89,13 @@ function checkPremiumPlanContracts() {
     [
         'window.FingendaPremiumPlans',
         'window.getPremiumPlanProductId',
+        'window.getPremiumPlanProductIds',
         'window.startPremiumCheckout',
         'window.setPricingPlan',
         'com.fingenda.premium.monthly',
         'com.fingenda.premium.yearly',
-        'com.fingenda.premium.lifetime',
+        'fingenda_pro_lifetime',
+        "legacyProductIds: ['com.fingenda.premium.lifetime']",
         "fallbackPrice: '₺49,99'",
         "fallbackPrice: '₺399,99'",
         "PLAN_ORDER = ['monthly', 'yearly', 'lifetime']",
@@ -101,9 +103,22 @@ function checkPremiumPlanContracts() {
         'premium-plan-grid-v2',
         'premium-plan-card-v2',
         "productKey: 'LIFETIME'",
+        'function getProductIds',
+        'function productMatchesPlan',
         "expiresAt: selected === 'lifetime' ? null : undefined"
     ].forEach((contract) => {
         assertIncludes('fingenda-premium-plans.js', premiumPlans, contract);
+    });
+
+    [
+        "LIFETIME: 'fingenda_pro_lifetime'",
+        'PRODUCT_ID_ALIASES',
+        'getProductIds(productKey)',
+        'normalizeProductId(productId)',
+        'resolvePlanFromProductId(productId)',
+        'rememberEntitlement(productId'
+    ].forEach((contract) => {
+        assertIncludes('index.html IAP contract', index, contract);
     });
 }
 

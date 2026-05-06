@@ -57,7 +57,8 @@
         lifetime: {
             id: 'lifetime',
             productKey: 'LIFETIME',
-            fallbackProductId: 'com.fingenda.premium.lifetime',
+            fallbackProductId: 'fingenda_pro_lifetime',
+            legacyProductIds: ['com.fingenda.premium.lifetime'],
             fallbackPrice: '₺1.499,99',
             tr: {
                 label: 'Ömür Boyu',
@@ -111,19 +112,42 @@
         );
     }
 
-    function getProductId(planId) {
+    function getProductIds(planId) {
         const plan = PLAN_CONFIG[normalizePlan(planId)];
-        return window.IAPManager?.PRODUCT_IDS?.[plan.productKey] || plan.fallbackProductId;
+        const managerIds = typeof window.IAPManager?.getProductIds === 'function'
+            ? window.IAPManager.getProductIds(plan.productKey)
+            : [];
+        const ids = Array.isArray(managerIds) && managerIds.length
+            ? managerIds
+            : [
+                window.IAPManager?.PRODUCT_IDS?.[plan.productKey],
+                plan.fallbackProductId,
+                ...(plan.legacyProductIds || [])
+            ];
+
+        return Array.from(new Set(ids.filter(Boolean)));
+    }
+
+    function getProductId(planId) {
+        return getProductIds(planId)[0];
+    }
+
+    function productMatchesPlan(product, planId) {
+        const normalizedPlan = normalizePlan(planId);
+        const productIds = [
+            product?.id,
+            product?.productId,
+            product?.productIdentifier
+        ].filter(Boolean).map(String);
+        const expectedIds = getProductIds(normalizedPlan);
+
+        return productIds.some((id) => expectedIds.includes(id)) ||
+            productIds.some((id) => id.includes(normalizedPlan));
     }
 
     function getStoreProduct(planId) {
-        const productId = getProductId(planId);
         const products = Array.isArray(window.IAPManager?.products) ? window.IAPManager.products : [];
-        return products.find((product) =>
-            product?.id === productId ||
-            product?.productId === productId ||
-            String(product?.id || '').includes(normalizePlan(planId))
-        );
+        return products.find((product) => productMatchesPlan(product, planId));
     }
 
     function getPrice(planId) {
@@ -995,7 +1019,7 @@
                 if (!originalSimulate) return false;
                 this.__lastRequestedProductId = productId;
                 const result = await originalSimulate(productId);
-                const selected = PLAN_ORDER.find((planId) => getProductId(planId) === productId) || getSelectedPlan();
+                const selected = PLAN_ORDER.find((planId) => productMatchesPlan({ id: productId }, planId)) || getSelectedPlan();
                 const entitlement = {
                     productId,
                     plan: selected,
@@ -1209,9 +1233,11 @@
         setPlan,
         render: renderPlanCards,
         getProductId,
+        getProductIds,
         getPrice
     });
     window.getPremiumPlanProductId = getProductId;
+    window.getPremiumPlanProductIds = getProductIds;
     window.setPricingPlan = setPlan;
     window.startPremiumCheckout = startCheckout;
     window.upgradeToPro = () => startCheckout('legacy_paywall_cta');
