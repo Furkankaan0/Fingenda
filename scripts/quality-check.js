@@ -107,6 +107,42 @@ function checkPremiumPlanContracts() {
     });
 }
 
+function checkReleaseReadinessContracts() {
+    const buildScript = read('scripts/build.js');
+    const codemagic = read('codemagic.yaml');
+    const index = read('index.html');
+    const premiumPlans = read('fingenda-premium-plans.js');
+
+    assert(
+        !buildScript.includes("buildChannel === 'testflight'"),
+        'TestFlight must not enable premium bypass by default.'
+    );
+    assert(
+        !codemagic.includes('FINGENDA_TEST_PREMIUM_BYPASS: "true"'),
+        'Codemagic workflows must not ship with premium bypass enabled.'
+    );
+
+    [
+        'Demo veri',
+        'Test Bildirimi',
+        'Test Notification',
+        '[DEV] Premium',
+        '[DEV] Simulating purchase'
+    ].forEach((blockedText) => {
+        assert(!index.includes(blockedText), `Release UI contains blocked test/dev text: ${blockedText}`);
+    });
+
+    [
+        'FREE_MONTHLY_TRANSACTION_LIMIT = 30',
+        'window.FingendaFreeLimit',
+        'free_transaction_limit',
+        '__freeTransactionLimitWrapped',
+        'canAddTransaction'
+    ].forEach((contract) => {
+        assertIncludes('fingenda-premium-plans.js free limit', premiumPlans, contract);
+    });
+}
+
 function checkCategoryIconFallbacks() {
     const dnaRuntime = read('dna-performance-runtime.js');
 
@@ -307,6 +343,7 @@ function main() {
     checkCoreRuntimeWiring();
     checkPerformanceGuardContracts();
     checkPremiumPlanContracts();
+    checkReleaseReadinessContracts();
     checkCategoryIconFallbacks();
     checkWidgetSnapshotContract();
     checkWidgetSigningContracts();

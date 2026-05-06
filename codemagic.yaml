@@ -196,7 +196,7 @@ workflows:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
         FINGENDA_BUILD_CHANNEL: "testflight"
-        FINGENDA_TEST_PREMIUM_BYPASS: "true"
+        FINGENDA_TEST_PREMIUM_BYPASS: "false"
 
     triggering:
       events:

@@ -72,7 +72,7 @@ function writeBuildConfig(outDir) {
     const buildChannel = getBuildChannel();
     const testPremiumBypass = parseBooleanEnv(
         process.env.FINGENDA_TEST_PREMIUM_BYPASS,
-        buildChannel === 'testflight'
+        false
     );
 
     const config = {

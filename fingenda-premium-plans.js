@@ -777,13 +777,195 @@
         }
     }
 
+    const FREE_MONTHLY_TRANSACTION_LIMIT = 30;
+
+    function readLimitStorage(key) {
+        try {
+            return localStorage.getItem(key);
+        } catch (_) {
+            return null;
+        }
+    }
+
+    function safeParseLimitJson(raw, fallback = null) {
+        if (!raw) return fallback;
+        try {
+            return JSON.parse(raw);
+        } catch (_) {
+            return fallback;
+        }
+    }
+
+    function currentLimitMonth() {
+        return new Date().toISOString().slice(0, 7);
+    }
+
+    function currentLimitYear() {
+        try {
+            if (typeof APP_YEAR !== 'undefined') return APP_YEAR;
+        } catch (_) {}
+        return new Date().getFullYear();
+    }
+
+    function isPremiumUserForLimit() {
+        if (window.PremiumManager?.isPremium || window.userStatus === 'pro') return true;
+
+        const statusValues = [
+            readLimitStorage('user_status'),
+            readLimitStorage('user_membership_status')
+        ].filter(Boolean).map((value) => String(value).toLowerCase());
+
+        if (statusValues.some((value) => value === 'pro' || value === 'premium')) return true;
+        if (readLimitStorage('premium') === 'true') return true;
+
+        const cache = safeParseLimitJson(readLimitStorage('premium_cache'));
+        if (cache?.isPremium === true) return true;
+
+        const entitlement = safeParseLimitJson(readLimitStorage('premium_entitlement'));
+        if (!entitlement) return false;
+
+        const hasEntitlement = entitlement.isPremium === true || !!entitlement.productId || !!entitlement.plan;
+        const expiresAt = entitlement.expiresAt ? new Date(entitlement.expiresAt) : null;
+        return hasEntitlement && (!expiresAt || expiresAt > new Date());
+    }
+
+    function normalizeTransactionDateForLimit(row) {
+        const raw = row?.date || row?.createdAt || row?.timestamp || row?.time;
+        if (!raw) return '';
+        if (typeof raw === 'string') return raw.slice(0, 10);
+        const parsed = new Date(raw);
+        return Number.isNaN(parsed.getTime()) ? '' : parsed.toISOString().slice(0, 10);
+    }
+
+    function readTransactionRowsForLimit() {
+        const rows = [];
+        const seen = new Set();
+
+        const addRows = (source, sourceName) => {
+            if (!Array.isArray(source)) return;
+            source.forEach((row, index) => {
+                if (!row || typeof row !== 'object') return;
+                const key = row.id || row.uuid || `${sourceName}:${row.date || ''}:${row.type || ''}:${row.amount || ''}:${row.description || row.note || ''}:${index}`;
+                if (seen.has(key)) return;
+                seen.add(key);
+                rows.push(row);
+            });
+        };
+
+        addRows(window.transactions, 'memory');
+        addRows(safeParseLimitJson(readLimitStorage(`my_expenses_${currentLimitYear()}`), []), 'year');
+        return rows;
+    }
+
+    function isCountableLimitTransaction(row) {
+        const type = String(row?.type || '').toLowerCase();
+        if (type !== 'income' && type !== 'expense') return false;
+        return normalizeTransactionDateForLimit(row).startsWith(currentLimitMonth());
+    }
+
+    function getFreeMonthlyUsage() {
+        return readTransactionRowsForLimit().filter(isCountableLimitTransaction).length;
+    }
+
+    function getFreeMonthlyRemaining() {
+        return Math.max(0, FREE_MONTHLY_TRANSACTION_LIMIT - getFreeMonthlyUsage());
+    }
+
+    function isEditingTransactionNow() {
+        const cancelEditButton = document.getElementById('cancel-edit-btn');
+        return !!(cancelEditButton && !cancelEditButton.classList.contains('hidden'));
+    }
+
+    function canCreateFreeTransaction() {
+        return isPremiumUserForLimit() || isEditingTransactionNow() || getFreeMonthlyUsage() < FREE_MONTHLY_TRANSACTION_LIMIT;
+    }
+
+    function openFreeLimitPaywall() {
+        if (typeof window.openPremiumPaywall === 'function') {
+            window.openPremiumPaywall('free_transaction_limit');
+        } else if (typeof window.buyPremium === 'function') {
+            window.buyPremium('free_transaction_limit');
+        } else if (typeof window.upgradeToPro === 'function') {
+            window.upgradeToPro('free_transaction_limit');
+        }
+    }
+
+    async function showFreeTransactionLimitMessage() {
+        const title = 'Ayl\u0131k kay\u0131t hakk\u0131n doldu';
+        const message = `Free planda ayda ${FREE_MONTHLY_TRANSACTION_LIMIT} gelir/gider kayd\u0131 bulunur. Bu ay hakk\u0131n\u0131 tamamlad\u0131n. S\u0131n\u0131rs\u0131z kay\u0131t, raporlar ve Fingo Brain i\u00e7g\u00f6r\u00fcleri i\u00e7in Pro\u2019ya ge\u00e7ebilirsin.`;
+
+        if (typeof window.confirmDialog === 'function') {
+            const shouldUpgrade = await window.confirmDialog({
+                title,
+                message,
+                confirmText: 'Pro\u2019ya Ge\u00e7',
+                cancelText: 'Daha sonra',
+                variant: 'blue'
+            });
+            if (shouldUpgrade) openFreeLimitPaywall();
+            return;
+        }
+
+        if (typeof window.alertMessage === 'function') {
+            window.alertMessage(title, message, 'blue');
+            setTimeout(openFreeLimitPaywall, 450);
+            return;
+        }
+
+        alert(`${title}\n\n${message}`);
+        openFreeLimitPaywall();
+    }
+
+    function installFreeTransactionLimitGate() {
+        if (window.__fingendaFreeTransactionLimitGateInstalling) return;
+        window.__fingendaFreeTransactionLimitGateInstalling = true;
+
+        const wrapSaveTransaction = () => {
+            const currentSaveTransaction = window.saveTransaction;
+            if (typeof currentSaveTransaction !== 'function') return false;
+            if (currentSaveTransaction.__freeTransactionLimitWrapped) return true;
+
+            const originalSaveTransaction = currentSaveTransaction;
+            const guardedSaveTransaction = async function freeLimitedSaveTransaction(...args) {
+                if (!canCreateFreeTransaction()) {
+                    await showFreeTransactionLimitMessage();
+                    return false;
+                }
+                return originalSaveTransaction.apply(this, args);
+            };
+
+            guardedSaveTransaction.__freeTransactionLimitWrapped = true;
+            guardedSaveTransaction.__freeLimitOriginal = originalSaveTransaction;
+            window.saveTransaction = guardedSaveTransaction;
+            return true;
+        };
+
+        if (!wrapSaveTransaction()) {
+            let attempts = 0;
+            const timer = setInterval(() => {
+                attempts += 1;
+                if (wrapSaveTransaction() || attempts >= 30) {
+                    clearInterval(timer);
+                }
+            }, 250);
+        }
+    }
+
     function boot() {
         injectStyles();
         setPlan(getSelectedPlan());
         patchManagers();
         patchOnboarding();
+        installFreeTransactionLimitGate();
         renderPlanCards();
     }
+
+    window.FingendaFreeLimit = Object.freeze({
+        monthlyLimit: FREE_MONTHLY_TRANSACTION_LIMIT,
+        getUsage: getFreeMonthlyUsage,
+        getRemaining: getFreeMonthlyRemaining,
+        canAddTransaction: canCreateFreeTransaction
+    });
 
     window.FingendaPremiumPlans = Object.freeze({
         plans: PLAN_CONFIG,
@@ -814,5 +996,6 @@
     window.addEventListener('fingenda:performance-ready', () => {
         renderPlanCards();
         patchManagers();
+        installFreeTransactionLimitGate();
     });
 })();
