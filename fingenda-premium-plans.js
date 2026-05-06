@@ -503,6 +503,240 @@
                     font-size: 16px;
                 }
             }
+
+            #premium-modal .pricing-toggle.premium-plan-grid-v2,
+            #premium-modal .premium-plan-grid-v2 {
+                width: min(100%, 440px) !important;
+                display: grid !important;
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+                margin: 0 auto 18px !important;
+                padding: 0 !important;
+                background: transparent !important;
+                border: 0 !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+            }
+
+            #premium-modal .premium-plan-card-v2 {
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) auto;
+                grid-template-areas:
+                    "top price"
+                    "caption caption";
+                align-items: center;
+                gap: 8px 14px !important;
+                min-height: 0 !important;
+                padding: 15px 17px !important;
+                overflow: visible !important;
+                border-radius: 24px !important;
+                border: 1px solid rgba(148, 163, 184, 0.20) !important;
+                background:
+                    radial-gradient(circle at 94% 8%, rgba(99, 102, 241, 0.14), transparent 34%),
+                    linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(241, 245, 249, 0.72)) !important;
+                box-shadow: 0 18px 42px -34px rgba(15, 23, 42, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.76) !important;
+            }
+
+            html.dark #premium-modal .premium-plan-card-v2 {
+                border-color: rgba(255, 255, 255, 0.10) !important;
+                background:
+                    radial-gradient(circle at 92% 0%, rgba(139, 92, 246, 0.28), transparent 36%),
+                    linear-gradient(145deg, rgba(17, 24, 39, 0.92), rgba(15, 23, 42, 0.78)) !important;
+                box-shadow: 0 20px 48px -36px rgba(0, 0, 0, 0.82), inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
+            }
+
+            #premium-modal .premium-plan-card-v2.is-active {
+                transform: translateY(-1px);
+                border-color: rgba(99, 102, 241, 0.56) !important;
+                background:
+                    radial-gradient(circle at 94% 0%, rgba(99, 102, 241, 0.22), transparent 36%),
+                    linear-gradient(145deg, rgba(238, 242, 255, 0.98), rgba(255, 255, 255, 0.90)) !important;
+                box-shadow: 0 22px 48px -34px rgba(79, 70, 229, 0.62), inset 0 0 0 1px rgba(255, 255, 255, 0.72) !important;
+            }
+
+            html.dark #premium-modal .premium-plan-card-v2.is-active {
+                border-color: rgba(167, 139, 250, 0.62) !important;
+                background:
+                    radial-gradient(circle at 94% 0%, rgba(167, 139, 250, 0.30), transparent 36%),
+                    linear-gradient(145deg, rgba(49, 46, 129, 0.48), rgba(15, 23, 42, 0.88)) !important;
+                box-shadow: 0 24px 52px -36px rgba(139, 92, 246, 0.76), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+            }
+
+            #premium-modal .premium-plan-card-v2::before {
+                content: "" !important;
+                position: absolute !important;
+                left: 17px !important;
+                right: auto !important;
+                bottom: 12px !important;
+                top: auto !important;
+                width: 42px !important;
+                height: 3px !important;
+                border-radius: 999px !important;
+                opacity: 0 !important;
+                background: linear-gradient(90deg, #6366f1, #22c55e) !important;
+                transition: opacity 180ms ease, transform 180ms ease !important;
+                transform: scaleX(0.72) !important;
+            }
+
+            #premium-modal .premium-plan-card-v2.is-active::before {
+                opacity: 1 !important;
+                transform: scaleX(1) !important;
+            }
+
+            #premium-modal .premium-plan-card-v2__top,
+            #premium-modal .premium-plan-card-v2__price,
+            #premium-modal .premium-plan-card-v2__caption,
+            #premium-modal .premium-plan-card-v2__label,
+            #premium-modal .premium-plan-card-v2__badge,
+            #premium-modal .premium-plan-card-v2__amount,
+            #premium-modal .premium-plan-card-v2__period {
+                background: transparent !important;
+                box-shadow: none !important;
+                border: 0 !important;
+            }
+
+            #premium-modal .premium-plan-card-v2__top {
+                grid-area: top;
+                display: flex !important;
+                align-items: baseline !important;
+                justify-content: flex-start !important;
+                gap: 9px !important;
+                min-width: 0;
+                margin: 0 !important;
+            }
+
+            #premium-modal .premium-plan-card-v2__label {
+                min-width: 0;
+                font-size: clamp(17px, 4.2vw, 22px) !important;
+                line-height: 1.05 !important;
+                font-weight: 950 !important;
+                letter-spacing: -0.035em !important;
+                color: #111827 !important;
+                white-space: normal !important;
+            }
+
+            html.dark #premium-modal .premium-plan-card-v2__label {
+                color: #f8fafc !important;
+            }
+
+            #premium-modal .premium-plan-card-v2__badge {
+                width: auto !important;
+                max-width: none !important;
+                padding: 0 !important;
+                font-size: 9px !important;
+                line-height: 1.1 !important;
+                font-weight: 950 !important;
+                letter-spacing: 0.09em !important;
+                color: #6366f1 !important;
+                text-transform: uppercase;
+                white-space: nowrap !important;
+            }
+
+            html.dark #premium-modal .premium-plan-card-v2__badge {
+                color: #c4b5fd !important;
+            }
+
+            #premium-modal .premium-plan-card-v2__price {
+                grid-area: price;
+                display: flex !important;
+                align-items: baseline !important;
+                justify-content: flex-end !important;
+                gap: 5px !important;
+                min-width: max-content;
+                margin: 0 !important;
+                text-align: right;
+            }
+
+            #premium-modal .premium-plan-card-v2__amount {
+                font-size: clamp(24px, 7vw, 34px) !important;
+                line-height: 0.95 !important;
+                font-weight: 950 !important;
+                letter-spacing: -0.06em !important;
+                color: #0f172a !important;
+                white-space: nowrap !important;
+            }
+
+            html.dark #premium-modal .premium-plan-card-v2__amount {
+                color: #ffffff !important;
+            }
+
+            #premium-modal .premium-plan-card-v2__period {
+                font-size: 12px !important;
+                line-height: 1 !important;
+                font-weight: 850 !important;
+                color: #64748b !important;
+                white-space: nowrap !important;
+            }
+
+            html.dark #premium-modal .premium-plan-card-v2__period {
+                color: rgba(226, 232, 240, 0.76) !important;
+            }
+
+            #premium-modal .premium-plan-card-v2__caption {
+                grid-area: caption;
+                display: block !important;
+                min-height: 0 !important;
+                font-size: 12px !important;
+                line-height: 1.35 !important;
+                font-weight: 750 !important;
+                color: #64748b !important;
+                overflow: visible !important;
+                -webkit-line-clamp: unset !important;
+                -webkit-box-orient: initial !important;
+            }
+
+            html.dark #premium-modal .premium-plan-card-v2__caption {
+                color: rgba(226, 232, 240, 0.74) !important;
+            }
+
+            #premium-modal .premium-selected-price-v2 {
+                padding: 0 !important;
+                background: transparent !important;
+                border: 0 !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+            }
+
+            @media (max-width: 390px) {
+                #premium-modal .premium-plan-card-v2 {
+                    grid-template-columns: 1fr;
+                    grid-template-areas:
+                        "top"
+                        "price"
+                        "caption";
+                    padding: 14px 15px !important;
+                }
+
+                #premium-modal .premium-plan-card-v2__price {
+                    justify-content: flex-start !important;
+                    text-align: left;
+                }
+
+                #premium-modal .premium-plan-card-v2__amount {
+                    font-size: 28px !important;
+                }
+            }
+
+            @media (min-width: 560px) {
+                #premium-modal .premium-plan-grid-v2 {
+                    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+                    max-width: 760px !important;
+                }
+
+                #premium-modal .premium-plan-card-v2 {
+                    grid-template-columns: 1fr;
+                    grid-template-areas:
+                        "top"
+                        "price"
+                        "caption";
+                    align-content: start;
+                }
+
+                #premium-modal .premium-plan-card-v2__price {
+                    justify-content: flex-start !important;
+                    text-align: left;
+                }
+            }
         `;
         document.head.appendChild(style);
     }
