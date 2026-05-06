@@ -3,288 +3,415 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="index,follow" />
   <title>Fingenda Gizlilik Politikası</title>
   <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f5f7fb;
+      --card: rgba(255, 255, 255, 0.92);
+      --text: #111827;
+      --muted: #5f6b7a;
+      --line: rgba(17, 24, 39, 0.10);
+      --accent: #ff4f63;
+      --accent-2: #635bff;
+      --soft: rgba(99, 91, 255, 0.10);
+      --shadow: 0 24px 70px rgba(15, 23, 42, 0.10);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #08111f;
+        --card: rgba(13, 23, 40, 0.90);
+        --text: #f8fafc;
+        --muted: #a8b3c4;
+        --line: rgba(255, 255, 255, 0.12);
+        --soft: rgba(124, 92, 255, 0.16);
+        --shadow: 0 28px 90px rgba(0, 0, 0, 0.36);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-      background: #f7f7f8;
-      color: #1d1d1f;
-      line-height: 1.7;
       margin: 0;
-      padding: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(circle at 12% 4%, rgba(255, 79, 99, 0.18), transparent 28rem),
+        radial-gradient(circle at 88% 8%, rgba(99, 91, 255, 0.18), transparent 30rem),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.7;
     }
-    .container {
-      max-width: 860px;
+
+    main {
+      width: min(940px, calc(100% - 32px));
       margin: 0 auto;
-      padding: 48px 22px;
+      padding: 48px 0;
     }
-    .card {
-      background: #ffffff;
-      border-radius: 24px;
-      padding: 36px;
-      box-shadow: 0 18px 45px rgba(0,0,0,0.06);
-      border: 1px solid rgba(0,0,0,0.06);
+
+    .hero,
+    .section {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(22px) saturate(1.2);
+      -webkit-backdrop-filter: blur(22px) saturate(1.2);
     }
-    h1 {
-      font-size: 34px;
-      margin-bottom: 8px;
-      letter-spacing: -0.03em;
+
+    .hero {
+      padding: clamp(28px, 6vw, 52px);
+      margin-bottom: 18px;
     }
-    h2 {
-      margin-top: 34px;
-      font-size: 22px;
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--accent);
+      font-weight: 800;
       letter-spacing: -0.02em;
     }
-    p, li {
+
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 900;
+      font-size: 26px;
+      background: linear-gradient(135deg, #ff563f, #ff4f8a);
+      box-shadow: 0 16px 36px rgba(255, 79, 99, 0.30);
+    }
+
+    h1 {
+      margin: 22px 0 10px;
+      font-size: clamp(34px, 7vw, 56px);
+      line-height: 1.02;
+      letter-spacing: -0.055em;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: clamp(21px, 3vw, 28px);
+      letter-spacing: -0.025em;
+    }
+
+    h3 {
+      margin: 24px 0 8px;
+      font-size: 18px;
+      letter-spacing: -0.015em;
+    }
+
+    p,
+    li {
+      color: var(--muted);
       font-size: 16px;
-      color: #3a3a3c;
     }
-    ul {
-      padding-left: 22px;
-    }
-    .date {
-      color: #6e6e73;
-      margin-bottom: 30px;
-    }
-    .brand {
-      color: #ff4f5e;
-      font-weight: 700;
-    }
+
     a {
-      color: #007aff;
+      color: #3277ff;
+      font-weight: 700;
       text-decoration: none;
     }
+
     a:hover {
       text-decoration: underline;
     }
+
+    .date {
+      margin: 0;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .summary div,
     .note {
-      background: #f2f2f7;
-      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: var(--soft);
+      border-radius: 18px;
       padding: 16px;
-      margin-top: 18px;
-      color: #4b4b4f;
+    }
+
+    .summary strong {
+      display: block;
+      color: var(--text);
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .summary span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .section {
+      padding: clamp(24px, 5vw, 40px);
+      margin: 18px 0;
+    }
+
+    ul {
+      padding-left: 22px;
+      margin: 10px 0 0;
+    }
+
+    .note {
+      margin-top: 16px;
+      color: var(--muted);
+    }
+
+    footer {
+      padding: 22px 4px 0;
+      color: var(--muted);
+      text-align: center;
+      font-size: 13px;
+    }
+
+    @media (max-width: 720px) {
+      main {
+        width: min(100% - 22px, 940px);
+        padding: 22px 0;
+      }
+
+      .summary {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
-  <main class="container">
-    <section class="card">
-      <h1><span class="brand">Fingenda</span> Gizlilik Politikası</h1>
+  <main>
+    <section class="hero">
+      <div class="brand"><span class="logo">F</span> Fingenda</div>
+      <h1>Gizlilik Politikası</h1>
       <p class="date">Son güncelleme: 06 Mayıs 2026</p>
-
       <p>
         Bu Gizlilik Politikası, Fingenda mobil uygulamasını kullandığınızda hangi bilgilerin işlendiğini,
-        bu bilgilerin hangi amaçlarla kullanıldığını ve kullanıcı olarak sahip olduğunuz hakları açıklar.
-        Fingenda; gelir-gider takibi, hedef birikimi, taksit ve kredi ödeme planlama, döviz/altın takibi,
-        OCR ile görselden işlem ekleme, sesle işlem ekleme ve kişiselleştirilmiş finansal içgörüler sunan
-        bir finansal ajanda uygulamasıdır.
+        bu bilgilerin hangi amaçlarla kullanıldığını, kimlerle paylaşılabileceğini ve gizlilik tercihlerinizi
+        nasıl yönetebileceğinizi açıklar.
       </p>
-
-      <p>
-        Fingenda’yı kullanarak bu Gizlilik Politikası kapsamında açıklanan uygulamaları kabul etmiş olursunuz.
-        Politikayı kabul etmiyorsanız uygulamayı kullanmamanız gerekir.
-      </p>
-
-      <h2>1. Topladığımız Bilgiler</h2>
-      <p>
-        Fingenda, sunduğu özelliklerin çalışabilmesi için bazı kullanıcı verilerini işleyebilir. Toplanan
-        veri türleri kullandığınız özelliklere göre değişebilir.
-      </p>
-
-      <h3>1.1. Hesap ve İletişim Bilgileri</h3>
-      <ul>
-        <li>Ad veya profil adı</li>
-        <li>E-posta adresi</li>
-        <li>Apple ile giriş yapmanız halinde Apple tarafından sağlanan kullanıcı kimliği</li>
-      </ul>
-
-      <h3>1.2. Finansal Kayıtlar</h3>
-      <p>
-        Fingenda’ya manuel olarak eklediğiniz finansal bilgiler uygulama işlevlerinin çalışması için işlenebilir.
-        Bu bilgiler şunları içerebilir:
-      </p>
-      <ul>
-        <li>Gelir ve gider kayıtları</li>
-        <li>Bütçe bilgileri</li>
-        <li>Hedef birikim kayıtları</li>
-        <li>Taksit, kredi veya ödeme planı bilgileri</li>
-        <li>Döviz, altın veya varlık takip bilgileri</li>
-        <li>İşlem notları, kategori bilgileri ve kullanıcı tarafından girilen açıklamalar</li>
-      </ul>
-
-      <p>
-        Fingenda herhangi bir banka hesabınıza doğrudan bağlanmaz ve banka hesabı, kredi kartı numarası,
-        kart güvenlik kodu veya IBAN gibi hassas ödeme bilgilerini doğrudan toplamaz.
-      </p>
-
-      <h3>1.3. Kullanıcı İçeriği</h3>
-      <p>
-        OCR, görselle işlem ekleme veya sesle işlem ekleme gibi özellikleri kullandığınızda aşağıdaki içerikler
-        işlenebilir:
-      </p>
-      <ul>
-        <li>Yüklediğiniz fiş, fatura veya işlem görselleri</li>
-        <li>Görsellerden çıkarılan metinler</li>
-        <li>Sesli komutlarınızdan oluşturulan metin içerikleri</li>
-        <li>Uygulama içinde oluşturduğunuz notlar ve kayıtlar</li>
-      </ul>
-
-      <h3>1.4. Satın Alma ve Abonelik Bilgileri</h3>
-      <p>
-        Fingenda Premium abonelikleri veya uygulama içi satın almalar Apple App Store üzerinden gerçekleştirilir.
-        Apple, ödeme işlemlerini kendi sistemi üzerinden yönetir. Fingenda kredi kartı veya ödeme kartı bilgilerinizi
-        görmez, işlemez veya saklamaz.
-      </p>
-      <p>
-        Abonelik durumunuzu doğrulamak, premium özelliklere erişiminizi sağlamak ve satın alma geri yükleme işlemlerini
-        gerçekleştirmek için satın alma durumu, ürün kimliği ve abonelik bilgileri işlenebilir.
-      </p>
-
-      <h3>1.5. Teknik Veriler ve Kullanım Verileri</h3>
-      <p>
-        Uygulamanın güvenli, kararlı ve verimli çalışmasını sağlamak amacıyla bazı teknik bilgiler işlenebilir:
-      </p>
-      <ul>
-        <li>Cihaz türü ve işletim sistemi bilgileri</li>
-        <li>Uygulama sürümü</li>
-        <li>Çökme raporları ve hata kayıtları</li>
-        <li>Performans verileri</li>
-        <li>Uygulama içi özellik kullanımına ilişkin genel analiz verileri</li>
-      </ul>
-
-      <h2>2. Bilgileri Hangi Amaçlarla Kullanıyoruz?</h2>
-      <p>Toplanan bilgiler aşağıdaki amaçlarla kullanılabilir:</p>
-      <ul>
-        <li>Uygulama hesabınızı oluşturmak ve yönetmek</li>
-        <li>Gelir-gider, bütçe, taksit ve hedef birikim özelliklerini çalıştırmak</li>
-        <li>Premium abonelik ve satın alma durumunu doğrulamak</li>
-        <li>OCR ve sesle işlem ekleme özelliklerini sunmak</li>
-        <li>Fingo Brain ve benzeri kişiselleştirilmiş finansal içgörüler sağlamak</li>
-        <li>Uygulamayı geliştirmek, hata ve çökme sorunlarını gidermek</li>
-        <li>Güvenliği sağlamak ve kötüye kullanımı önlemek</li>
-        <li>Kullanıcı desteği sağlamak</li>
-      </ul>
-
-      <h2>3. Fingo Brain ve Finansal İçgörüler</h2>
-      <p>
-        Fingenda içerisinde yer alan Fingo Brain veya benzeri akıllı öneri özellikleri, kullanıcı tarafından girilen
-        finansal kayıtlar ve uygulama içi veriler üzerinden genel bilgilendirme ve kişiselleştirilmiş öneriler sunabilir.
-      </p>
-      <div class="note">
-        Fingo Brain tarafından sağlanan bilgiler yatırım, vergi, hukuk veya profesyonel finans danışmanlığı niteliği taşımaz.
-        Uygulama; döviz, altın, harcama, birikim veya ödeme kararlarınız için kesin sonuç, kazanç veya tasarruf garantisi vermez.
-      </div>
-
-      <h2>4. Verilerin Paylaşılması</h2>
-      <p>
-        Fingenda, kişisel verilerinizi satmaz. Verileriniz yalnızca uygulamanın çalışması, güvenliği, abonelik doğrulaması,
-        analiz, hata takibi veya yasal yükümlülükler kapsamında gerekli olduğu ölçüde üçüncü taraf hizmet sağlayıcılarla
-        paylaşılabilir.
-      </p>
-
-      <p>Bu hizmet sağlayıcılar şunları içerebilir:</p>
-      <ul>
-        <li>Apple App Store ve Apple Sign in servisleri</li>
-        <li>Bulut veritabanı veya kimlik doğrulama servisleri</li>
-        <li>Hata izleme ve performans analiz servisleri</li>
-        <li>Abonelik ve satın alma doğrulama servisleri</li>
-      </ul>
-
-      <p>
-        Bu üçüncü taraf hizmet sağlayıcılar, verileri kendi gizlilik politikaları doğrultusunda işleyebilir.
-      </p>
-
-      <h2>5. Üçüncü Taraf Reklam ve Takip</h2>
-      <p>
-        Fingenda, kullanıcıları üçüncü taraf uygulama veya web sitelerinde reklam amacıyla takip etmek için kişisel verileri
-        kullanmaz. Uygulama, kullanıcı verilerini üçüncü taraf reklam ağlarına satmaz.
-      </p>
-
-      <p>
-        İleride reklam veya pazarlama amaçlı üçüncü taraf takip teknolojileri kullanılması halinde bu Gizlilik Politikası
-        güncellenecek ve gerekli izinler kullanıcıdan alınacaktır.
-      </p>
-
-      <h2>6. Verilerin Saklanması</h2>
-      <p>
-        Kişisel veriler, uygulama hizmetlerini sunmak, yasal yükümlülükleri yerine getirmek, güvenliği sağlamak ve kullanıcı
-        taleplerini karşılamak için gerekli olduğu süre boyunca saklanabilir.
-      </p>
-
-      <p>
-        Hesabınızı silmeniz veya veri silme talebinde bulunmanız halinde, yasal olarak saklanması gereken bilgiler hariç olmak
-        üzere kişisel verileriniz makul süre içerisinde silinir veya anonim hale getirilir.
-      </p>
-
-      <h2>7. Kullanıcı Hakları</h2>
-      <p>
-        Kullanıcı olarak aşağıdaki haklara sahip olabilirsiniz:
-      </p>
-      <ul>
-        <li>Kişisel verilerinize erişim talep etme</li>
-        <li>Yanlış veya eksik verilerin düzeltilmesini isteme</li>
-        <li>Verilerinizin silinmesini talep etme</li>
-        <li>Verilerinizin işlenmesine itiraz etme</li>
-        <li>Aboneliğinizi App Store hesap ayarlarınız üzerinden yönetme veya iptal etme</li>
-      </ul>
-
-      <p>
-        Veri silme, hesap silme veya gizlilik talepleriniz için bizimle aşağıdaki iletişim adresinden iletişime geçebilirsiniz.
-      </p>
-
-      <h2>8. Çocukların Gizliliği</h2>
-      <p>
-        Fingenda, çocuklara yönelik olarak tasarlanmamıştır. Uygulama, bilerek çocuklardan kişisel veri toplamayı amaçlamaz.
-        Bir çocuğa ait kişisel verinin işlendiğini düşünüyorsanız bizimle iletişime geçebilirsiniz.
-      </p>
-
-      <h2>9. Güvenlik</h2>
-      <p>
-        Fingenda, kullanıcı verilerini korumak için makul teknik ve idari güvenlik önlemleri uygular. Ancak internet üzerinden
-        veri aktarımı veya elektronik saklama yöntemlerinin tamamen risksiz olduğu garanti edilemez.
-      </p>
-
-      <h2>10. Uluslararası Veri Aktarımı</h2>
-      <p>
-        Kullanılan altyapı ve üçüncü taraf servis sağlayıcılara bağlı olarak verileriniz Türkiye dışındaki sunucularda işlenebilir
-        veya saklanabilir. Bu durumda verilerin korunması için makul güvenlik önlemleri alınır.
-      </p>
-
-      <h2>11. Abonelikler ve Satın Almalar</h2>
-      <p>
-        Fingenda Premium abonelikleri Apple App Store üzerinden sunulur. Satın alma işlemleri Apple Kimliğiniz üzerinden
-        gerçekleştirilir. Abonelikler, iptal edilmediği sürece Apple’ın abonelik koşullarına göre otomatik olarak yenilenebilir.
-      </p>
-
-      <p>
-        Aboneliğinizi yönetmek veya iptal etmek için iOS cihazınızda App Store hesap ayarlarınızı kullanabilirsiniz.
-      </p>
-
-      <h2>12. Gizlilik Politikasındaki Değişiklikler</h2>
-      <p>
-        Bu Gizlilik Politikası zaman zaman güncellenebilir. Politika değiştirildiğinde bu sayfadaki “Son güncelleme” tarihi
-        yenilenir. Önemli değişikliklerde uygulama içinde veya uygun diğer kanallar aracılığıyla bilgilendirme yapılabilir.
-      </p>
-
-      <h2>13. İletişim</h2>
-      <p>
-        Gizlilik Politikası, veri silme talepleri veya uygulama desteğiyle ilgili bizimle iletişime geçmek için:
-      </p>
-
-      <p>
-        <strong>E-posta:</strong>
-        <a href="mailto:destek@fingenda.app">destek@fingenda.app</a>
-      </p>
-
-      <p>
-        Eğer henüz özel alan adı/e-posta kullanmıyorsanız bu adresi kendi aktif e-posta adresinizle değiştirmelisiniz.
-      </p>
-
-      <div class="note">
-        Bu metin genel bilgilendirme ve App Store hazırlığı amacıyla hazırlanmıştır. Yayın öncesinde uygulamanızın gerçekten
-        topladığı veriler, kullandığı SDK’lar ve hukuki gereklilikler doğrultusunda kontrol edilmesi önerilir.
+      <div class="summary" aria-label="Gizlilik özeti">
+        <div>
+          <strong>Finans verileriniz size aittir</strong>
+          <span>Gelir, gider, hedef, taksit ve notlarınız uygulama deneyimini çalıştırmak için kullanılır.</span>
+        </div>
+        <div>
+          <strong>Ödeme bilgilerinizi Apple yönetir</strong>
+          <span>Fingenda kart numarası, güvenlik kodu veya banka şifresi toplamaz.</span>
+        </div>
+        <div>
+          <strong>Reklam takibi yapılmaz</strong>
+          <span>Kişisel verileriniz üçüncü taraf reklam ağlarına satılmaz veya takip amacıyla kullanılmaz.</span>
+        </div>
       </div>
     </section>
+
+    <section class="section">
+      <h2>1. Fingenda Hakkında</h2>
+      <p>
+        Fingenda; gelir-gider takibi, hedef birikimi, taksit ve kredi planlama, notlar, piyasa takibi,
+        widget'lar, bildirimler, OCR fiş tarama, sesle işlem ekleme ve kişiselleştirilmiş finansal içgörüler
+        sunan bir finansal ajanda uygulamasıdır.
+      </p>
+      <p>
+        Gizlilik konularında bizimle <a href="mailto:furkankaan05@outlook.com">furkankaan05@outlook.com</a>
+        adresinden iletişime geçebilirsiniz.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>2. İşleyebileceğimiz Bilgiler</h2>
+      <h3>2.1. Hesap ve profil bilgileri</h3>
+      <ul>
+        <li>Adınız, profil adınız, seçtiğiniz avatar ve uygulama içi tercihleri</li>
+        <li>Apple ile giriş kullanılırsa Apple tarafından sağlanan kullanıcı kimliği, ad ve e-posta bilgisi</li>
+        <li>Face ID, Touch ID veya PIN tercihleri gibi güvenli erişim ayarları</li>
+      </ul>
+
+      <h3>2.2. Finansal kayıtlar ve kullanıcı içeriği</h3>
+      <ul>
+        <li>Gelir, gider, kategori, açıklama, tarih ve tutar bilgileri</li>
+        <li>Bütçe, hedef birikim, taksit, kredi ve ödeme planı bilgileri</li>
+        <li>Notlar, yapılacaklar, finansal açıklamalar ve kullanıcı tarafından girilen serbest metinler</li>
+        <li>Döviz, altın veya piyasa takibi için uygulama içinde oluşturulan tercihler</li>
+      </ul>
+
+      <h3>2.3. Kamera, mikrofon ve ses tanıma</h3>
+      <ul>
+        <li>Kamera erişimi, yalnızca fiş veya fatura tarama gibi özellikleri kullanmanız halinde istenir.</li>
+        <li>Mikrofon ve ses tanıma erişimi, yalnızca sesle işlem ekleme özelliğini kullanmanız halinde istenir.</li>
+        <li>Bu izinleri iOS Ayarlar uygulamasından dilediğiniz zaman kapatabilirsiniz.</li>
+      </ul>
+
+      <h3>2.4. Bildirimler ve widget verileri</h3>
+      <ul>
+        <li>Bildirim izni verirseniz hatırlatmalar, özetler ve finansal ajanda uyarıları gönderebiliriz.</li>
+        <li>iOS widget'ları, ana uygulamadaki verilerinizden oluşturulan sınırlı bir özet/snapshot kullanır.</li>
+        <li>Widget verileri, iOS App Group/shared container gibi Apple mekanizmalarıyla uygulama ve widget arasında paylaşılabilir.</li>
+      </ul>
+
+      <h3>2.5. Satın alma ve abonelik bilgileri</h3>
+      <p>
+        Fingenda Premium abonelikleri ve uygulama içi satın almalar Apple App Store üzerinden gerçekleşir.
+        Fingenda ödeme kartı numaranızı, CVV kodunuzu veya Apple Kimliği şifrenizi görmez, toplamaz veya saklamaz.
+        Premium erişimi doğrulamak için ürün kimliği, abonelik/satın alma durumu ve işlem sonucu gibi bilgiler işlenebilir.
+      </p>
+
+      <h3>2.6. Teknik ve tanısal bilgiler</h3>
+      <ul>
+        <li>Uygulama sürümü, cihaz türü, işletim sistemi sürümü ve performans bilgileri</li>
+        <li>Çökme raporları, hata günlükleri ve güvenlik/kararlılık için gerekli teknik kayıtlar</li>
+        <li>Uygulama özelliklerinin düzgün çalışmasını sağlamak için gereken sınırlı kullanım bilgileri</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>3. Bilgileri Kullanma Amaçlarımız</h2>
+      <ul>
+        <li>Uygulamanın temel finansal ajanda özelliklerini çalıştırmak</li>
+        <li>Gelir-gider, hedef, taksit, not, piyasa ve widget deneyimini sunmak</li>
+        <li>Premium üyelikleri doğrulamak ve satın alımları geri yüklemek</li>
+        <li>Bildirim, hatırlatma ve finansal içgörü özelliklerini sağlamak</li>
+        <li>Uygulamanın güvenliğini, performansını ve kararlılığını iyileştirmek</li>
+        <li>Destek taleplerini yanıtlamak ve hata çözümü yapmak</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>4. Fingo Brain ve Finansal İçgörüler</h2>
+      <p>
+        Fingo Brain ve benzeri akıllı öneri özellikleri, uygulamaya eklediğiniz finansal kayıtlar üzerinden
+        bütçe, harcama, hedef ve ödeme alışkanlıklarınıza dair özetler ve öneriler sunabilir.
+      </p>
+      <div class="note">
+        Fingenda yatırım, vergi, hukuk veya profesyonel finans danışmanlığı sunmaz. Uygulamadaki analizler
+        bilgilendirme amaçlıdır ve kesin kazanç, tasarruf veya yatırım sonucu garantisi vermez.
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>5. Bilgilerin Paylaşılması</h2>
+      <p>
+        Fingenda kişisel verilerinizi satmaz. Bilgiler yalnızca uygulamanın çalışması, güvenlik, satın alma
+        doğrulaması, destek, hata çözümü veya yasal yükümlülükler için gerekli olduğu ölçüde işlenebilir ya da
+        hizmet sağlayıcılarla paylaşılabilir.
+      </p>
+      <ul>
+        <li>Apple App Store, Sign in with Apple, StoreKit ve ilgili Apple servisleri</li>
+        <li>Uygulama altyapısı, hata izleme, performans ve güvenlik hizmetleri</li>
+        <li>Yasal olarak gerekli olması halinde yetkili kurumlar</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>6. Reklam Takibi</h2>
+      <p>
+        Fingenda kullanıcıları üçüncü taraf uygulama veya web sitelerinde reklam amacıyla takip etmek için kişisel
+        verileri kullanmaz. Verileriniz üçüncü taraf reklam ağlarına satılmaz. Bu uygulama değişirse politika
+        güncellenir ve gerekli izinler ayrıca alınır.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>7. Verilerin Saklanması ve Silinmesi</h2>
+      <p>
+        Veriler, uygulama hizmetlerini sunmak, güvenliği sağlamak, yasal yükümlülükleri yerine getirmek ve destek
+        taleplerini karşılamak için gerekli olduğu süre boyunca saklanabilir. Uygulama içinde "Tüm verileri sıfırla"
+        gibi mevcut araçları kullanabilir veya veri silme talebi için bize e-posta gönderebilirsiniz.
+      </p>
+      <p>
+        Apple abonelikleri ve satın alma geçmişi Apple tarafından yönetilir. Abonelikleri iOS App Store hesap
+        ayarlarınızdan yönetebilir veya iptal edebilirsiniz.
+      </p>
+    </section>
+
+    <section class="section" id="privacy-choices">
+      <h2>8. Gizlilik Tercihleriniz ve Haklarınız</h2>
+      <p>
+        Bulunduğunuz ülkeye veya bölgeye göre kişisel verilerinize erişme, düzeltme, silme, işlemeye itiraz etme
+        veya veri taşınabilirliği talep etme haklarına sahip olabilirsiniz. Bu hakları kullanmak için
+        <a href="mailto:furkankaan05@outlook.com">furkankaan05@outlook.com</a> adresinden bizimle iletişime geçebilirsiniz.
+      </p>
+      <ul>
+        <li>Bildirim, kamera, mikrofon, ses tanıma ve Face ID izinlerini iOS Ayarlar üzerinden yönetebilirsiniz.</li>
+        <li>Apple ile giriş bilgilerinizi Apple Kimliği ayarlarınızdan yönetebilirsiniz.</li>
+        <li>Premium aboneliklerinizi App Store hesap ayarlarınızdan yönetebilirsiniz.</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>9. Çocukların Gizliliği</h2>
+      <p>
+        Fingenda çocuklara yönelik olarak tasarlanmamıştır. Bilerek çocuklardan kişisel veri toplamayı amaçlamayız.
+        Bir çocuğa ait kişisel verinin işlendiğini düşünüyorsanız bizimle iletişime geçebilirsiniz.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>10. Güvenlik</h2>
+      <p>
+        Fingenda kullanıcı verilerini korumak için makul teknik ve idari güvenlik önlemleri uygular. Ancak internet
+        üzerinden veri aktarımı veya elektronik saklama yöntemlerinin tamamen risksiz olduğu garanti edilemez.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>11. Uluslararası Veri Aktarımı</h2>
+      <p>
+        Kullandığımız altyapı ve hizmet sağlayıcılara bağlı olarak verileriniz Türkiye dışındaki sunucularda
+        işlenebilir veya saklanabilir. Bu durumda verilerin korunması için makul önlemler alınır.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>12. Politika Değişiklikleri</h2>
+      <p>
+        Bu Gizlilik Politikası zaman zaman güncellenebilir. Değişiklik olduğunda bu sayfadaki "Son güncelleme"
+        tarihi yenilenir. Önemli değişikliklerde uygulama içi bildirim veya uygun diğer yöntemlerle bilgi verilebilir.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>13. İletişim</h2>
+      <p>
+        Gizlilik, veri silme, destek veya uygulama ile ilgili talepleriniz için:
+      </p>
+      <p>
+        <strong>E-posta:</strong>
+        <a href="mailto:furkankaan05@outlook.com">furkankaan05@outlook.com</a>
+      </p>
+    </section>
+
+    <section class="section" lang="en">
+      <h2>English Summary</h2>
+      <p>
+        Fingenda is a finance agenda app for income and expense tracking, savings goals, installments, notes,
+        market tracking, widgets, notifications, receipt scanning, voice input and personalized financial insights.
+        Fingenda does not sell personal data and does not collect payment card numbers. In-app purchases and
+        subscriptions are processed by Apple App Store.
+      </p>
+      <p>
+        You may contact us at <a href="mailto:furkankaan05@outlook.com">furkankaan05@outlook.com</a> to request
+        access, correction or deletion of your data, or to ask privacy-related questions.
+      </p>
+    </section>
+
+    <footer>
+      Fingenda Privacy Policy · Public URL: https://furkankaan0.github.io/Fingenda/privacy-policy.html
+    </footer>
   </main>
 </body>
 </html>
